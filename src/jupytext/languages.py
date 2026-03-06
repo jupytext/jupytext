@@ -92,6 +92,11 @@ _SCRIPT_EXTENSIONS = {
         "comment": "/*",
         "comment_suffix": "*/",
     },
+    ".jenner": {
+        "language": "jenner",
+        "comment": "/*",
+        "comment_suffix": "*/",
+    },
     ".xsh": {"language": "xonsh", "comment": "#"},
     ".lgt": {"language": "logtalk", "comment": "%"},
     ".logtalk": {"language": "logtalk", "comment": "%"},

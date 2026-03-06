@@ -1,0 +1,25 @@
+/* --- */
+/* jupyter: */
+/*   kernelspec: */
+/*     display_name: Jenner */
+/*     language: jenner */
+/*     name: jenner */
+/* --- */
+
+/* %% [markdown] */
+/* # Jenner Notebooks with Jupytext */
+
+/* %% */
+data test;
+    x = 1;
+    y = x * 2;
+    output;
+run;
+
+/* %% */
+proc print data=test;
+run;
+
+/* %% */
+/* %let name = Jupytext;
+/* %put &name;
