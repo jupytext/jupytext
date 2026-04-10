@@ -1,6 +1,7 @@
 """Jupyter notebook to Emacs Org-mode and back, using Pandoc"""
 
 import os
+import re
 import tempfile
 
 # Copy nbformat reads and writes to avoid them being patched in the contents manager!!
@@ -8,6 +9,9 @@ from nbformat import reads as ipynb_reads
 from nbformat import writes as ipynb_writes
 
 from .pandoc import pandoc, raise_if_pandoc_is_not_available
+
+# Matches valid Org keyword lines such as #+TITLE:, #+AUTHOR:, #+PROPERTY:, etc.
+_ORG_KEYWORD_RE = re.compile(r"^#\+[A-Z_]+:")
 
 
 def org_to_notebook(text):
@@ -61,21 +65,24 @@ def notebook_to_org(notebook):
     if kernel_name:
         text = _inject_kernel_header_args(text, kernel_name)
 
+    # Normalize line endings (consistent with pandoc.py behavior)
     return "\n".join(text.splitlines())
 
 
 def _inject_kernel_header_args(text, kernel_name):
-    """Insert a top-level #+PROPERTY: header-args line after the leading #+... header block"""
+    """Insert a #+PROPERTY: header-args line after the leading Org keyword block"""
     header_args_line = f"#+PROPERTY: header-args:{kernel_name} :session *{kernel_name}*\n"
     lines = text.splitlines(keepends=True)
-    # Find the last #+... line in the leading header block
+    # Find the last Org keyword (#+KEYWORD:) line in the leading header block.
+    # Blank lines are skipped; the first non-blank, non-keyword line ends the search.
     last_header_line = -1
     for i, line in enumerate(lines):
-        if line.startswith("#+"):
+        if _ORG_KEYWORD_RE.match(line):
             last_header_line = i
         elif line.strip():
-            # First non-blank, non-header line ends the search
+            # First non-blank, non-keyword line ends the search
             break
+    # insert_pos == 0 when no keyword lines were found; inserts at document start
     insert_pos = last_header_line + 1
     lines.insert(insert_pos, header_args_line)
     return "".join(lines)
