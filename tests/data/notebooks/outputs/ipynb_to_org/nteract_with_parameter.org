@@ -1,0 +1,20 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+begin_src jupyter-python
+param = 4
+#+end_src
+
+#+begin_src jupyter-python
+import pandas as pd
+#+end_src
+
+#+begin_src jupyter-python
+df = pd.DataFrame({'A': [1, 2], 'B': [3 + param, 4]},
+                  index=pd.Index(['x0', 'x1'], name='x'))
+df
+#+end_src
+
+#+begin_src jupyter-python
+%matplotlib inline
+df.plot(kind='bar')
+#+end_src

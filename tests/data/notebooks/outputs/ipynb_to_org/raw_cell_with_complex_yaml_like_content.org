@@ -1,0 +1,7 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+<<b32297a4>>
+
+#+begin_src jupyter-python
+print("Hello, World!")
+#+end_src

@@ -1,0 +1,25 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Tcl
+#+PROPERTY: header-args:jupyter-tcl :kernel tcljupyter
+* Assign Values
+:PROPERTIES:
+:CUSTOM_ID: assign-values
+:END:
+
+#+begin_src jupyter-tcl
+set a 1
+puts "a = $a"
+#+end_src
+
+* Loop
+:PROPERTIES:
+:CUSTOM_ID: loop
+:END:
+
+#+begin_src jupyter-tcl
+for {set i 0} {$i < 10} {incr i} {
+    puts "I inside first loop: $i"
+}
+#+end_src
+
+#+begin_src jupyter-tcl
+#+end_src

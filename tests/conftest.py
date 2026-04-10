@@ -409,6 +409,39 @@ def ipynb_to_quarto(request):
 
 
 @pytest.fixture(
+    params=[
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_R" / "ir_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_bash" / "sample_bash_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_groovy" / "tailrecursive-factorial.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_js" / "ijavascript.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_m" / "octave_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_maxima" / "maxima_example.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_ocaml" / "ocaml_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "Notebook with html and latex cells.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "Notebook_with_R_magic.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "Notebook_with_more_R_magic_111.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "cat_variable.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "convert_to_py_then_test_with_update83.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "jupyter.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "jupyter_again.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "notebook_with_complex_metadata.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_q" / "kalman_filter_and_visualization.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_robot" / "simple_robot_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_sage" / "sage_print_hello.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_sas" / "sas.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_scala" / "simple_scala_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_stata" / "stata_notebook.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_tcl" / "tcl_test.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_ts" / "itypescript.ipynb"),
+        str(SAMPLE_NOTEBOOK_PATH / "ipynb_xonsh" / "xonsh_example.ipynb"),
+    ],
+    ids=notebook_id_func,
+)
+def ipynb_to_org(request):
+    return request.param
+
+
+@pytest.fixture(
     params=list_notebooks("ipynb_py", skip="(raw|hash|frozen|magic|html|164|long)"),
     ids=notebook_id_func,
 )

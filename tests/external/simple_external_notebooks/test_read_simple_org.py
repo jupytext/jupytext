@@ -1,8 +1,9 @@
 import pytest
-from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook
+from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, new_raw_cell
 
 import jupytext
 from jupytext.cli import jupytext as jupytext_cli
+from jupytext.compare import compare_notebooks
 from jupytext.pandoc import PandocError
 
 
@@ -47,13 +48,15 @@ def test_org_kernel_header_arg():
         ],
     )
     org = jupytext.writes(notebook, "org")
+    assert "#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3" in org
     assert "#+PROPERTY: header-args:jupyter-python :kernel python3" in org
-    assert "#+PROPERTY: header-args:jupyter-python+ :session python3" in org
+    assert "header-args:jupyter-python+ :session" not in org
 
 
 @pytest.mark.requires_pandoc
 def test_org_header_args_are_read_as_kernel_metadata():
-    org = """#+PROPERTY: header-args:jupyter-python :kernel python3
+    org = """#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
 #+PROPERTY: header-args:jupyter-python+ :session python3
 
 #+begin_src jupyter-python
@@ -63,6 +66,7 @@ print("hello")
     nb = jupytext.reads(org, "org")
     assert nb.metadata["kernelspec"]["name"] == "python3"
     assert nb.metadata["kernelspec"]["language"] == "python"
+    assert nb.metadata["kernelspec"]["display_name"] == "Python 3"
     assert nb.metadata["org_babel"]["header_args"]["jupyter-python"]["session"] == "python3"
     assert len(nb.cells) == 1
     assert nb.cells[0].cell_type == "code"
@@ -78,8 +82,38 @@ def test_org_babel_metadata_is_written_to_header_args():
         cells=[new_code_cell("x = 1")],
     )
     org = jupytext.writes(notebook, "org")
+    assert "#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3" in org
     assert "#+PROPERTY: header-args:jupyter-python :kernel python3" in org
     assert "#+PROPERTY: header-args:jupyter-python+ :session verification-games-fluxes" in org
+
+
+@pytest.mark.requires_pandoc
+def test_header_args_without_kernel_do_not_set_kernelspec():
+    org = """#+PROPERTY: header-args:jupyter-python+ :session verification-games-fluxes
+
+#+begin_src jupyter-python
+print("hello")
+#+end_src
+"""
+    nb = jupytext.reads(org, "org")
+    assert "kernelspec" not in nb.metadata
+    assert nb.metadata["org_babel"]["header_args"]["jupyter-python"]["session"] == "verification-games-fluxes"
+
+
+@pytest.mark.requires_pandoc
+def test_raw_cells_are_not_preserved():
+    notebook = new_notebook(
+        cells=[
+            new_markdown_cell("before"),
+            new_raw_cell("RAW CONTENT"),
+            new_markdown_cell("after"),
+        ]
+    )
+    nb2 = jupytext.reads(jupytext.writes(notebook, "org"), "org")
+    assert all(cell.cell_type != "raw" for cell in nb2.cells)
+    assert len(nb2.cells) == 1
+    assert nb2.cells[0].cell_type == "markdown"
+    assert nb2.cells[0].source == "before\n\nafter"
 
 
 @pytest.mark.requires_pandoc
@@ -94,6 +128,68 @@ def test_consecutive_markdown_cells_are_concatenated():
     assert len(nb2.cells) == 1
     assert nb2.cells[0].cell_type == "markdown"
     assert nb2.cells[0].source == "First markdown cell.\n\nSecond markdown cell."
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(
+    reason="Org prose has no native cell-boundary markers; consecutive markdown cells are concatenated",
+    strict=True,
+)
+def test_strict_round_trip_does_not_preserve_consecutive_markdown_cells():
+    notebook = new_notebook(
+        cells=[
+            new_markdown_cell("First markdown cell."),
+            new_markdown_cell("Second markdown cell."),
+        ]
+    )
+    compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(
+    reason="Pandoc Org conversion does not preserve raw cells",
+    strict=True,
+)
+def test_strict_round_trip_does_not_preserve_raw_cells():
+    notebook = new_notebook(
+        cells=[
+            new_markdown_cell("before"),
+            new_raw_cell("RAW CONTENT"),
+            new_markdown_cell("after"),
+        ]
+    )
+    compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(
+    reason="Org format does not preserve cell metadata",
+    strict=True,
+)
+def test_strict_round_trip_does_not_preserve_cell_metadata():
+    notebook = new_notebook(
+        cells=[
+            new_markdown_cell(
+                "A markdown cell",
+                metadata={"slideshow": {"slide_type": "slide"}},
+            )
+        ]
+    )
+    compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(
+    reason="Pandoc Org conversion may normalize indentation inside code blocks",
+    strict=True,
+)
+def test_strict_round_trip_does_not_preserve_code_indentation():
+    notebook = new_notebook(
+        cells=[
+            new_code_cell('fish = {"x"=>x,\n\t"type"=>"scatter"}'),
+        ]
+    )
+    compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
 
 
 @pytest.mark.requires_pandoc

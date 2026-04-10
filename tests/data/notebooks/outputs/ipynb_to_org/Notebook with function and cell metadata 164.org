@@ -1,0 +1,23 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+begin_src jupyter-python
+1 + 1
+#+end_src
+
+A markdown cell
+And below, the cell for function f has non trivial cell metadata. And the next cell as well.
+
+#+begin_src jupyter-python
+def f(x):
+    return x
+#+end_src
+
+#+begin_src jupyter-python
+f(5)
+#+end_src
+
+More text
+
+#+begin_src jupyter-python
+2 + 2
+#+end_src

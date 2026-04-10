@@ -1,0 +1,9 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3 (ipykernel)
+#+PROPERTY: header-args:jupyter-python :kernel python3
+<<7f0da6ff-9da5-453c-8515-88fabeb03582>>
+
+#+begin_quote
+*Note*
+
+=slide= layer with a =top= of =30%=
+#+end_quote
