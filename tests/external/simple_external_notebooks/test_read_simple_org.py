@@ -15,7 +15,7 @@ def test_notebook_to_org_and_back(
             new_markdown_cell("Another markdown cell."),
         ]
     ),
-    ):
+):
     org = jupytext.writes(notebook, "org")
     assert "#+begin_src" in org.lower() or "#+BEGIN_SRC" in org
     nb2 = jupytext.reads(org, "org")
@@ -34,9 +34,7 @@ def test_org_round_trip_preserves_code():
     )
     org = jupytext.writes(notebook, "org")
     nb2 = jupytext.reads(org, "org")
-    assert any(
-        "a = 1" in cell.source for cell in nb2.cells if cell.cell_type == "code"
-    )
+    assert any("a = 1" in cell.source for cell in nb2.cells if cell.cell_type == "code")
 
 
 @pytest.mark.requires_pandoc

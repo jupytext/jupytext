@@ -3,28 +3,26 @@
 import os
 import re
 import tempfile
-from typing import Any
+from typing import Any, Optional
 
 # Copy nbformat reads and writes to avoid them being patched in the contents manager!!
 from nbformat import reads as ipynb_reads
 from nbformat import writes as ipynb_writes
 
-from .pandoc import pandoc, raise_if_pandoc_is_not_available
+from .pandoc import PandocError, pandoc, raise_if_pandoc_is_not_available
 
 # Matches valid Org keyword lines such as #+TITLE:, #+AUTHOR:, #+PROPERTY:, etc.
 # Org keywords are case-insensitive; Pandoc may generate lowercase variants.
 _ORG_KEYWORD_RE = re.compile(r"^#\+[A-Za-z_]+:", re.IGNORECASE)
 _ORG_TARGET_LINE_RE = re.compile(r"(?m)^<<[^>\n]+>>[ \t]*\n?")
-_ORG_HEADER_ARGS_RE = re.compile(
-    r"(?im)^#\+PROPERTY:\s*header-args:(jupyter-[^ \t+\n]+)(\+?)\s*(.*)$"
-)
+_ORG_HEADER_ARGS_RE = re.compile(r"(?im)^#\+PROPERTY:\s*header-args:(jupyter-[^ \t+\n]+)(\+?)\s*(.*)$")
 _ORG_HEADER_ARG_RE = re.compile(r":([A-Za-z0-9_-]+)\s+([^:\n]+?)(?=(?:\s+:[A-Za-z0-9_-]+\s)|\s*$)")
 _SAFE_HEADER_ARG_RE = re.compile(r"[^A-Za-z0-9_+\-]")
 
 
 def org_to_notebook(text):
     """Convert an Org-mode text to a Jupyter notebook, using Pandoc"""
-    raise_if_pandoc_is_not_available()
+    _raise_if_pandoc_is_not_available_for_org()
     metadata = _org_metadata(text)
     text = _strip_org_targets(_strip_org_header_args(text))
     tmp_in = tempfile.NamedTemporaryFile(suffix=".org", delete=False)
@@ -52,7 +50,7 @@ def org_to_notebook(text):
 
 def notebook_to_org(notebook):
     """Convert a notebook to its Org-mode representation, using Pandoc"""
-    raise_if_pandoc_is_not_available()
+    _raise_if_pandoc_is_not_available_for_org()
     tmp_in = tempfile.NamedTemporaryFile(suffix=".ipynb", delete=False)
     tmp_in.write(ipynb_writes(notebook).encode("utf-8"))
     tmp_in.close()
@@ -106,9 +104,7 @@ def _inject_kernel_header_args(
     """
     block_language = f"jupyter-{kernel_language}"
     extra_args = {
-        key: _sanitize_header_arg(value)
-        for key, value in header_args.get(block_language, {}).items()
-        if key != "kernel"
+        key: _sanitize_header_arg(value) for key, value in header_args.get(block_language, {}).items() if key != "kernel"
     }
     extra_args = {key: value for key, value in extra_args.items() if value}
     if not extra_args:
@@ -133,7 +129,7 @@ def _inject_kernel_header_args(
     return "".join(lines)
 
 
-def _sanitize_header_arg(value: Any) -> str | None:
+def _sanitize_header_arg(value: Any) -> Optional[str]:
     """Restrict an Org header arg value to a conservative safe subset.
 
     Args:
@@ -144,6 +140,7 @@ def _sanitize_header_arg(value: Any) -> str | None:
     """
     if not value:
         return None
+    value = str(value)
     value = _SAFE_HEADER_ARG_RE.sub("", value)
     return value or None
 
@@ -196,10 +193,7 @@ def _org_metadata(text: str) -> dict[str, Any]:
 
     for match in _ORG_HEADER_ARGS_RE.finditer(text):
         block_language = match.group(1)
-        parsed_args = {
-            key: value.strip()
-            for key, value in _ORG_HEADER_ARG_RE.findall(match.group(3))
-        }
+        parsed_args = {key: value.strip() for key, value in _ORG_HEADER_ARG_RE.findall(match.group(3))}
 
         if block_language.startswith("jupyter-") and "language" not in kernelspec:
             kernelspec["language"] = block_language.removeprefix("jupyter-")
@@ -224,3 +218,11 @@ def _org_metadata(text: str) -> dict[str, Any]:
 
     metadata["kernelspec"] = kernelspec
     return metadata
+
+
+def _raise_if_pandoc_is_not_available_for_org() -> None:
+    """Raise with an Org-specific error when Pandoc is unavailable."""
+    try:
+        raise_if_pandoc_is_not_available()
+    except PandocError as exc:
+        raise PandocError(str(exc).replace("Pandoc Markdown format", "Pandoc Org format")) from exc
