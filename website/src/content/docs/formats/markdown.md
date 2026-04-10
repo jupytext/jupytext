@@ -165,3 +165,22 @@ In Pandoc Markdown, all cells are marked with pandoc divs (`:::`). The format is
 See for instance how our `World population.ipynb` notebook is [represented](https://github.com/jupytext/jupytext/blob/main/demo/World%20population.pandoc.md#) in the `md:pandoc` format.
 
 If you wish to use that format, please install `pandoc` in version 2.7.2 or above, with e.g. `conda install pandoc -c conda-forge`.
+
+## Org Mode
+
+[Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
+Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
+
+Code cells are represented as `#+BEGIN_SRC ... #+END_SRC` blocks. The kernel language is recorded as a top-level `#+PROPERTY: header-args` line in the Org output.
+
+**Limitations (first-pass implementation):**
+- Cell metadata is not preserved in the Org representation.
+- Adjacent markdown cells may be merged on round-trip, since Org prose has no native cell-boundary markers.
+- Notebook metadata is not preserved in the Org header.
+
+To use the Org format, install `pandoc` in version 2.7.2 or above, then convert with:
+
+```bash
+jupytext --to org notebook.ipynb
+jupytext --to ipynb notebook.org
+```
