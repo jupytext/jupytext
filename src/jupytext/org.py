@@ -11,7 +11,8 @@ from nbformat import writes as ipynb_writes
 from .pandoc import pandoc, raise_if_pandoc_is_not_available
 
 # Matches valid Org keyword lines such as #+TITLE:, #+AUTHOR:, #+PROPERTY:, etc.
-_ORG_KEYWORD_RE = re.compile(r"^#\+[A-Z_]+:")
+# Org keywords are case-insensitive; Pandoc may generate lowercase variants.
+_ORG_KEYWORD_RE = re.compile(r"^#\+[A-Za-z_]+:", re.IGNORECASE)
 
 
 def org_to_notebook(text):
@@ -59,9 +60,12 @@ def notebook_to_org(notebook):
         if os.path.exists(out_file):
             os.unlink(out_file)
 
-    # Inject kernel name as an Org header-args property if available
+    # Inject kernel name as an Org header-args property if available.
+    # Sanitize to only allow safe characters (letters, digits, hyphens, underscores, plus).
     kernelspec = notebook.metadata.get("kernelspec", {})
     kernel_name = kernelspec.get("language") or kernelspec.get("name")
+    if kernel_name:
+        kernel_name = re.sub(r"[^A-Za-z0-9_+\-]", "", kernel_name)
     if kernel_name:
         text = _inject_kernel_header_args(text, kernel_name)
 
