@@ -17,7 +17,7 @@ def test_notebook_to_org_and_back(
     ),
 ):
     org = jupytext.writes(notebook, "org")
-    assert "#+begin_src" in org.lower() or "#+BEGIN_SRC" in org
+    assert "#+begin_src" in org.lower()
     nb2 = jupytext.reads(org, "org")
     assert [cell.cell_type for cell in nb2.cells] == [cell.cell_type for cell in notebook.cells]
     assert nb2.cells[0].source == notebook.cells[0].source

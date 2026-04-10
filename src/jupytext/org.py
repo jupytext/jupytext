@@ -190,13 +190,14 @@ def _org_metadata(text: str) -> dict[str, Any]:
     """
     kernelspec = {}
     header_args = {}
+    kernel_language = None
 
     for match in _ORG_HEADER_ARGS_RE.finditer(text):
         block_language = match.group(1)
         parsed_args = {key: value.strip() for key, value in _ORG_HEADER_ARG_RE.findall(match.group(3))}
 
-        if block_language.startswith("jupyter-") and "language" not in kernelspec:
-            kernelspec["language"] = block_language.removeprefix("jupyter-")
+        if block_language.startswith("jupyter-") and kernel_language is None:
+            kernel_language = block_language.removeprefix("jupyter-")
 
         kernel_name = parsed_args.pop("kernel", None)
         if kernel_name:
@@ -210,8 +211,11 @@ def _org_metadata(text: str) -> dict[str, Any]:
     if header_args:
         metadata["org_babel"] = {"header_args": header_args}
 
-    if not kernelspec:
+    if "name" not in kernelspec:
         return metadata
+
+    if kernel_language is not None:
+        kernelspec["language"] = kernel_language
 
     if "name" in kernelspec and "display_name" not in kernelspec:
         kernelspec["display_name"] = kernelspec["name"]
