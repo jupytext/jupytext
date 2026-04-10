@@ -1,0 +1,36 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+****************************************************************** 
+:PROPERTIES:
+:CUSTOM_ID: section
+:END:
+This is a notebook that contains many hash signs.
+Hopefully its python representation is not recognized as a Sphinx Gallery script...
+
+****************************************************************** 
+:PROPERTIES:
+:CUSTOM_ID: section-1
+:END:
+
+#+begin_src jupyter-python
+some = 1
+code = 2
+some+code
+
+##################################################################
+# A comment
+##################################################################
+# Another comment
+#+end_src
+
+****************************************************************** 
+:PROPERTIES:
+:CUSTOM_ID: section
+:END:
+This is a notebook that contains many hash signs.
+Hopefully its python representation is not recognized as a Sphinx Gallery script...
+
+****************************************************************** 
+:PROPERTIES:
+:CUSTOM_ID: section-1
+:END:

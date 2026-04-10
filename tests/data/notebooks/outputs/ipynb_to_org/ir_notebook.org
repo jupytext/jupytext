@@ -1,0 +1,14 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: R
+#+PROPERTY: header-args:jupyter-R :kernel ir
+This is a jupyter notebook that uses the IR kernel.
+
+#+begin_src jupyter-R
+sum(1:10)
+#+end_src
+
+#+begin_src jupyter-R
+plot(cars)
+#+end_src
+
+#+begin_src jupyter-R
+#+end_src

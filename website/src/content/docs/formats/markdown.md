@@ -175,6 +175,7 @@ Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using P
 Code cells are represented as `#+BEGIN_SRC ... #+END_SRC` blocks. The kernel metadata are recorded as top-level `#+PROPERTY: header-args` lines in the Org output, e.g.
 
 ```org
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
 #+PROPERTY: header-args:jupyter-python :kernel python3
 #+PROPERTY: header-args:jupyter-python+ :session python3
 ```

@@ -1,0 +1,37 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Octave
+#+PROPERTY: header-args:jupyter-octave :kernel octave
+A markdown cell
+
+#+begin_src jupyter-octave
+1 + 1
+#+end_src
+
+#+begin_src jupyter-octave
+% a code cell with comments
+2 + 2
+#+end_src
+
+#+begin_src jupyter-octave
+% a simple plot
+x = -10:0.1:10;
+plot (x, sin (x));
+#+end_src
+
+#+begin_src jupyter-octave
+%plot -w 800
+% a simple plot with a magic instruction
+x = -10:0.1:10;
+plot (x, sin (x));
+#+end_src
+
+And to finish with, a Python cell
+
+#+begin_src jupyter-octave
+%%python
+a = 1
+#+end_src
+
+#+begin_src jupyter-octave
+%%python
+a + 1
+#+end_src

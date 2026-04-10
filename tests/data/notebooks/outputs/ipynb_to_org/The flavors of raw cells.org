@@ -1,0 +1,7 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+$1+1$
+
+#+begin_html
+  <b>Bold text<b>
+#+end_html

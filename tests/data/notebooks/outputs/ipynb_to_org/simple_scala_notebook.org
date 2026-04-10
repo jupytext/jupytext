@@ -1,0 +1,15 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Apache Toree - Scala
+#+PROPERTY: header-args:jupyter-scala :kernel apache_toree_scala
+#+begin_src jupyter-scala
+// This is just a simple scala notebook
+
+object SampleObject {
+    def calculation(x: Int, y: Int): Int = x + y
+}
+
+val result = SampleObject.calculation(1, 2)
+#+end_src
+
+#+begin_src jupyter-scala
+println(result * 10)
+#+end_src

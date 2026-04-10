@@ -1,0 +1,14 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Bash
+#+PROPERTY: header-args:jupyter-bash :kernel bash
+#+begin_src jupyter-sh
+ls
+#+end_src
+
+#+begin_src jupyter-sh
+# https://coderwall.com/p/euwpig/a-better-git-log
+git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+#+end_src
+
+#+begin_src jupyter-sh
+git lg
+#+end_src

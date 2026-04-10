@@ -1,0 +1,37 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: SAS
+#+PROPERTY: header-args:jupyter-sas :kernel sas
+<<14a71cf0-4339-4ae6-982d-7dda15f3810e>>
+* SAS Notebooks with jupytext
+:PROPERTIES:
+:CUSTOM_ID: sas-notebooks-with-jupytext
+:END:
+
+#+begin_src jupyter-sas
+proc sql;
+    select *
+    from sashelp.cars (obs=10)
+    ;
+quit; 
+#+end_src
+
+#+begin_src jupyter-sas
+%let name = "Jupytext";
+#+end_src
+
+#+begin_src jupyter-sas
+%put &name;
+#+end_src
+
+#+begin_src jupyter-sas
+/* Note when defining macros "%macro" cannot be the first line of text in the cell */
+%macro test;
+    data temp;
+        set sashelp.cars;
+        name = "testx";
+    run; 
+    proc print data = temp (obs=10);
+    run; 
+%mend test;
+
+%test
+#+end_src

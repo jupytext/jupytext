@@ -1,0 +1,36 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Q 3.5
+#+PROPERTY: header-args:jupyter-q :kernel qpk
+#+begin_src jupyter-q
+plt: .p.import`matplotlib.pyplot
+#+end_src
+
+#+begin_src jupyter-q
+filter: {
+    t: ([] x: `float $ x; xh: `float $ x; p: (count x) # R: var x);
+    (first t), iterate[R; R]\[first t; 1 _ t] 
+    }
+
+iterate: {[Q; R; x; y]
+    x[`p]+: Q;
+    k: x[`p] % R + x[`p];
+    `x`xh`p ! (y[`x]; x[`xh] + k * y[`x] - x[`xh]; (1 - k) * x[`p])
+    }
+#+end_src
+
+#+begin_src jupyter-q
+price: 100 + sums 0.5 - (n:50)?1.
+#+end_src
+
+#+begin_src jupyter-q
+output:filter price
+#+end_src
+
+#+begin_src jupyter-q
+plt[`:plot][til n; output`x; `label pykw "price"];
+plt[`:plot][til n; output`xh;`label pykw "forecast"];
+plt[`:legend][];
+plt[`:show][];
+#+end_src
+
+#+begin_src jupyter-q
+#+end_src

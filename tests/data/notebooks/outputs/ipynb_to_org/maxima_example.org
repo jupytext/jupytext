@@ -1,0 +1,26 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Maxima
+#+PROPERTY: header-args:jupyter-maxima :kernel maxima
+<<a272759d>>
+** maxima misc
+:PROPERTIES:
+:CUSTOM_ID: maxima-misc
+:END:
+
+#+begin_src jupyter-maxima
+kill(all)$
+#+end_src
+
+#+begin_src jupyter-maxima
+f(x) := 1/(x^2+l^2)^(3/2);
+#+end_src
+
+#+begin_src jupyter-maxima
+integrate(f(x), x);
+#+end_src
+
+#+begin_src jupyter-maxima
+tex(%)$
+#+end_src
+
+#+begin_src jupyter-maxima
+#+end_src
