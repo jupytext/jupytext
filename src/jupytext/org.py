@@ -13,11 +13,19 @@ from .pandoc import pandoc, raise_if_pandoc_is_not_available
 # Matches valid Org keyword lines such as #+TITLE:, #+AUTHOR:, #+PROPERTY:, etc.
 # Org keywords are case-insensitive; Pandoc may generate lowercase variants.
 _ORG_KEYWORD_RE = re.compile(r"^#\+[A-Za-z_]+:", re.IGNORECASE)
+_ORG_TARGET_LINE_RE = re.compile(r"(?m)^<<[^>\n]+>>[ \t]*\n?")
+_ORG_HEADER_ARGS_RE = re.compile(
+    r"(?im)^#\+PROPERTY:\s*header-args:(jupyter-[^ \t+\n]+)(\+?)\s*(.*)$"
+)
+_ORG_HEADER_ARG_RE = re.compile(r":([A-Za-z0-9_-]+)\s+([^:\n]+?)(?=(?:\s+:[A-Za-z0-9_-]+\s)|\s*$)")
+_SAFE_HEADER_ARG_RE = re.compile(r"[^A-Za-z0-9_+\-]")
 
 
 def org_to_notebook(text):
     """Convert an Org-mode text to a Jupyter notebook, using Pandoc"""
     raise_if_pandoc_is_not_available()
+    metadata = _org_metadata(text)
+    text = _strip_org_targets(_strip_org_header_args(text))
     tmp_in = tempfile.NamedTemporaryFile(suffix=".org", delete=False)
     tmp_in.write(text.encode("utf-8"))
     tmp_in.close()
@@ -35,6 +43,8 @@ def org_to_notebook(text):
         os.unlink(tmp_in.name)
         if os.path.exists(out_file):
             os.unlink(out_file)
+
+    notebook.metadata.update(metadata)
 
     return notebook
 
@@ -60,33 +70,108 @@ def notebook_to_org(notebook):
         if os.path.exists(out_file):
             os.unlink(out_file)
 
-    # Inject kernel name as an Org header-args property if available.
-    # Sanitize to only allow safe characters (letters, digits, hyphens, underscores, plus).
     kernelspec = notebook.metadata.get("kernelspec", {})
-    kernel_name = kernelspec.get("language") or kernelspec.get("name")
-    if kernel_name:
-        kernel_name = re.sub(r"[^A-Za-z0-9_+\-]", "", kernel_name)
-    if kernel_name:
-        text = _inject_kernel_header_args(text, kernel_name)
+    kernel_name = _sanitize_header_arg(kernelspec.get("name"))
+    kernel_language = _sanitize_header_arg(kernelspec.get("language"))
+    if kernel_name and kernel_language:
+        text = _inject_kernel_header_args(
+            text,
+            kernel_name,
+            kernel_language,
+            notebook.metadata.get("org_babel", {}).get("header_args", {}),
+        )
 
     # Normalize line endings (consistent with pandoc.py behavior)
     return "\n".join(text.splitlines())
 
 
-def _inject_kernel_header_args(text, kernel_name):
-    """Insert a #+PROPERTY: header-args line after the leading Org keyword block"""
-    header_args_line = f"#+PROPERTY: header-args:{kernel_name} :session *{kernel_name}*\n"
+def _inject_kernel_header_args(text, kernel_name, kernel_language, header_args):
+    """Insert Org header-args lines after the leading Org keyword block."""
+    block_language = f"jupyter-{kernel_language}"
+    extra_args = {
+        key: _sanitize_header_arg(value)
+        for key, value in header_args.get(block_language, {}).items()
+        if key != "kernel"
+    }
+    extra_args = {key: value for key, value in extra_args.items() if value}
+    if not extra_args:
+        extra_args = {"session": kernel_name}
+
+    header_args_lines = [
+        _format_header_args_line(block_language, {"kernel": kernel_name}),
+    ]
+    if extra_args:
+        header_args_lines.append(_format_header_args_line(block_language + "+", extra_args))
+
     lines = text.splitlines(keepends=True)
-    # Find the last Org keyword (#+KEYWORD:) line in the leading header block.
-    # Blank lines are skipped; the first non-blank, non-keyword line ends the search.
     last_header_line = -1
     for i, line in enumerate(lines):
         if _ORG_KEYWORD_RE.match(line):
             last_header_line = i
         elif line.strip():
-            # First non-blank, non-keyword line ends the search
             break
-    # insert_pos == 0 when no keyword lines were found; inserts at document start
+
     insert_pos = last_header_line + 1
-    lines.insert(insert_pos, header_args_line)
+    lines[insert_pos:insert_pos] = header_args_lines
     return "".join(lines)
+
+
+def _sanitize_header_arg(value):
+    """Restrict Org header arg values to a conservative safe subset."""
+    if not value:
+        return None
+    value = _SAFE_HEADER_ARG_RE.sub("", value)
+    return value or None
+
+
+def _format_header_args_line(block_language, args):
+    """Format an Org header-args property line."""
+    args_text = " ".join(f":{key} {value}" for key, value in args.items())
+    return f"#+PROPERTY: header-args:{block_language} {args_text}\n"
+
+
+def _strip_org_targets(text):
+    """Remove standalone Org targets that Pandoc round-trips as HTML anchors."""
+    return _ORG_TARGET_LINE_RE.sub("", text)
+
+
+def _strip_org_header_args(text):
+    """Remove Org header-args property lines before Pandoc conversion."""
+    return re.sub(r"(?im)^#\+PROPERTY:\s*header-args:[^\n]*\n?", "", text)
+
+
+def _org_metadata(text):
+    """Extract kernelspec metadata from Org header-args properties."""
+    kernelspec = {}
+    header_args = {}
+
+    for match in _ORG_HEADER_ARGS_RE.finditer(text):
+        block_language = match.group(1)
+        parsed_args = {
+            key: value.strip()
+            for key, value in _ORG_HEADER_ARG_RE.findall(match.group(3))
+        }
+
+        if block_language.startswith("jupyter-") and "language" not in kernelspec:
+            kernelspec["language"] = block_language.removeprefix("jupyter-")
+
+        kernel_name = parsed_args.pop("kernel", None)
+        if kernel_name:
+            kernelspec["name"] = kernel_name
+
+        if parsed_args:
+            header_args.setdefault(block_language, {}).update(parsed_args)
+
+    metadata = {}
+
+    if header_args:
+        metadata["org_babel"] = {"header_args": header_args}
+
+    if not kernelspec:
+        return metadata
+
+    if "name" in kernelspec and "display_name" not in kernelspec:
+        kernelspec["display_name"] = kernelspec["name"]
+
+    metadata["kernelspec"] = kernelspec
+    return metadata
