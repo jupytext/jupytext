@@ -10,6 +10,8 @@ _DEFAULT_NOTEBOOK_METADATA = ",".join(
         "jupytext",
         # Preserve kernel specs
         "kernelspec",
+        # Org Babel header arguments
+        "org_babel",
         # Kernel_info found in Nteract notebooks
         "kernel_info",
         # Used in MyST notebooks
