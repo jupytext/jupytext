@@ -125,7 +125,7 @@ export async function getAvailableKernelLanguages(
         // If we managed to find the language, construct the FileTypeData
         // Here we make an assumption that first extension in
         // languageInfo.extensions is the most common one.
-        if (languageInfo) {
+        if (languageInfo && languageInfo.extensions) {
           const fileExt = languageInfo.extensions[0];
           const fileType = docRegistry.getFileTypesForPath(
             `test.${fileExt}`,
