@@ -47,6 +47,19 @@ def test_full_path_dotdot():
     assert full_path("scripts/test", fmt=fmt) == "scripts/test.py"
 
 
+@pytest.mark.parametrize(
+    "formats",
+    [
+        "notebooks///ipynb,../../../../../../tmp/escape///py:light",
+        "notebooks///ipynb,/tmp/escape///py:light",
+    ],
+)
+def test_paired_path_cannot_escape_notebook_tree(formats):
+    nb_file = "notebooks/nb.ipynb"
+    with pytest.raises(InconsistentPath, match="escapes the directory"):
+        paired_paths(nb_file, "notebooks///ipynb", formats)
+
+
 def test_base_path_in_tree_from_root():
     fmt = long_form_one_format("scripts///py")
     assert base_path("scripts/subfolder/test.py", fmt=fmt) == "//subfolder/test"
