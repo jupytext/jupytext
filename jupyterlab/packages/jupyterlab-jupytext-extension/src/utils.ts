@@ -125,9 +125,9 @@ export async function getAvailableKernelLanguages(
         // If we managed to find the language, construct the FileTypeData
         // Here we make an assumption that first extension in
         // languageInfo.extensions is the most common one.
-        const fileExt = languageInfo.extensions[0];
-        const fileType = docRegistry.getFileTypesForPath(`test.${fileExt}`)[0];
         if (languageInfo) {
+          const fileExt = languageInfo.extensions[0];
+          const fileType = docRegistry.getFileTypesForPath(`test.${fileExt}`)[0];
           // We attempt to get kernelIcon here for specModel.resources
           // If none provided, we return generic kernel icon
           const kernelIcon = await getKernelIcon(specModel, fileType);
