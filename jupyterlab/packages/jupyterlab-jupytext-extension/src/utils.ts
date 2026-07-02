@@ -194,9 +194,8 @@ export async function getAvailableCreateTextNotebookCommands(
                 if (numKernels === mapIndex) {
                   updatedKernelLanguageFileType.separator = true;
                 }
-                const kernelCommands = createTextNotebookCommands.get(
-                  updatedKernelKey,
-                );
+                const kernelCommands =
+                  createTextNotebookCommands.get(updatedKernelKey);
                 if (!kernelCommands) {
                   return;
                 }

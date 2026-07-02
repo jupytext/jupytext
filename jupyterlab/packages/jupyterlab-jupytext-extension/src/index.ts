@@ -516,12 +516,17 @@ const extension: JupyterFrontEndPlugin<void> = {
               disposables.add(
                 launcher.add({
                   command: command,
-                  args: kernelName !== undefined ? { isLauncher: true, kernelName } : { isLauncher: true },
+                  args:
+                    kernelName !== undefined
+                      ? { isLauncher: true, kernelName }
+                      : { isLauncher: true },
                   category: trans.__('Jupytext'),
                   rank: rank++,
                   kernelIconUrl,
                   metadata: {
-                    kernel: JSONExt.deepCopy(kernelSpec?.metadata || {}) as ReadonlyJSONValue,
+                    kernel: JSONExt.deepCopy(
+                      kernelSpec?.metadata || {},
+                    ) as ReadonlyJSONValue,
                   },
                 }),
               );
