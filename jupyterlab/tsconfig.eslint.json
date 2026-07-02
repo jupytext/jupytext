@@ -9,7 +9,7 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "target": "es2018",
     "types": [],
     "esModuleInterop": true
