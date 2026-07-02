@@ -18,7 +18,12 @@ import {
 function getWidgetJupytextFormats(
   notebookTracker: INotebookTracker,
 ): Array<string> {
-  const model = notebookTracker.currentWidget.context.model;
+  const widget = notebookTracker.currentWidget;
+  if (!widget) {
+    return [];
+  }
+
+  const model = widget.context.model;
 
   const jupytext: IJupytextSection = (model as any).getMetadata('jupytext');
   if (!jupytext) {
@@ -36,8 +41,13 @@ function getWidgetJupytextFormats(
  * Get file extension of current notebook widget
  */
 function getNotebookFileExtension(notebookTracker: INotebookTracker): string {
+  const widget = notebookTracker.currentWidget;
+  if (!widget) {
+    return '';
+  }
+
   let notebookFileExtension: string | undefined =
-    notebookTracker.currentWidget.context.path.split('.').pop();
+    widget.context.path.split('.').pop();
   if (!notebookFileExtension) {
     return '';
   }
@@ -174,7 +184,9 @@ export function executePairCommand(
     return;
   }
   const model = notebookTracker.currentWidget.context.model;
-  let jupytext: IJupytextSection = (model as any).getMetadata('jupytext') as
+  let jupytext = (model as any).getMetadata(
+    'jupytext',
+  ) as
     | IJupytextSection
     | undefined;
 
