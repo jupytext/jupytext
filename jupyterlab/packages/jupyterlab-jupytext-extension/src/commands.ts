@@ -46,8 +46,9 @@ function getNotebookFileExtension(notebookTracker: INotebookTracker): string {
     return '';
   }
 
-  let notebookFileExtension: string | undefined =
-    widget.context.path.split('.').pop();
+  let notebookFileExtension: string | undefined = widget.context.path
+    .split('.')
+    .pop();
   if (!notebookFileExtension) {
     return '';
   }
@@ -184,9 +185,7 @@ export function executePairCommand(
     return;
   }
   const model = notebookTracker.currentWidget.context.model;
-  let jupytext = (model as any).getMetadata(
-    'jupytext',
-  ) as
+  let jupytext = (model as any).getMetadata('jupytext') as
     | IJupytextSection
     | undefined;
 
