@@ -125,9 +125,11 @@ export async function getAvailableKernelLanguages(
         // If we managed to find the language, construct the FileTypeData
         // Here we make an assumption that first extension in
         // languageInfo.extensions is the most common one.
-        const fileExt = languageInfo.extensions[0];
-        const fileType = docRegistry.getFileTypesForPath(`test.${fileExt}`)[0];
-        if (languageInfo) {
+        if (languageInfo && languageInfo.extensions) {
+          const fileExt = languageInfo.extensions[0];
+          const fileType = docRegistry.getFileTypesForPath(
+            `test.${fileExt}`,
+          )[0];
           // We attempt to get kernelIcon here for specModel.resources
           // If none provided, we return generic kernel icon
           const kernelIcon = await getKernelIcon(specModel, fileType);
@@ -192,9 +194,12 @@ export async function getAvailableCreateTextNotebookCommands(
                 if (numKernels === mapIndex) {
                   updatedKernelLanguageFileType.separator = true;
                 }
-                createTextNotebookCommands
-                  .get(updatedKernelKey)
-                  .push(updatedKernelLanguageFileType);
+                const kernelCommands =
+                  createTextNotebookCommands.get(updatedKernelKey);
+                if (!kernelCommands) {
+                  return;
+                }
+                kernelCommands.push(updatedKernelLanguageFileType);
                 // Update includeFormats with the language specific formats
                 // Effectiviely we will add formats like py:light, js:light here
                 if (includeFormats.includes(format)) {
@@ -207,7 +212,11 @@ export async function getAvailableCreateTextNotebookCommands(
           if (createTextNotebookCommands.get(format) === undefined) {
             createTextNotebookCommands.set(format, []);
           }
-          createTextNotebookCommands.get(format).push(fileType);
+          const formatCommands = createTextNotebookCommands.get(format);
+          if (!formatCommands) {
+            return;
+          }
+          formatCommands.push(fileType);
         }
       });
     },

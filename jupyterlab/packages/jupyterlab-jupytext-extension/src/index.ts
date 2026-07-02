@@ -143,11 +143,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     const jupytextCreateMenu = new Menu({ commands: app.commands });
     jupytextCreateMenu.id = 'jp-mainmenu-jupytext-new-menu';
     jupytextCreateMenu.title.label = trans.__('New Text Notebook');
-    mainmenu.fileMenu.addItem({
-      rank: 0.97,
-      type: 'submenu',
-      submenu: jupytextCreateMenu,
-    });
+    if (mainmenu) {
+      mainmenu.fileMenu.addItem({
+        rank: 0.97,
+        type: 'submenu',
+        submenu: jupytextCreateMenu,
+      });
+    }
 
     // Add create text notebook submenu to context menu
     // Rank 53 as 52 is used for classic notebook
@@ -161,11 +163,13 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Initialise Jupytext menu and add it to main menu
     const jupytextMenu = new Menu({ commands: app.commands });
-    mainmenu.fileMenu.addItem({
-      rank: 0.98,
-      type: 'submenu',
-      submenu: jupytextMenu,
-    });
+    if (mainmenu) {
+      mainmenu.fileMenu.addItem({
+        rank: 0.98,
+        type: 'submenu',
+        submenu: jupytextMenu,
+      });
+    }
     jupytextMenu.id = 'jp-mainmenu-jupytext-menu';
     jupytextMenu.title.label = trans.__('Jupytext');
 
@@ -402,7 +406,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       contentFactory,
       editorServices,
       rendermime,
-      translator,
+      translator ?? nullTranslator,
       trans,
       riseFactory,
     );
@@ -413,15 +417,21 @@ const extension: JupyterFrontEndPlugin<void> = {
     createTextNotebookCommands.forEach((fileTypes: IFileTypeData[], _) => {
       fileTypes.map((fileType: IFileTypeData) => {
         const format = fileType.fileExt;
+        if (!format) {
+          return;
+        }
+
         const command = `jupytext:create-new-text-notebook-${format}`;
         const iconName = fileType.iconName;
         const kernelIcon = fileType.kernelIcon;
+        const launcherLabel = fileType.launcherLabel ?? 'New Text Notebook';
+        const paletteLabel = fileType.paletteLabel ?? 'New Text Notebook';
         commands.addCommand(command, {
           label: (args) => {
             if (args['isLauncher']) {
-              return trans.__(fileType.launcherLabel);
+              return trans.__(launcherLabel);
             }
-            return trans.__(fileType.paletteLabel);
+            return trans.__(paletteLabel);
           },
           caption: trans.__(fileType.caption),
           icon: (args) => {
@@ -494,20 +504,28 @@ const extension: JupyterFrontEndPlugin<void> = {
               if (!specs) {
                 return;
               }
+              const kernelName = fileType.kernelName;
+              const kernelSpec =
+                kernelName !== undefined
+                  ? specs.kernelspecs[kernelName]
+                  : undefined;
               disposables = new DisposableSet();
               const kernelIconUrl =
-                specs.kernelspecs[fileType.kernelName]?.resources['logo-svg'] ||
-                specs.kernelspecs[fileType.kernelName]?.resources['logo-64x64'];
+                kernelSpec?.resources['logo-svg'] ||
+                kernelSpec?.resources['logo-64x64'];
               disposables.add(
                 launcher.add({
                   command: command,
-                  args: { isLauncher: true, kernelName: fileType.kernelName },
+                  args:
+                    kernelName !== undefined
+                      ? { isLauncher: true, kernelName }
+                      : { isLauncher: true },
                   category: trans.__('Jupytext'),
                   rank: rank++,
                   kernelIconUrl,
                   metadata: {
                     kernel: JSONExt.deepCopy(
-                      specs.kernelspecs[fileType.kernelName]?.metadata || {},
+                      kernelSpec?.metadata || {},
                     ) as ReadonlyJSONValue,
                   },
                 }),
