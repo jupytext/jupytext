@@ -7,6 +7,9 @@ Jupytext ChangeLog
 **Changed**
 - Harden the github action ([#1569](https://github.com/jupytext/jupytext/pull/1569)). Thanks to [Peyton Murray](https://github.com/peytondmurray) for this PR!
 
+**Security**
+- Paired paths can no longer be written outside the notebook's directory tree. A `formats` entry read from notebook metadata, e.g. `../../../../etc///py` or an absolute path, is now rejected instead of driving a file write above the working tree ([#1588](https://github.com/jupytext/jupytext/pull/1588)).
+
 1.19.4 (2026-06-21)
 -------------------
 
