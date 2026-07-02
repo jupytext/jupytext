@@ -50,12 +50,15 @@ def marimo_py_to_notebook(text):
     raise_if_marimo_is_not_available()
 
     # On Windows, NamedTemporaryFile cannot be reopened with open,
-    # so we keep the file names and close the files
-    tmp_py_file = tempfile.NamedTemporaryFile(suffix=".py")
+    # so we keep the file names and close the files. We pass delete=False
+    # so the files created with 0600 permissions are reused on reopen,
+    # instead of being deleted and recreated through a name that an
+    # attacker could point at another file in the meantime.
+    tmp_py_file = tempfile.NamedTemporaryFile(suffix=".py", delete=False)
     tmp_py_file_name = tmp_py_file.name
     tmp_py_file.close()
 
-    tmp_ipynb_file = tempfile.NamedTemporaryFile(suffix=".ipynb")
+    tmp_ipynb_file = tempfile.NamedTemporaryFile(suffix=".ipynb", delete=False)
     tmp_ipynb_file_name = tmp_ipynb_file.name
     tmp_ipynb_file.close()
 
