@@ -1,6 +1,10 @@
 # Stop everything if one command fails
 set -e
 
+# Default image of the Binder has outdated JupyterLab and notebooks
+# We need to upgrade them before installing jupytext
+pip install -U jupyterlab notebook
+
 # Install from sources
 # NB: If you want to use Jupytext on your binder, don't install it from source,
 # just add "jupytext" to your "binder/requirements.txt" instead.
