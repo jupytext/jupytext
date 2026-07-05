@@ -29,8 +29,8 @@
   ],
   "scripts": {
     "build": "jlpm run build:lib && jlpm run build:labextension:dev && jlpm run copy:extensioncfgfile",
-    "build:labextension": "jupyter labextension build .",
-    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build:labextension": "jupyter-builder build .",
+    "build:labextension:dev": "jupyter-builder build --development True .",
     "build:lib": "tsc",
     "build:prod": "jlpm run build:lib && jlpm run build:labextension && jlpm run copy:extensioncfgfile",
     "copy:extensioncfgfile": "cp ../../install.json ../../jupyterlab_jupytext/labextension",
@@ -40,7 +40,7 @@
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
     "install:extension": "python ../../scripts/install_extension.py",
     "watch": "run-p watch:src watch:labextension",
-    "watch:labextension": "jupyter labextension watch .",
+    "watch:labextension": "jupyter-builder watch .",
     "watch:src": "tsc -w"
   },
   "jupyterlab": {
@@ -84,7 +84,8 @@
     "jupyterlab-rise": "^0.43.1"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.4.9",
+    "@jupyter/builder": "^1.0.0",
+    "@types/node": "^26.1.0",
     "npm-run-all": "^4.1.5",
     "rimraf": "^6.0.1",
     "typescript": "~6.0.3"

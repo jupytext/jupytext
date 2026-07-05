@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.5.0", "hatch-jupyter-builder>=0.5", "jupyterlab>=4"]
+requires = ["hatchling>=1.5.0", "hatch-jupyter-builder>=0.5", "jupyter-builder>=1.0.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -145,7 +145,7 @@ enable-by-default = false
 # extension. To install the extension, it is required to run
 # `HATCH_BUILD_HOOKS_ENABLE=true pip install .`
 # Runtime dependency for this build hook
-# We need jupyterlab as build time depdendency to get jlpm (wrapper around yarn)
+# We need jupyter-builder as build time depdendency to get jlpm (wrapper around yarn)
 # UPDATE 20260118: Based on https://github.com/jupyterlab/hatch-jupyter-builder/issues/146
 # we moved all the dependencies to build system dependencies
 # We use npm_builder to build the jupyterlab extension
