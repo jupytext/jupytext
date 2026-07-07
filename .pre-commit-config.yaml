@@ -7,6 +7,10 @@
 # Run the hooks on all files with
 # 'pre-commit run --all'
 
+# The 'lint-extension' hook below relies on jlpm/node, which are provided
+# by the pixi environment. Run git commit through pixi so they are on PATH,
+# e.g. 'pixi run git commit'
+
 # NB: In this config we exclude the example and tests notebooks
 # from the code hooks (black, flake8, etc) as we want to keep
 # the text representation of the test notebooks unchanged, plus
@@ -50,3 +54,10 @@ repos:
         language: system
         pass_filenames: false
         files: ^(pyproject\.toml|pixi\.toml|pixi\.lock|src/jupytext/version\.py)$
+
+      - id: lint-extension
+        name: Lint the JupyterLab extension (prettier, eslint, stylelint)
+        entry: bash -c 'cd jupyterlab && jlpm && jlpm run lint'
+        language: system
+        pass_filenames: false
+        files: ^jupyterlab/(packages/.*\.(ts|tsx|js|jsx|css)|package\.json|tsconfig.*\.json)$

@@ -26,29 +26,3 @@ jobs:
           activate-environment: true
 
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
-
-  lint-extension:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@95d85449e4f3f352e261221f6529f8ed307f5728 # v1
-        with:
-          python_version: "3.x"
-
-      # Current repo organization will not permit to set up pre-commit config for
-      # TS lint related packages due to absence of package.json in the top level
-      # repo. So we run lint step separately here
-      - name: Lint the extension
-        run: |
-          # Install JupyterLab in an isolated env to get jlpm
-          pip install jupyterlab>=4
-
-          # Install lint deps and lint extension
-          cd jupyterlab/
-          jlpm
-          jlpm run lint:check
