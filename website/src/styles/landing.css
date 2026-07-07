@@ -419,6 +419,14 @@ p.lede {
 	font-size: 0.97rem;
 	margin: 0.5rem 0 0;
 }
+.lp-grid-2 {
+	grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width: 640px) {
+	.lp-grid-2 {
+		grid-template-columns: 1fr;
+	}
+}
 
 /* ---------- AI band ---------- */
 .lp-ai {
@@ -642,34 +650,6 @@ p.lede {
 }
 .lp-works-strip a:hover { color: var(--jt-orange); }
 .lp-works-dot { color: var(--lp-border); }
-
-/* ---------- Integrations ---------- */
-.lp-int {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 1rem;
-}
-.lp-int a {
-	display: flex;
-	flex-direction: column;
-	gap: 0.35rem;
-	text-decoration: none;
-	color: inherit;
-	background: var(--lp-panel);
-	border: 1px solid var(--lp-border);
-	border-radius: 12px;
-	padding: 1.2rem;
-}
-.lp-int a:hover {
-	border-color: var(--jt-orange);
-}
-.lp-int strong {
-	font-size: 1rem;
-}
-.lp-int span {
-	color: var(--lp-text-dim);
-	font-size: 0.88rem;
-}
 
 /* ---------- Stats ---------- */
 .lp-stats {
