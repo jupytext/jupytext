@@ -292,6 +292,7 @@ pre-commit = ">=4.3"
 nodejs = ">=20"
 hatch = "*"
 pip = "*"
+jupyter-builder = ">=1.1.0,<2"
 
 [tool.pixi.feature.docs.dependencies]
 sphinx = "*"
@@ -308,6 +309,7 @@ pandoc = ">=3.0,<3.10"  # 1545
 python = "3.13.*"
 nodejs = ">=20"
 jupyterlab = ">=4.0"
+jupyter-builder = ">=1.1.0,<2"
 
 [tool.pixi.feature.build.tasks]
 build-labextension = { cmd = "jlpm install && jlpm run build:prod", cwd = "jupyterlab" }
