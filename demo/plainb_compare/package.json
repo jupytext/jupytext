@@ -1,0 +1,9 @@
+{
+  "name": "plainb-compare-bridge",
+  "private": true,
+  "description": "Minimal Node CLI used by the 'Comparing Jupytext and jupyter-plainb' demo notebook to invoke the plainb parsers.",
+  "type": "module",
+  "dependencies": {
+    "plainb": "1.10.0"
+  }
+}
