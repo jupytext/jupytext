@@ -60,6 +60,23 @@ def test_paired_path_cannot_escape_notebook_tree(formats):
         paired_paths(nb_file, "notebooks///ipynb", formats)
 
 
+@pytest.mark.parametrize(
+    "formats",
+    [
+        # On Windows a backslash is also a path separator, so '..' or a root written with
+        # backslashes must not slip past the containment check (the notebook path itself
+        # uses '/', as the contents manager always does).
+        "notebooks///ipynb,..\\..\\..\\..\\tmp\\escape///py:light",
+        "notebooks///ipynb,\\tmp\\escape///py:light",
+    ],
+)
+def test_paired_path_cannot_escape_notebook_tree_windows(formats):
+    nb_file = "notebooks/nb.ipynb"
+    with mock.patch("os.path.sep", "\\"):
+        with pytest.raises(InconsistentPath, match="escapes the directory"):
+            paired_paths(nb_file, "notebooks///ipynb", formats)
+
+
 def test_base_path_in_tree_from_root():
     fmt = long_form_one_format("scripts///py")
     assert base_path("scripts/subfolder/test.py", fmt=fmt) == "//subfolder/test"
