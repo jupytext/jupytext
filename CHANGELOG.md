@@ -1,14 +1,21 @@
 Jupytext ChangeLog
 ==================
 
-1.19.5.dev0 (2026-mm-dd)
+1.19.5 (2026-07-21)
 -------------------
 
 **Changed**
-- Harden the github action ([#1569](https://github.com/jupytext/jupytext/pull/1569)). Thanks to [Peyton Murray](https://github.com/peytondmurray) for this PR!
+- Harden the github action ([#1569](https://github.com/jupytext/jupytext/pull/1569)). Thanks to [Peyton Murray](https://github.com/peytondmurray) for this PR
+- The JupyterLab extension is now built with `jupyter-builder` - Thanks to [Mahendra Paipuri](https://github.com/mahendrapaipuri) for this PR ([#1590](https://github.com/jupytext/jupytext/pull/1590))
+- `zizmor` and `pre-commit` are now required to pass before any other CI job runs, and the extension lint is now part of `pre-commit` ([#1594](https://github.com/jupytext/jupytext/pull/1594))
+- Enabled TypeScript strict null checks in the JupyterLab extension - Thanks to [Michał Krassowski](https://github.com/krassowski) for this PR ([#1586](https://github.com/jupytext/jupytext/pull/1586))
 
 **Fixed**
-- Detecting IPython help/shell commands no longer takes quadratic time on lines made of whitespace ([#1582](https://github.com/jupytext/jupytext/pull/1582))
+- Detecting IPython help/shell commands no longer takes quadratic time on lines made of whitespace - Thanks to [Naveed](https://github.com/nvxbug) for this PR ([#1582](https://github.com/jupytext/jupytext/pull/1582))
+- Fixed unguarded access to the `languageInfo.extensions` array, which could still make Jupytext show notebook icons for Python files when the kernel metadata was incomplete - Thanks to [Michał Krassowski](https://github.com/krassowski) for this PR ([#1584](https://github.com/jupytext/jupytext/pull/1584))
+
+**Security**
+- `marimo_py_to_notebook` now reuses its secure (0600, `mkstemp`-backed) temporary files instead of closing and reopening them by name, which removed the safe permissions and left a window for a symlink attack on shared machines ([#1568](https://github.com/jupytext/jupytext/pull/1568)). Thanks to [Naveed](https://github.com/nvxbug) for reporting and fixing this!
 
 1.19.4 (2026-06-21)
 -------------------
