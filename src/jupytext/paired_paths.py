@@ -66,25 +66,32 @@ def separator(path):
     return "/"
 
 
-def _path_reach(path, sep):
+def _path_reach(path):
     """Describe how far a resolved path reaches outside its starting directory.
 
     Return an ``(anchor, climb)`` pair where ``anchor`` is the leading root the path
-    is tied to (empty for a path relative to the current directory, the separator for
-    an absolute path, or a Windows drive) and ``climb`` is the number of leading '..'
-    segments that survive after resolving '.' and normal segments, i.e. how many
-    levels the path escapes above that anchor.
+    is tied to (empty for a path relative to the current directory, ``'/'`` for an
+    absolute path, or a lower-cased Windows drive) and ``climb`` is the number of
+    leading '..' segments that survive after resolving '.' and normal segments, i.e.
+    how many levels the path escapes above that anchor.
     """
-    if path.startswith(sep):
-        anchor = sep
+    # On Windows both '/' and '\' separate path components, and a single path may mix
+    # them (the contents manager always uses '/'). Normalize to '/' so that a '..' or a
+    # root that is written with a backslash still counts - otherwise crafted 'formats'
+    # metadata could escape the tree on Windows by using the separator we don't split on.
+    if os.path.sep == "\\":
+        path = path.replace("\\", "/")
+
+    if path.startswith("/"):
+        anchor = "/"
     elif len(path) >= 2 and path[1] == ":":
-        anchor = path[:2]
+        anchor = path[:2].lower()
     else:
         anchor = ""
 
     climb = 0
     depth = 0
-    for part in path.split(sep):
+    for part in path.split("/"):
         if part in ("", "."):
             continue
         if part == "..":
@@ -364,10 +371,9 @@ def paired_paths(main_path, fmt, formats):
     # format whose prefix (e.g. '../../../' or an absolute path) makes a paired path
     # reach further up, or to a different root, than the notebook itself - otherwise
     # untrusted 'formats' metadata could drive writes outside the working tree.
-    sep = separator(main_path)
-    main_anchor, main_climb = _path_reach(main_path, sep)
+    main_anchor, main_climb = _path_reach(main_path)
     for alt_path in paths:
-        anchor, climb = _path_reach(alt_path, sep)
+        anchor, climb = _path_reach(alt_path)
         if anchor != main_anchor or climb > main_climb:
             raise InconsistentPath(
                 f"Paired path '{alt_path}' escapes the directory of the notebook '{main_path}'. "
