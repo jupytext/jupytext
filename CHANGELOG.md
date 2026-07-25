@@ -1,6 +1,12 @@
 Jupytext ChangeLog
 ==================
 
+1.19.6-dev
+----------
+
+**Fixed**
+- Cells in the `percent` format no longer lose a trailing line made of whitespace ([#1599](https://github.com/mwouts/jupytext/issues/1599))
+
 1.19.5 (2026-07-21)
 -------------------
 
