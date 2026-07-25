@@ -1,6 +1,12 @@
 Jupytext ChangeLog
 ==================
 
+1.19.6-dev
+----------
+
+**Fixed**
+- Mermaid `%%` comments inside a markdown cell are no longer mistaken for `py:percent` cell markers ([#1533](https://github.com/mwouts/jupytext/issues/1533))
+
 1.19.5 (2026-07-21)
 -------------------
 

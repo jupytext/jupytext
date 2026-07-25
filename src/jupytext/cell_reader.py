@@ -747,8 +747,14 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
         self.default_language = default_language or script["language"]
         self.comment = script["comment"]
         self.comment_suffix = script.get("comment_suffix", "")
-        self.start_code_re = re.compile(rf"^\s*{re.escape(self.comment)}\s*%%(%*)\s(.*)$")
-        self.alternative_start_code_re = re.compile(rf"^\s*{re.escape(self.comment)}\s*(%%|<codecell>|In\[[0-9 ]*\]:?)\s*$")
+        # Only a single optional space is allowed between the comment char and '%%':
+        # jupytext never writes more, and being permissive here makes commented-out
+        # content that merely contains '%%' (e.g. mermaid comments inside a markdown
+        # cell) look like a cell marker on the next read (#1533).
+        self.start_code_re = re.compile(rf"^\s*{re.escape(self.comment)} ?%%(%*)\s(.*)$")
+        self.alternative_start_code_re = re.compile(
+            rf"^\s*{re.escape(self.comment)} ?(%%|<codecell>|In\[[0-9 ]*\]:?)\s*$"
+        )
         self.explicit_soc = True
 
     def metadata_and_language_from_option_line(self, line):

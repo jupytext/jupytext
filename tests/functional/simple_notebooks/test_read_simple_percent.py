@@ -606,3 +606,20 @@ fmt.Printf("Hello World!")
     nb = jupytext.reads(go_percent, fmt="go:percent")
     go = jupytext.writes(nb, fmt="go:percent")
     compare(go, go_percent)
+
+
+def test_mermaid_comments_do_not_split_markdown_cell(
+    text="""# %% [markdown]
+# ```mermaid
+# stateDiagram-v2
+#     %% == States ==
+#     Idle --> Running
+# ```
+""",
+):
+    """Mermaid '%%' comments in a markdown cell are not cell markers. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert len(nb.cells) == 1
+    (cell,) = nb.cells
+    assert cell.cell_type == "markdown", cell.cell_type
+    compare(jupytext.writes(nb, fmt="py:percent"), text)
