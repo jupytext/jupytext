@@ -28,6 +28,7 @@ from .pep8 import pep8_lines_between_cells
 from .stringparser import StringParser
 
 _BLANK_LINE = re.compile(r"^\s*$")
+_EMPTY_LINE = re.compile(r"^$")
 _PY_INDENTED = re.compile(r"^\s")
 
 
@@ -809,7 +810,9 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
 
         if last_two_lines_blank(lines[:next_cell]):
             return next_cell - 2, next_cell, False
-        if next_cell > 0 and _BLANK_LINE.match(lines[next_cell - 1]):
+        # Only an empty line separates two cells. A line that contains
+        # whitespace is part of the cell content and must be preserved (#1599)
+        if next_cell > 0 and _EMPTY_LINE.match(lines[next_cell - 1]):
             return next_cell - 1, next_cell, False
         return next_cell, next_cell, False
 
