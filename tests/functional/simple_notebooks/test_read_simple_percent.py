@@ -623,3 +623,23 @@ def test_mermaid_comments_do_not_split_markdown_cell(
     (cell,) = nb.cells
     assert cell.cell_type == "markdown", cell.cell_type
     compare(jupytext.writes(nb, fmt="py:percent"), text)
+
+
+def test_mermaid_comments_at_any_indent_do_not_split_markdown_cell(
+    text="""# %% [markdown]
+# Some diagram
+#
+# ```mermaid
+# %% not indented at all
+# stateDiagram-v2
+#       %% deeply indented
+#     Idle --> Running
+# ```
+""",
+):
+    """Mermaid '%%' comments are ignored whatever their indent. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert len(nb.cells) == 1
+    (cell,) = nb.cells
+    assert cell.cell_type == "markdown", cell.cell_type
+    compare(jupytext.writes(nb, fmt="py:percent"), text)
