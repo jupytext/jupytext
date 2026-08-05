@@ -28,6 +28,8 @@ from .pep8 import pep8_lines_between_cells
 from .stringparser import StringParser
 
 _BLANK_LINE = re.compile(r"^\s*$")
+# Opening or closing line of a markdown fenced code block, e.g. '```mermaid' or '~~~'
+_CODE_FENCE = re.compile(r"^\s*(```|~~~)")
 _PY_INDENTED = re.compile(r"^\s")
 
 
@@ -747,8 +749,12 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
         self.default_language = default_language or script["language"]
         self.comment = script["comment"]
         self.comment_suffix = script.get("comment_suffix", "")
-        self.start_code_re = re.compile(rf"^\s*{re.escape(self.comment)}\s*%%(%*)\s(.*)$")
-        self.alternative_start_code_re = re.compile(rf"^\s*{re.escape(self.comment)}\s*(%%|<codecell>|In\[[0-9 ]*\]:?)\s*$")
+        # Only a single optional space is allowed between the comment char and '%%':
+        # jupytext never writes more, and being permissive here makes commented-out
+        # content that merely contains '%%' (e.g. mermaid comments inside a markdown
+        # cell) look like a cell marker on the next read (#1533).
+        self.start_code_re = re.compile(rf"^\s*{re.escape(self.comment)} ?%%(%*)\s(.*)$")
+        self.alternative_start_code_re = re.compile(rf"^\s*{re.escape(self.comment)} ?(%%|<codecell>|In\[[0-9 ]*\]:?)\s*$")
         self.explicit_soc = True
 
     def metadata_and_language_from_option_line(self, line):
@@ -797,12 +803,24 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
 
         next_cell = len(lines)
         parser = StringParser(self.language or self.default_language)
+        in_fenced_code_block = False
         for i, line in enumerate(lines):
             if parser.is_quoted():
                 parser.read_line(line)
                 continue
 
             parser.read_line(line)
+
+            if self.cell_type in ("markdown", "raw"):
+                # Inside a markdown (or raw) cell, a fenced code block may contain
+                # anything - including '%%' comments, e.g. in mermaid diagrams (#1533).
+                # We don't look for cell markers until the block is closed.
+                if _CODE_FENCE.match(uncomment([line], self.comment, self.comment_suffix)[0]):
+                    in_fenced_code_block = not in_fenced_code_block
+                    continue
+                if in_fenced_code_block:
+                    continue
+
             if i > 0 and (self.start_code_re.match(line) or self.alternative_start_code_re.match(line)):
                 next_cell = i
                 break
