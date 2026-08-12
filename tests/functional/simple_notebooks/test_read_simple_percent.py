@@ -606,3 +606,11 @@ fmt.Printf("Hello World!")
     nb = jupytext.reads(go_percent, fmt="go:percent")
     go = jupytext.writes(nb, fmt="go:percent")
     compare(go, go_percent)
+
+
+def test_trailing_whitespace_only_line_is_preserved():
+    """A trailing line made of spaces belongs to the cell (#1599)"""
+    source = 'print("hello")\n# the following line has 4 white spaces.\n    '
+    nb = jupytext.reads("# %%\n" + source + "\n", fmt="py:percent")
+    assert len(nb.cells) == 1
+    compare(nb.cells[0].source, source)
