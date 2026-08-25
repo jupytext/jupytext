@@ -35,6 +35,8 @@ _JUPYTER_LANGUAGES = [
     "wolfram language",
 ]
 
+_NEED_TRAILING_WHITESPACE_LANGUAGES = ["q"]
+
 # Supported file extensions (and languages)
 # Please add more languages here (and add a few tests) - see contributing.md
 _SCRIPT_EXTENSIONS = {
@@ -218,10 +220,10 @@ def cell_language(source, default_language, custom_cell_magics):
     return None, None
 
 
-def comment_lines(lines, prefix, suffix=""):
+def comment_lines(lines, prefix, suffix="", empty_line_whitespace=""):
     """Return commented lines"""
     if not prefix:
         return lines
     if not suffix:
-        return [prefix + " " + line if line else prefix for line in lines]
+        return [prefix + " " + line if line else prefix + empty_line_whitespace for line in lines]
     return [prefix + " " + line + " " + suffix if line else prefix + " " + suffix for line in lines]
