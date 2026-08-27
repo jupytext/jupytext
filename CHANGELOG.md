@@ -1,7 +1,7 @@
 Jupytext ChangeLog
 ==================
 
-1.19.6 (2026-mm-dd)
+1.19.6.dev0 (development)
 ------------------------
 
 **Fixed**
