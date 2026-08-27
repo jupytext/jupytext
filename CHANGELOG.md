@@ -1,6 +1,12 @@
 Jupytext ChangeLog
 ==================
 
+1.19.6 (2026-mm-dd)
+------------------------
+
+**Fixed**
+- Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default" ([#1632](https://github.com/jupytext/jupytext/pull/1632))
+
 1.19.5 (2026-07-21)
 -------------------
 
