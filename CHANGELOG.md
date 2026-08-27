@@ -2,7 +2,7 @@ Jupytext ChangeLog
 ==================
 
 1.19.6.dev0 (development)
-------------------------
+-------------------------
 
 **Fixed**
 - Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default" ([#1632](https://github.com/jupytext/jupytext/pull/1632))
