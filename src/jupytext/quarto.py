@@ -1,7 +1,6 @@
 """Jupyter notebook to Quarto Markdown and back, using 'quarto convert'"""
 
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -76,19 +75,20 @@ def quarto_version():
 def qmd_to_notebook(text):
     """Convert a Quarto Markdown notebook to a Jupyter notebook"""
     raise_if_quarto_is_not_available()
-    tmp_qmd_file = tempfile.NamedTemporaryFile(delete=False, suffix=".qmd")
-    tmp_qmd_file.write(text.encode("utf-8"))
-    tmp_qmd_file.close()
+    # Quarto derives the name of the file it writes from the name of the file it reads,
+    # so we give it a directory of its own rather than let it create that output file
+    # in the shared temporary directory
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_qmd_file = tempfile.NamedTemporaryFile(delete=False, suffix=".qmd", dir=tmp_dir)
+        tmp_qmd_file.write(text.encode("utf-8"))
+        tmp_qmd_file.close()
 
-    quarto("convert --log-level warning", tmp_qmd_file.name)
+        quarto("convert --log-level warning", tmp_qmd_file.name)
 
-    tmp_ipynb_file_name = tmp_qmd_file.name[:-4] + ".ipynb"
+        tmp_ipynb_file_name = tmp_qmd_file.name[:-4] + ".ipynb"
 
-    with open(tmp_ipynb_file_name, encoding="utf-8") as ipynb_file:
-        notebook = ipynb_reads(ipynb_file.read(), as_version=4)
-
-    os.unlink(tmp_qmd_file.name)
-    os.unlink(tmp_ipynb_file_name)
+        with open(tmp_ipynb_file_name, encoding="utf-8") as ipynb_file:
+            notebook = ipynb_reads(ipynb_file.read(), as_version=4)
 
     # Recent version of Quarto duplicate the notebook metadata in a YAML header
     # If we find such a header, we remove it if it is identical to the notebook metadata
@@ -146,18 +146,16 @@ def qmd_to_notebook(text):
 def notebook_to_qmd(notebook):
     """Convert a Jupyter notebook to its Quarto Markdown representation"""
     raise_if_quarto_is_not_available()
-    tmp_ipynb_file = tempfile.NamedTemporaryFile(delete=False, suffix=".ipynb")
-    tmp_ipynb_file.write(ipynb_writes(notebook).encode("utf-8"))
-    tmp_ipynb_file.close()
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_ipynb_file = tempfile.NamedTemporaryFile(delete=False, suffix=".ipynb", dir=tmp_dir)
+        tmp_ipynb_file.write(ipynb_writes(notebook).encode("utf-8"))
+        tmp_ipynb_file.close()
 
-    quarto("convert --log-level warning", tmp_ipynb_file.name)
+        quarto("convert --log-level warning", tmp_ipynb_file.name)
 
-    tmp_qmd_file_name = tmp_ipynb_file.name[:-6] + ".qmd"
+        tmp_qmd_file_name = tmp_ipynb_file.name[:-6] + ".qmd"
 
-    with open(tmp_qmd_file_name, encoding="utf-8") as qmd_file:
-        text = qmd_file.read()
-
-    os.unlink(tmp_ipynb_file.name)
-    os.unlink(tmp_qmd_file_name)
+        with open(tmp_qmd_file_name, encoding="utf-8") as qmd_file:
+            text = qmd_file.read()
 
     return "\n".join(text.splitlines())

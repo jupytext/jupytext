@@ -1,6 +1,12 @@
 Jupytext ChangeLog
 ==================
 
+1.19.6.dev0 (2026-mm-dd)
+------------------------
+
+**Security**
+- The Quarto conversions now run in a private temporary directory, so that the output file that `quarto convert` names after its input can no longer be pre-created as a symlink by another user of the machine ([#1615](https://github.com/jupytext/jupytext/pull/1615))
+
 1.19.5 (2026-07-21)
 -------------------
 
