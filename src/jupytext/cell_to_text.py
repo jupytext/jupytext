@@ -13,7 +13,7 @@ from .cell_metadata import (
 )
 from .cell_reader import LightScriptCellReader, MarkdownCellReader, RMarkdownCellReader
 from .doxygen import markdown_to_doxygen
-from .languages import _SCRIPT_EXTENSIONS, cell_language, comment_lines, same_language
+from .languages import _SCRIPT_EXTENSIONS, cell_language, comment_lines, same_language, _NO_EMPTY_COMMENT_LANGUAGES
 from .magics import comment_magic, escape_code_start, need_explicit_marker
 from .metadata_filter import filter_metadata
 from .pep8 import pep8_lines_between_cells
@@ -82,6 +82,7 @@ class BaseCellExporter:
         self.default_language = default_language
         self.comment = _SCRIPT_EXTENSIONS.get(self.ext, {}).get("comment", "#")
         self.comment_suffix = _SCRIPT_EXTENSIONS.get(self.ext, {}).get("comment_suffix", "")
+        self.no_empty_comment = self.language in _NO_EMPTY_COMMENT_LANGUAGES
         self.comment_magics = self.fmt.get("comment_magics", self.default_comment_magics)
         self.cell_metadata_json = self.fmt.get("cell_metadata_json", False)
         self.use_runtools = self.fmt.get("use_runtools", False)
@@ -179,7 +180,7 @@ class BaseCellExporter:
                 explicitly_code=self.cell_type == "code",
             )
 
-        return comment_lines(source, self.comment, self.comment_suffix)
+        return comment_lines(source, self.comment, self.comment_suffix, self.no_empty_comment)
 
     def code_to_text(self):
         """Return the text representation of this cell as a code cell"""
@@ -478,9 +479,9 @@ class DoublePercentCellExporter(BaseCellExporter):  # pylint: disable=W0223
                     indent = left_space.groups()[0]
 
         if options.startswith("%") or not options:
-            lines = comment_lines(["%%" + options], indent + self.comment, self.comment_suffix)
+            lines = comment_lines(["%%" + options], indent + self.comment, self.comment_suffix, self.no_empty_comment)
         else:
-            lines = comment_lines(["%% " + options], indent + self.comment, self.comment_suffix)
+            lines = comment_lines(["%% " + options], indent + self.comment, self.comment_suffix, self.no_empty_comment)
 
         if self.is_code() and active:
             source = copy(self.source)
@@ -538,5 +539,5 @@ class SphinxGalleryCellExporter(BaseCellExporter):  # pylint: disable=W0223
             return [cell_marker] + self.source + [cell_marker]
 
         return [(cell_marker if cell_marker.startswith("#" * 20) else self.default_cell_marker)] + comment_lines(
-            self.source, self.comment, self.comment_suffix
+            self.source, self.comment, self.comment_suffix, self.no_empty_comment
         )
