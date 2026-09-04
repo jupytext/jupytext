@@ -487,6 +487,9 @@ def jupytext(args=None, *, notary=None):
         else:
             notebooks.append(pattern)
 
+    if os.sep == "\\":
+        notebooks = [path.replace("\\", "/") for path in notebooks]
+
     # Count how many files have round-trip issues when testing
     exit_code = 0
 
