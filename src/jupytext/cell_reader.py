@@ -605,8 +605,10 @@ class LightScriptCellReader(ScriptCellReader):
         self.explicit_end_marker_required = False
         if fmt and fmt.get("format_name", "light") == "light" and "cell_markers" in fmt and fmt["cell_markers"] != "+,-":
             self.cell_marker_start, self.cell_marker_end = fmt["cell_markers"].split(",", 1)
-            self.start_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + self.cell_marker_start + r"(.*)$")
-            self.end_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + self.cell_marker_end + r"\s*$")
+            self.start_code_re = re.compile(
+                "^" + re.escape(self.comment) + r"\s*" + re.escape(self.cell_marker_start) + r"(.*)$"
+            )
+            self.end_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + re.escape(self.cell_marker_end) + r"\s*$")
         else:
             self.start_code_re = re.compile("^" + re.escape(self.comment) + r"\s*\+(.*)$")
 
@@ -681,7 +683,7 @@ class LightScriptCellReader(ScriptCellReader):
             self.end_code_re = None
         elif not self.cell_marker_end:
             end_of_cell = self.metadata.get("endofcell", "-")
-            self.end_code_re = re.compile("^" + re.escape(self.comment) + " " + end_of_cell + r"\s*$")
+            self.end_code_re = re.compile("^" + re.escape(self.comment) + " " + re.escape(end_of_cell) + r"\s*$")
 
         return self.find_region_end(lines)
 
