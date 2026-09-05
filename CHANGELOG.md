@@ -23,6 +23,9 @@ Jupytext ChangeLog
 **Security**
 - `marimo_py_to_notebook` now reuses its secure (0600, `mkstemp`-backed) temporary files instead of closing and reopening them by name, which removed the safe permissions and left a window for a symlink attack on shared machines ([#1568](https://github.com/jupytext/jupytext/pull/1568)). Thanks to [Naveed](https://github.com/nvxbug) for reporting and fixing this!
 
+**Security**
+- Paired paths can no longer be written outside the notebook's directory tree. A `formats` entry read from notebook metadata, e.g. `../../../../etc///py` or an absolute path, is now rejected instead of driving a file write above the working tree ([#1588](https://github.com/jupytext/jupytext/pull/1588)).
+
 1.19.4 (2026-06-21)
 -------------------
 
