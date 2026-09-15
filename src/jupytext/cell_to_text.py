@@ -455,6 +455,21 @@ class DoublePercentCellExporter(BaseCellExporter):  # pylint: disable=W0223
         BaseCellExporter.__init__(self, *args, **kwargs)
         self.cell_markers = self.fmt.get("cell_markers")
 
+    def markdown_to_text(self, source):
+        """Optionally keep paragraph breaks as empty lines in Python percent cells."""
+        text = super().markdown_to_text(source)
+        if (
+            self.ext == ".py"
+            and self.fmt.get("format_name") == "percent"
+            and self.cell_type == "markdown"
+            and self.fmt.get("markdown_blank_lines", False)
+        ):
+            # Keep a final commented line to distinguish cell content from spacing.
+            for i, line in enumerate(source[:-1]):
+                if not line and text[i] == self.comment:
+                    text[i] = ""
+        return text
+
     def cell_to_text(self):
         """Return the text representation for the cell"""
         # Go notebooks have '%%' or '%% -' magic commands that need to be escaped
