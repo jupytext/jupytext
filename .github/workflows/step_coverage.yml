@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@94b14ddfbdd1ed651e9f9343ae2409ab5c73a6a8 # v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1
         with:
           python_version: 3.x
 
@@ -39,7 +39,7 @@ jobs:
         run: pytest tests/${{ matrix.coverage }} -n logical --cov --cov-report=xml
 
       - name: Upload the coverage
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
+        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v7
         with:
           flags: ${{ matrix.coverage }}
           fail_ci_if_error: true

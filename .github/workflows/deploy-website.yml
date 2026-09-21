@@ -24,7 +24,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build with Astro
-        uses: withastro/action@e84f40bd8d2caa9e768ec82ad30dd81f0b280853 # v6
+        uses: withastro/action@3eafd002e65cc31b4f0eae0bb05450d521562247 # v6
         with:
           path: website
           node-version: 24
