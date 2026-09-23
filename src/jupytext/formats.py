@@ -399,7 +399,7 @@ def divine_format(text):
     try:
         nbformat.reads(text, as_version=4)
         return "ipynb"
-    except nbformat.reader.NotJSONError:
+    except (AttributeError, nbformat.reader.NotJSONError):
         pass
 
     lines = text.splitlines()
