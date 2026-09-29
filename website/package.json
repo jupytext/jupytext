@@ -13,8 +13,8 @@
     "link-check": "linkinator ./dist --recurse --silent"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.42.0",
-    "astro": "^7.3.2",
+    "@astrojs/starlight": "^0.42.2",
+    "astro": "^7.3.3",
     "sharp": "^0.35.3"
   },
   "devDependencies": {
