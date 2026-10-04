@@ -274,6 +274,7 @@ def full_path(base, fmt):
 
         # Local path separator (\\ on windows)
         sep = separator(base)
+        prefix_root = prefix_root.replace("/", sep)
         prefix_dir = prefix_dir.replace("/", sep)
 
         if (prefix_root != "") != ("//" in base):
