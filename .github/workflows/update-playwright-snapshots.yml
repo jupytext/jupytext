@@ -43,7 +43,7 @@ jobs:
           pip uninstall jupyter-fs -y
 
       - name: Update snapshots
-        uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@b48fcdb87e70c45789abd80d4042b06641e47b46 # v1
+        uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@21b1cac622018fd37ec13a1c8081da814e10d94e # v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Test folder within your repository

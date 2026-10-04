@@ -54,7 +54,6 @@ import {
   CommandIDs,
   IFileTypeData,
   JupytextIcon,
-  AUTO_LANGUAGE_FILETYPE_DATA,
 } from './tokens';
 
 import {
@@ -379,15 +378,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       );
 
     // Register Jupytext text notebooks file types
-    registerFileTypes(
-      availableKernelLanguages,
-      [
-        ...[...JUPYTEXT_PAIR_COMMANDS_FILETYPE_DATA.values()].flat(),
-        ...[...AUTO_LANGUAGE_FILETYPE_DATA.values()].flat(),
-      ],
-      docRegistry,
-      trans,
-    );
+    registerFileTypes(availableKernelLanguages, docRegistry, trans);
 
     // Get all kernel file types to add to Jupytext factory
     const kernelLanguageNames: string[] = [];

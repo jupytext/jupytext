@@ -1,7 +1,6 @@
 {
     "name": "jupyterlab-jupytext-extensions",
     "version": "1.0.0",
-    "private": true,
     "files": [],
     "workspaces": [
         "packages/*"
@@ -120,5 +119,6 @@
             "selector-no-vendor-prefix": null,
             "value-no-vendor-prefix": null
         }
-    }
+    },
+    "packageManager": "yarn@3.5.0"
 }

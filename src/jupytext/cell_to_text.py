@@ -369,8 +369,10 @@ class LightScriptCellExporter(BaseCellExporter):
         if self.metadata:
             return True
         if self.cell_marker_start:
-            start_code_re = re.compile("^" + self.comment + r"\s*" + self.cell_marker_start + r"\s*(.*)$")
-            end_code_re = re.compile("^" + self.comment + r"\s*" + self.cell_marker_end + r"\s*$")
+            start_code_re = re.compile(
+                "^" + re.escape(self.comment) + r"\s*" + re.escape(self.cell_marker_start) + r"\s*(.*)$"
+            )
+            end_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + re.escape(self.cell_marker_end) + r"\s*$")
             if start_code_re.match(source[0]) or end_code_re.match(source[0]):
                 return False
 

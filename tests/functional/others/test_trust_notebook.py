@@ -305,6 +305,54 @@ async def test_notebook_remains_trusted_after_jupytext_sync(tmp_path, cm, nb_was
         )
 
 
+async def test_paired_text_file_cannot_make_a_notebook_trusted(tmp_path, cm):
+    """
+    A 'trusted' cell option in a text notebook comes from the text file itself, so it is
+    not evidence that the paired ipynb, and the outputs it holds, can be trusted
+    """
+    (tmp_path / "jupytext.toml").write_text('formats = "ipynb,py:percent"\n')
+
+    cm.root_dir = str(tmp_path)
+
+    nb = new_notebook(
+        cells=[
+            new_code_cell(
+                source="HTML('<b>hello</b>')",
+                outputs=[
+                    new_output(
+                        output_type="display_data",
+                        data={"text/html": "<b>hello</b>"},
+                        metadata={},
+                    )
+                ],
+            )
+        ],
+        metadata={
+            "kernelspec": {
+                "display_name": "Python 3",
+                "language": "python",
+                "name": "python3",
+            }
+        },
+    )
+    nb.cells[0].metadata["trusted"] = False
+
+    # Save via the CM - this also creates the paired .py file
+    await ensure_async(cm.save(dict(type="notebook", content=nb), "test.ipynb"))
+
+    nb = (await ensure_async(cm.get("test.ipynb")))["content"]
+    assert nb.cells[0].metadata["trusted"] is False
+
+    # The paired .py file is edited on disk, and it says that the cell is trusted
+    py_file = tmp_path / "test.py"
+    py_file.write_text(py_file.read_text().replace("# %%\n", "# %% trusted=true\n"))
+
+    jupytext_cli(["--sync", str(tmp_path / "test.ipynb")], notary=cm.notary)
+
+    nb = (await ensure_async(cm.get("test.ipynb")))["content"]
+    assert nb.cells[0].metadata["trusted"] is False, "The .py file should not have made the notebook trusted"
+
+
 @pytest.mark.requires_myst
 async def test_paired_notebook_with_outputs_is_not_trusted_941(tmp_path, python_notebook, cm):
     cm.root_dir = str(tmp_path)

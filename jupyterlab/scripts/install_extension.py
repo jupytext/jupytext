@@ -12,7 +12,7 @@
 import os
 
 import jupyterlab_jupytext
-from jupyter_builder.federated_labextensions import build_labextension, develop_labextension
+from jupyter_builder.federated_extensions import build_labextension, develop_labextension
 
 
 def main():

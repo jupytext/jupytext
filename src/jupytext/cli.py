@@ -542,10 +542,14 @@ def jupytext_single_file(nb_file, args, log, notary):
     config = load_jupytext_config(os.path.abspath(nb_file))
 
     def _read(path, fmt=None):
-        """Read a notebook; mark cells trusted when the signature is valid."""
+        """Read a notebook; mark the cells trusted when the signature is valid, and drop
+        the trust claims that the file makes about itself when it is not."""
         nb = read(path, fmt=fmt, config=config)
         if notary.check_signature(nb):
             notary.mark_cells(nb, True)
+        else:
+            for cell in nb.cells:
+                cell.metadata.pop("trusted", None)
         return nb
 
     def _writes(nb, fmt):
