@@ -230,14 +230,7 @@ def comment_lines(lines, prefix, suffix="", no_empty_comment=False):
     if not prefix:
         return lines
     if not suffix:
-        result = []
-        for line in lines:
-            if line:
-                result.append(f"{prefix} {line}")
-            elif no_empty_comment:
-                result.append("")
-            else:
-                result.append(prefix)
-        return result
+        empty_line = "" if no_empty_comment else prefix
+        return [f"{prefix} {line}" if line else empty_line for line in lines]
 
     return [prefix + " " + line + " " + suffix if line else prefix + " " + suffix for line in lines]

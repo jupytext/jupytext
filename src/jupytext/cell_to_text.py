@@ -13,7 +13,13 @@ from .cell_metadata import (
 )
 from .cell_reader import LightScriptCellReader, MarkdownCellReader, RMarkdownCellReader
 from .doxygen import markdown_to_doxygen
-from .languages import _SCRIPT_EXTENSIONS, cell_language, comment_lines, same_language, _NO_EMPTY_COMMENT_LANGUAGES
+from .languages import (
+    _NO_EMPTY_COMMENT_LANGUAGES,
+    _SCRIPT_EXTENSIONS,
+    cell_language,
+    comment_lines,
+    same_language,
+)
 from .magics import comment_magic, escape_code_start, need_explicit_marker
 from .metadata_filter import filter_metadata
 from .pep8 import pep8_lines_between_cells
@@ -80,9 +86,10 @@ class BaseCellExporter:
 
         self.language = self.language or cell.metadata.get("language", default_language)
         self.default_language = default_language
-        self.comment = _SCRIPT_EXTENSIONS.get(self.ext, {}).get("comment", "#")
-        self.comment_suffix = _SCRIPT_EXTENSIONS.get(self.ext, {}).get("comment_suffix", "")
-        self.no_empty_comment = self.language in _NO_EMPTY_COMMENT_LANGUAGES
+        script = _SCRIPT_EXTENSIONS.get(self.ext, {})
+        self.comment = script.get("comment", "#")
+        self.comment_suffix = script.get("comment_suffix", "")
+        self.no_empty_comment = script.get("language") in _NO_EMPTY_COMMENT_LANGUAGES
         self.comment_magics = self.fmt.get("comment_magics", self.default_comment_magics)
         self.cell_metadata_json = self.fmt.get("cell_metadata_json", False)
         self.use_runtools = self.fmt.get("use_runtools", False)
@@ -317,9 +324,14 @@ class LightScriptCellExporter(BaseCellExporter):
                 self.metadata[key] = self.unfiltered_metadata[key]
 
     def is_code(self):
-        # Treat markdown cells with metadata as code cells (#66)
-        if (self.cell_type == "markdown" and self.metadata) or self.use_triple_quotes():
+        # Markdown cells with metadata (#66), or uncommented q blank lines,
+        # need explicit cell markers.
+        if (
+            self.cell_type == "markdown"
+            and (self.metadata or (self.no_empty_comment and self.use_cell_markers and "" in self.source))
+        ) or self.use_triple_quotes():
             if is_active(self.ext, self.metadata):
+                self.explicit_markdown = self.no_empty_comment and self.cell_type == "markdown"
                 self.metadata["cell_type"] = self.cell_type
                 self.source = self.markdown_to_text(self.source)
                 self.cell_type = "code"
@@ -332,11 +344,14 @@ class LightScriptCellExporter(BaseCellExporter):
         """Return the text representation of a code cell"""
         active = is_active(self.ext, self.metadata, same_language(self.language, self.default_language))
         source = copy(self.source)
-        escape_code_start(source, self.ext, self.language)
+        explicit_markdown = self.no_empty_comment and getattr(self, "explicit_markdown", False)
+        if not explicit_markdown:
+            escape_code_start(source, self.ext, self.language)
         comment_questions = self.metadata.pop("comment_questions", True)
 
         if active:
-            comment_magic(source, self.language, self.comment_magics, comment_questions)
+            if not explicit_markdown:
+                comment_magic(source, self.language, self.comment_magics, comment_questions)
         else:
             source = self.markdown_to_text(source)
 
@@ -350,11 +365,16 @@ class LightScriptCellExporter(BaseCellExporter):
 
         lines = []
         endofcell = self.metadata["endofcell"]
-        if endofcell == "-" or self.cell_marker_end:
+        if (endofcell == "-" or self.cell_marker_end) and not explicit_markdown:
             del self.metadata["endofcell"]
 
         cell_start = [self.comment, self.cell_marker_start or "+"]
-        options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json)
+        if explicit_markdown and not self.cell_marker_end and not self.cell_metadata_json:
+            # Generated end markers contain only hyphens, so they need no JSON escaping.
+            self.metadata.pop("endofcell")
+            options = metadata_to_double_percent_options(self.metadata, False) + f' endofcell="{endofcell}"'
+        else:
+            options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json)
         if options:
             cell_start.append(options)
         lines.append(" ".join(cell_start))
@@ -386,7 +406,9 @@ class LightScriptCellExporter(BaseCellExporter):
 
     def remove_eoc_marker(self, text, next_text):
         """Remove end of cell marker when next cell has an explicit start marker"""
-        if self.cell_marker_start:
+        # Explicit q Markdown regions need their closing marker so marker-like
+        # Markdown content can be read literally without extra escaping passes.
+        if self.cell_marker_start or (self.no_empty_comment and getattr(self, "explicit_markdown", False)):
             return text
 
         if self.is_code() and text[-1] == self.comment + " -":
@@ -471,7 +493,22 @@ class DoublePercentCellExporter(BaseCellExporter):  # pylint: disable=W0223
         if not self.is_code():
             self.metadata["cell_type"] = self.cell_type
 
-        options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json)
+        # q leaves empty lines uncommented, so use an end marker to preserve
+        # trailing blank source lines separately from the cell separator.
+        commented_source = None
+        endofcell = None
+        if self.no_empty_comment and len(self.source) > 1 and self.source[-1] == "" and not (self.is_code() and active):
+            commented_source = self.markdown_to_text(self.source)
+            endofcell = "-"
+            while self.comment + " " + endofcell in commented_source:
+                endofcell += "-"
+            self.metadata["endofcell"] = endofcell
+
+        if endofcell is not None and not self.cell_metadata_json:
+            self.metadata.pop("endofcell")
+            options = metadata_to_double_percent_options(self.metadata, False) + f' endofcell="{endofcell}"'
+        else:
+            options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json)
         indent = ""
         if self.is_code() and active and self.source:
             first_line = self.source[0]
@@ -492,7 +529,16 @@ class DoublePercentCellExporter(BaseCellExporter):  # pylint: disable=W0223
                 return lines
             return lines + source
 
-        return lines + self.markdown_to_text(self.source)
+        # The cell-type marker already represents an empty q cell. Emitting an
+        # extra blank content line would be read back as additional cell spacing.
+        if self.no_empty_comment and self.source == [""]:
+            return lines
+
+        if commented_source is None:
+            commented_source = self.markdown_to_text(self.source)
+        if endofcell is not None:
+            commented_source.append(self.comment + " " + endofcell)
+        return lines + commented_source
 
 
 class HydrogenCellExporter(DoublePercentCellExporter):  # pylint: disable=W0223
