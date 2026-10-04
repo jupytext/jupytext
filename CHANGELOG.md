@@ -14,6 +14,7 @@ Jupytext ChangeLog
 
 **Added**
 - We have added a development container that can be opened with VS Code’s Dev Containers extension.
+- Added support for the Jenner language. Thanks to [Lawrence Sinclair](https://github.com/lwsinclair) for this contribution ([#1493](https://github.com/mwouts/jupytext/pull/1493)).
 
 
 1.19.5 (2026-07-21)
