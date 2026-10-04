@@ -12,6 +12,8 @@ Jupytext ChangeLog
 - Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default" ([#1632](https://github.com/jupytext/jupytext/pull/1632))
 - Mermaid `%%` comments inside a markdown cell are no longer mistaken for `py:percent` cell markers ([#1533](https://github.com/mwouts/jupytext/issues/1533)).  Thanks to [Sanjay Santhanam](https://github.com/Sanjays2402) for his PR ([1609](https://github.com/jupytext/jupytext/pull/1609))
 
+**Added**
+- We have added a development container that can be opened with VS Code’s Dev Containers extension.
 
 
 1.19.5 (2026-07-21)

@@ -25,7 +25,15 @@ HATCH_BUILD_HOOKS_ENABLE=true pip install git+https://github.com/jupytext/jupyte
 ```
 where `branch` is the name of the branch you want to test.
 
-## Install and develop Jupytext locally
+## Using our VS Code development container
+
+Our development container is a convenient alternative to installing Pixi on your host machine. You need [VS Code](https://code.visualstudio.com/), the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), and a container engine, either `podman` or `docker`. Pixi runs inside the container, so you do not need to install it on your host.
+
+You can open a local clone by opening the Jupytext repository in VS Code and running **Dev Containers: Reopen in Container** from the Command Palette. For a fresh clone, run **Dev Containers: Clone Repository in Container Volume...** and enter `jupytext/jupytext`. VS Code clones the repository and builds its development container. The first build may take a few minutes.
+
+Once the container is ready, initialize the Pixi environment with `pixi install`. Run commands with `pixi run <command>`, or activate the environment with `pixi shell`. The container also installs the Pyright and OpenAI Codex VS Code extensions.
+
+## Installing and developing Jupytext locally with Pixi
 
 Most of Jupytext's code is written in Python. To develop the Python part of Jupytext, you should clone Jupytext, then create a dedicated Python environment with [Pixi](https://pixi.sh):
 ```
@@ -50,7 +58,7 @@ pytest -n 5
 
 Some tests require a Jupyter kernel pointing to the current environment:
 ```
-python -m ipykernel install --name jupytext-dev --user
+python -m ipykernel install --name python_kernel --user
 ```
 
 ## Jupytext's extension for JupyterLab
