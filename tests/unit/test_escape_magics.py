@@ -84,6 +84,33 @@ def test_magics_commented_default(fmt, commented):
     compare_notebooks(nb2, nb)
 
 
+@pytest.mark.parametrize("fmt", ["jenner:light", "jenner:percent", "Rmd"])
+def test_jenner_macro_statements_preserved(fmt):
+    source = """/* %put This statement is commented out; */
+%let name = Jupytext;
+%macro greet;
+    %put &name;
+%mend;
+%greet;"""
+    nb = new_notebook(
+        cells=[new_code_cell(source)],
+        metadata={"jupytext": {"main_language": "jenner"}},
+    )
+
+    text = jupytext.writes(nb, fmt)
+    assert source in text
+    compare_notebooks(jupytext.reads(text, fmt), nb)
+
+
+def test_read_jenner_commented_macro_preserved():
+    source = "/* %put This statement is commented out; */\n%put Hello;"
+    nb = jupytext.reads("/* %% */\n" + source + "\n", "jenner:percent")
+
+    assert len(nb.cells) == 1
+    assert nb.cells[0].cell_type == "code"
+    assert nb.cells[0].source == source
+
+
 @pytest.mark.parametrize(
     "fmt",
     ["md", "Rmd", "py:light", "py:percent", "py:sphinx", "R", "ss:light", "ss:percent"],

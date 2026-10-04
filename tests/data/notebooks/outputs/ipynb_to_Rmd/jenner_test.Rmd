@@ -22,6 +22,6 @@ run;
 ```
 
 ```{jenner}
-/* %let name = Jupytext;
-/* %put &name;
+%let name = Jupytext;
+%put &name;
 ```

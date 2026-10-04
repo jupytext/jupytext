@@ -72,7 +72,7 @@ _SCRIPT_LANGUAGES = [_SCRIPT_EXTENSIONS[ext]["language"] for ext in _SCRIPT_EXTE
 def is_magic(line, language, global_escape_flag=True, explicitly_code=False):
     """Is the current line a (possibly escaped) Jupyter magic, and should it be commented?"""
     language = usual_language_name(language)
-    if language in ["octave", "matlab", "sas", "logtalk"] or language not in _SCRIPT_LANGUAGES:
+    if language in ["octave", "matlab", "sas", "jenner", "logtalk"] or language not in _SCRIPT_LANGUAGES:
         return False
     if _MAGIC_FORCE_ESC_RE[language].match(line):
         return True

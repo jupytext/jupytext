@@ -17,5 +17,5 @@ run;
 proc print data=test;
 run;
 
-/* %let name = Jupytext;
-/* %put &name;
+%let name = Jupytext;
+%put &name;
