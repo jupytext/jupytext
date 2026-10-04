@@ -4,8 +4,12 @@ Jupytext ChangeLog
 1.19.6.dev0 (development)
 -------------------------
 
+**Security**
+- The Quarto conversions now run in a private temporary directory, so that the output file that `quarto convert` names after its input can no longer be pre-created as a symlink by another user of the machine Thanks to [Naveed](https://github.com/nvxbug) for the PR ([#1615](https://github.com/jupytext/jupytext/pull/1615)).
+
 **Fixed**
 - Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default" ([#1632](https://github.com/jupytext/jupytext/pull/1632))
+
 
 1.19.5 (2026-07-21)
 -------------------
