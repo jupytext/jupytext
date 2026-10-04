@@ -67,34 +67,29 @@ def separator(path):
 
 
 def _path_reach(path, sep):
-    """Describe how far a resolved path reaches outside its starting directory.
-
-    Return an ``(anchor, climb)`` pair where ``anchor`` is the leading root the path
-    is tied to (empty for a path relative to the current directory, the separator for
-    an absolute path, or a Windows drive) and ``climb`` is the number of leading '..'
-    segments that survive after resolving '.' and normal segments, i.e. how many
-    levels the path escapes above that anchor.
-    """
+    """Return a path's anchor, leading climbs, and normalized components."""
     if path.startswith(sep):
         anchor = sep
-    elif len(path) >= 2 and path[1] == ":":
+        path = path[len(sep) :]
+    elif len(path) >= 3 and path[1] == ":" and path[2] == sep:
         anchor = path[:2]
+        path = path[3:]
     else:
         anchor = ""
 
     climb = 0
-    depth = 0
+    parts = []
     for part in path.split(sep):
         if part in ("", "."):
             continue
         if part == "..":
-            if depth > 0:
-                depth -= 1
+            if parts:
+                parts.pop()
             else:
                 climb += 1
         else:
-            depth += 1
-    return anchor, climb
+            parts.append(part)
+    return anchor, climb, parts
 
 
 def get_prefix_root_prefix_dir_prefix_file_name(prefix: str) -> tuple[str, str, str]:
@@ -365,10 +360,17 @@ def paired_paths(main_path, fmt, formats):
     # reach further up, or to a different root, than the notebook itself - otherwise
     # untrusted 'formats' metadata could drive writes outside the working tree.
     sep = separator(main_path)
-    main_anchor, main_climb = _path_reach(main_path, sep)
+    main_anchor, main_climb, _ = _path_reach(main_path, sep)
+    root_path = base.rsplit("//", 1)[0] if "//" in base else ""
+    if root_path:
+        root_anchor, root_climb, root_parts = _path_reach(root_path, sep)
+
     for alt_path in paths:
-        anchor, climb = _path_reach(alt_path, sep)
-        if anchor != main_anchor or climb > main_climb:
+        anchor, climb, parts = _path_reach(alt_path, sep)
+        escapes = anchor != main_anchor or climb > main_climb
+        if root_path:
+            escapes = escapes or (anchor != root_anchor or climb != root_climb or parts[: len(root_parts)] != root_parts)
+        if escapes:
             raise InconsistentPath(
                 f"Paired path '{alt_path}' escapes the directory of the notebook '{main_path}'. "
                 "A prefix like '../' or an absolute path in 'formats' must stay within the "

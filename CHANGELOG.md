@@ -6,6 +6,7 @@ Jupytext ChangeLog
 
 **Security**
 - The Quarto conversions now run in a private temporary directory, so that the output file that `quarto convert` names after its input can no longer be pre-created as a symlink by another user of the machine Thanks to [Naveed](https://github.com/nvxbug) for the PR ([#1615](https://github.com/jupytext/jupytext/pull/1615)).
+- Paired paths from notebook `formats` metadata are now prevented from escaping the working tree, including when an absolute notebook path is used. Thanks to [Naveed](https://github.com/nvxbug) for addressing the issue ([#1588](https://github.com/jupytext/jupytext/pull/1588)).
 
 **Fixed**
 - Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default" ([#1632](https://github.com/jupytext/jupytext/pull/1632))
@@ -28,9 +29,6 @@ Jupytext ChangeLog
 
 **Security**
 - `marimo_py_to_notebook` now reuses its secure (0600, `mkstemp`-backed) temporary files instead of closing and reopening them by name, which removed the safe permissions and left a window for a symlink attack on shared machines ([#1568](https://github.com/jupytext/jupytext/pull/1568)). Thanks to [Naveed](https://github.com/nvxbug) for reporting and fixing this!
-
-**Security**
-- Paired paths can no longer be written outside the notebook's directory tree. A `formats` entry read from notebook metadata, e.g. `../../../../etc///py` or an absolute path, is now rejected instead of driving a file write above the working tree ([#1588](https://github.com/jupytext/jupytext/pull/1588)).
 
 1.19.4 (2026-06-21)
 -------------------
