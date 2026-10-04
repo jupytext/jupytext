@@ -1,8 +1,8 @@
 Jupytext ChangeLog
 ==================
 
-1.19.6.dev0 (development)
--------------------------
+1.19.6 (2026-10-04)
+-------------------
 
 **Security**
 - The Quarto conversions now run in a private temporary directory, so that the output file that `quarto convert` names after its input can no longer be pre-created as a symlink by another user of the machine. Thanks to [Naveed](https://github.com/nvxbug) for the PR ([#1615](https://github.com/jupytext/jupytext/pull/1615)).
@@ -32,6 +32,7 @@ Jupytext ChangeLog
 - The JupyterLab extension's development install script now uses the correct `jupyter-builder` import
   ([#1632](https://github.com/jupytext/jupytext/pull/1632)). Thanks again to [Michał Krassowski](https://github.com/krassowski)
   for this fix.
+- Fixed pairing on Windows when a prefix root contains subdirectories, such as `notebooks/tutorials///ipynb`.
 
 **Changed**
 - Updated the JupyterLab extension's production dependencies
