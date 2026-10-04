@@ -32,6 +32,10 @@ Jupytext ChangeLog
 - The JupyterLab extension's development install script now uses the correct `jupyter-builder` import
   ([#1632](https://github.com/jupytext/jupytext/pull/1632)). Thanks again to [Michał Krassowski](https://github.com/krassowski)
   for this fix.
+- Fixed JupyterLab extension build issues related to Yarn package checksums. Thanks to
+  [Mahendra Paipuri](https://github.com/mahendrapaipuri) for his contributions to
+  [#1614](https://github.com/jupytext/jupytext/pull/1614), [#1620](https://github.com/jupytext/jupytext/pull/1620),
+  and [#1621](https://github.com/jupytext/jupytext/pull/1621).
 - Fixed pairing on Windows when a prefix root contains subdirectories, such as `notebooks/tutorials///ipynb`.
 
 **Changed**
@@ -47,6 +51,9 @@ Jupytext ChangeLog
   ([#1613](https://github.com/jupytext/jupytext/pull/1613), [#1619](https://github.com/jupytext/jupytext/pull/1619),
   [#1633](https://github.com/jupytext/jupytext/pull/1633), [#1640](https://github.com/jupytext/jupytext/pull/1640),
   [#1649](https://github.com/jupytext/jupytext/pull/1649), [#1651](https://github.com/jupytext/jupytext/pull/1651)).
+- Updated Jupyter Server in the Pixi environments. Thanks again to
+  [Mahendra Paipuri](https://github.com/mahendrapaipuri) for this update
+  ([#1646](https://github.com/jupytext/jupytext/pull/1646)).
 
 **Added**
 - We have added a development container that can be opened with VS Code’s Dev Containers extension
