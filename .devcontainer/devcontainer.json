@@ -1,28 +1,44 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
-	"name": "Jupytext development",
+    "name": "Jupytext development",
     "build": {
         "dockerfile": "Dockerfile",
-        "context": ".."
-	},
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Configure tool-specific properties.
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"ms-pyright.pyright",
-				"openai.chatgpt"
-			]
-		}
-	}
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+        "context": ".",
+        "options": ["--platform=linux/amd64"]
+    },
+    "runArgs": ["--platform=linux/amd64"],
+    "remoteUser": "vscode",
+    "mounts": [
+        "source=${devcontainerId}-pixi,target=${containerWorkspaceFolder}/.pixi,type=volume"
+    ],
+    "postCreateCommand": "sudo chown vscode:vscode .pixi && pixi install --locked && pixi run --locked python -m ipykernel install --name python_kernel --user",
+    "waitFor": "postCreateCommand",
+    "remoteEnv": {
+        "PATH": "${containerWorkspaceFolder}/.pixi/envs/default/bin:${containerEnv:PATH}"
+    },
+    "forwardPorts": [8888, 4321],
+    "portsAttributes": {
+        "8888": {"label": "JupyterLab"},
+        "4321": {"label": "Jupytext website"}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-pyright.pyright",
+                "charliermarsh.ruff",
+                "openai.chatgpt"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/default/bin/python",
+                "python.pythonPath": "${workspaceFolder}/.pixi/envs/default/bin/python",
+                "python.languageServer": "None",
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestArgs": ["tests"],
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                }
+            }
+        }
+    }
 }

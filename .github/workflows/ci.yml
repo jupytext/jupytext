@@ -64,9 +64,13 @@ jobs:
     with:
       upload: ${{ inputs.upload-build-artifacts || false }}
 
+  devcontainer:
+    needs: [ zizmor, pre-commit ]
+    uses: ./.github/workflows/step_devcontainer.yml
+
   pass:
     name: Pass
-    needs: [ zizmor, pre-commit, static-analysis, test-pip, coverage, test-conda, test-ui, build ]
+    needs: [ zizmor, pre-commit, static-analysis, test-pip, coverage, test-conda, test-ui, build, devcontainer ]
     runs-on: ubuntu-latest
     steps:
       - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0

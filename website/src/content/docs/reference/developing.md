@@ -31,7 +31,13 @@ Our development container is a convenient alternative to installing Pixi on your
 
 You can open a local clone by opening the Jupytext repository in VS Code and running **Dev Containers: Reopen in Container** from the Command Palette. For a fresh clone, run **Dev Containers: Clone Repository in Container Volume...** and enter `jupytext/jupytext`. VS Code clones the repository and builds its development container. The first build may take a few minutes.
 
-Once the container is ready, initialize the Pixi environment with `pixi install`. Run commands with `pixi run <command>`, or activate the environment with `pixi shell`. The container also installs the Pyright and OpenAI Codex VS Code extensions.
+The container uses Linux AMD64. Native ARM containers are not supported; ARM hosts need a container engine configured for AMD64 emulation.
+
+The container automatically installs the dependencies from `pixi.lock` with `pixi install --locked` and registers the `python_kernel` Jupyter kernel used by the tests. The Pixi environment is stored in a dedicated container volume, separate from any environment on your host. If you change the dependencies, run `pixi install` to update the lockfile.
+
+VS Code uses the Pixi Python interpreter and enables pytest discovery in the Test Explorer. The container installs the Python, Pyright, Ruff, and OpenAI Codex extensions. Pyright provides the Python language server, and Ruff provides linting and formatting.
+
+Run commands with `pixi run <command>`, or activate the environment with `pixi shell`. To launch JupyterLab, run `pixi run jupyter lab`; its port `8888` is forwarded to your host. The website development server's port `4321` is also forwarded.
 
 ## Installing and developing Jupytext locally with Pixi
 

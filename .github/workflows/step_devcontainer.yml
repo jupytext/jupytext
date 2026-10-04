@@ -1,0 +1,37 @@
+name: devcontainer
+run-name: Smoke test development container
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  devcontainer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build and smoke test development container
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3
+        with:
+          push: never
+          runCmd: |
+            set -e
+            pixi run --locked python - <<'PY'
+            import sys
+            from pathlib import Path
+
+            import jupytext
+            from jupyter_client.kernelspec import get_kernel_spec
+
+            assert Path(jupytext.__file__).resolve() == Path('src/jupytext/__init__.py').resolve()
+            assert get_kernel_spec('python_kernel').argv[0] == sys.executable
+            PY
+            pixi run --locked jupytext --version
+            pixi run --locked pytest -q tests/integration/cli/test_execute.py::test_execute
