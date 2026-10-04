@@ -5,15 +5,51 @@ Jupytext ChangeLog
 -------------------------
 
 **Security**
-- The Quarto conversions now run in a private temporary directory, so that the output file that `quarto convert` names after its input can no longer be pre-created as a symlink by another user of the machine Thanks to [Naveed](https://github.com/nvxbug) for the PR ([#1615](https://github.com/jupytext/jupytext/pull/1615)).
+- The Quarto conversions now run in a private temporary directory, so that the output file that `quarto convert` names after its input can no longer be pre-created as a symlink by another user of the machine. Thanks to [Naveed](https://github.com/nvxbug) for the PR ([#1615](https://github.com/jupytext/jupytext/pull/1615)).
 - Paired paths from notebook `formats` metadata are now prevented from escaping the working tree, including when an absolute notebook path is used. Thanks to [Naveed](https://github.com/nvxbug) for addressing the issue ([#1588](https://github.com/jupytext/jupytext/pull/1588)).
+- The CLI now ignores `trusted` cell metadata when the notebook signature is invalid, so a `trusted=true` option in a
+  paired text file cannot make untrusted notebook outputs trusted during `--sync`. Thanks to
+  [Naveed](https://github.com/nvxbug) for the fix ([#1617](https://github.com/jupytext/jupytext/pull/1617)).
+- Custom `cell_markers` and `endofcell` values in the light format are now matched literally, preventing regular-expression
+  injection, parsing errors, and excessive processing time on crafted notebooks. This also fixes writing OCaml notebooks
+  with custom cell markers. Thanks to [Naveed](https://github.com/nvxbug) again for the PR
+  ([#1618](https://github.com/jupytext/jupytext/pull/1618)).
+- We have merged Dependabot security updates for the JupyterLab extension and the documentation website
+  ([#1614](https://github.com/jupytext/jupytext/pull/1614), [#1620](https://github.com/jupytext/jupytext/pull/1620),
+  [#1622](https://github.com/jupytext/jupytext/pull/1622), [#1624](https://github.com/jupytext/jupytext/pull/1624),
+  [#1634](https://github.com/jupytext/jupytext/pull/1634), [#1639](https://github.com/jupytext/jupytext/pull/1639),
+  [#1642](https://github.com/jupytext/jupytext/pull/1642), [#1643](https://github.com/jupytext/jupytext/pull/1643),
+  [#1647](https://github.com/jupytext/jupytext/pull/1647), [#1653](https://github.com/jupytext/jupytext/pull/1653),
+  [#1654](https://github.com/jupytext/jupytext/pull/1654)).
 
 **Fixed**
-- Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default" ([#1632](https://github.com/jupytext/jupytext/pull/1632))
-- Mermaid `%%` comments inside a markdown cell are no longer mistaken for `py:percent` cell markers ([#1533](https://github.com/mwouts/jupytext/issues/1533)).  Thanks to [Sanjay Santhanam](https://github.com/Sanjays2402) for his PR ([1609](https://github.com/jupytext/jupytext/pull/1609))
+- Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default". Thanks to
+  [Michał Krassowski](https://github.com/krassowski) for this PR ([#1632](https://github.com/jupytext/jupytext/pull/1632)).
+- Mermaid `%%` comments inside a markdown cell are no longer mistaken for `py:percent` cell markers ([#1533](https://github.com/mwouts/jupytext/issues/1533)).  Thanks to [Sanjay Santhanam](https://github.com/Sanjays2402) for his PR ([#1609](https://github.com/jupytext/jupytext/pull/1609))
+- A whitespace-only final line in a percent-format cell is now preserved when reading and round-tripping the notebook
+  ([#1599](https://github.com/jupytext/jupytext/issues/1599)). Thanks to [lowbyteguy](https://github.com/lowbyteguy)
+  for the PR ([#1610](https://github.com/jupytext/jupytext/pull/1610)).
+- The JupyterLab extension's development install script now uses the correct `jupyter-builder` import
+  ([#1632](https://github.com/jupytext/jupytext/pull/1632)). Thanks again to [Michał Krassowski](https://github.com/krassowski)
+  for this fix.
+
+**Changed**
+- Updated the JupyterLab extension's production dependencies
+  ([#1621](https://github.com/jupytext/jupytext/pull/1621), [#1641](https://github.com/jupytext/jupytext/pull/1641),
+  [#1652](https://github.com/jupytext/jupytext/pull/1652)).
+- Updated the documentation website's Astro, Starlight, and Sharp dependencies
+  ([#1612](https://github.com/jupytext/jupytext/pull/1612), [#1621](https://github.com/jupytext/jupytext/pull/1621),
+  [#1625](https://github.com/jupytext/jupytext/pull/1625), [#1641](https://github.com/jupytext/jupytext/pull/1641),
+  [#1646](https://github.com/jupytext/jupytext/pull/1646), [#1650](https://github.com/jupytext/jupytext/pull/1650),
+  [#1652](https://github.com/jupytext/jupytext/pull/1652)).
+- Updated the GitHub Actions used for CI and publishing
+  ([#1613](https://github.com/jupytext/jupytext/pull/1613), [#1619](https://github.com/jupytext/jupytext/pull/1619),
+  [#1633](https://github.com/jupytext/jupytext/pull/1633), [#1640](https://github.com/jupytext/jupytext/pull/1640),
+  [#1649](https://github.com/jupytext/jupytext/pull/1649), [#1651](https://github.com/jupytext/jupytext/pull/1651)).
 
 **Added**
-- We have added a development container that can be opened with VS Code’s Dev Containers extension.
+- We have added a development container that can be opened with VS Code’s Dev Containers extension
+  ([#1655](https://github.com/jupytext/jupytext/pull/1655)).
 - Added support for the Jenner language. Thanks to [Lawrence Sinclair](https://github.com/lwsinclair) for this contribution ([#1493](https://github.com/mwouts/jupytext/pull/1493)).
 
 
