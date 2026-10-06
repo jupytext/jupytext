@@ -298,3 +298,77 @@ def test_utf8_out_331(capsys, caplog):
     assert len(nb.cells) == 1
     print(nb.cells[0].outputs)
     assert nb.cells[0].outputs[0]["data"]["text/html"] == "\xd7"
+
+
+SHOW_OUTPUT_SCRIPT = """import sys
+
+print("to stdout")
+print("to stderr", file=sys.stderr)
+"""
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_show_output(tmpdir, capsys):
+    tmp_ipynb = str(tmpdir.join("notebook.ipynb"))
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    jupytext(args=[tmp_py, "--to", "ipynb", "--execute", "--show-output"])
+
+    captured = capsys.readouterr()
+    assert "to stdout\n" in captured.err
+    assert "to stderr\n" in captured.err
+    assert "to stdout" not in captured.out
+    assert "to stderr" not in captured.out
+
+    # The outputs are still saved in the notebook
+    nb = read(tmp_ipynb)
+    assert [output["text"] for cell in nb.cells for output in cell.outputs] == ["to stdout\n", "to stderr\n"]
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_show_output_to_stdout(tmpdir, capsys):
+    """The cell outputs go to stderr, so the notebook written to stdout remains valid"""
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    jupytext(args=[tmp_py, "--to", "ipynb", "--execute", "--show-output", "-o", "-"])
+
+    captured = capsys.readouterr()
+    assert "to stdout\n" in captured.err
+    nb = reads(captured.out, "ipynb")
+    assert [output["text"] for cell in nb.cells for output in cell.outputs] == ["to stdout\n", "to stderr\n"]
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_does_not_show_output_by_default(tmpdir, capsys):
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    jupytext(args=[tmp_py, "--to", "ipynb", "--execute"])
+
+    captured = capsys.readouterr()
+    assert "to stdout" not in captured.out + captured.err
+    assert "to stderr" not in captured.out + captured.err
+
+
+def test_show_output_requires_execute(tmpdir):
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    with pytest.raises(ValueError, match="--show-output can only be used together with --execute"):
+        jupytext(args=[tmp_py, "--to", "ipynb", "--show-output"])
