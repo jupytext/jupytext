@@ -119,6 +119,13 @@ class JupytextConfiguration(Configurable):
         config=True,
     )
 
+    markdown_blank_lines = Enum(
+        values=[True, False],
+        allow_none=True,
+        help="Use empty lines for paragraph breaks in py:percent Markdown cells.",
+        config=True,
+    )
+
     split_at_heading = Bool(
         False,
         help="Split markdown cells on headings (Markdown and R Markdown formats only)",
@@ -207,6 +214,8 @@ class JupytextConfiguration(Configurable):
             format_options.setdefault("root_level_metadata_as_raw_cell", self.root_level_metadata_as_raw_cell)
         if self.comment_magics is not None:
             format_options.setdefault("comment_magics", self.comment_magics)
+        if self.markdown_blank_lines is not None:
+            format_options.setdefault("markdown_blank_lines", self.markdown_blank_lines)
         if self.split_at_heading:
             format_options.setdefault("split_at_heading", self.split_at_heading)
         if self.doxygen_equation_markers:

@@ -692,6 +692,7 @@ def short_form_multiple_formats(jupytext_formats: list[dict[str, str]]) -> str:
 _VALID_FORMAT_INFO = ["extension", "format_name", "suffix", "prefix"]
 _BINARY_FORMAT_OPTIONS = [
     "comment_magics",
+    "markdown_blank_lines",
     "hide_notebook_metadata",
     "root_level_metadata_as_raw_cell",
     "split_at_heading",

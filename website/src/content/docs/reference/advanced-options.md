@@ -38,6 +38,22 @@ Finally, note that you can _hide_ the notebook metadata in an HTML comment in `.
 
 In the `percent` and `light` script formats, magic commands (Jupyter commands prefixed by `%` or `%%`) are commented out in scripts. You can change this by using the `comment_magics` option, either in the `jupytext.toml` file or at the command line with `jupytext --opt`.
 
+## Blank lines in Python percent Markdown cells
+
+By default, empty Markdown lines in `py:percent` scripts are written as `#`.
+To use true empty lines for paragraph breaks, set `markdown_blank_lines = true`
+in `jupytext.toml`, or use the command line:
+
+```bash
+jupytext --to py:percent --opt markdown_blank_lines=true notebook.ipynb
+```
+
+The option can also be set as `metadata["jupytext"]["markdown_blank_lines"]`
+on a notebook or in the format dictionary passed to `jupytext.writes`.
+A final empty source line remains commented so it is not mistaken for spacing
+between cells. Rendering of code, raw and triple-quoted Markdown cells, and
+cells in other formats, is unchanged. The default for this option is `false`.
+
 ## Custom language magics
 
 In Markdown and R Markdown notebooks, code blocks in languages with built-in Jupyter magic support (e.g. `javascript`, `bash`, `sql`) are automatically converted to code cells using the corresponding `%%language` magic. However, code blocks in languages not covered by built-in magics remain as Markdown cells by default.
