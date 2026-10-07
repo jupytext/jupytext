@@ -710,6 +710,9 @@ class LightScriptCellReader(ScriptCellReader):
         else:
             self.cell_type = "code"
 
+        explicit_markdown = (
+            self.ext == ".q" and self.cell_type == "markdown" and "endofcell" in self.metadata and not self.ignore_end_marker
+        )
         parser = StringParser(self.language or self.default_language)
         for i, line in enumerate(lines):
             # skip cell header
@@ -723,10 +726,13 @@ class LightScriptCellReader(ScriptCellReader):
             parser.read_line(line)
             # New code region
             # Simple code pattern in LightScripts must be preceded with a blank line
-            if self.start_code_re.match(line) or (
-                self.simple_start_code_re
-                and self.simple_start_code_re.match(line)
-                and (self.cell_marker_start or i == 0 or _BLANK_LINE.match(lines[i - 1]))
+            if not explicit_markdown and (
+                self.start_code_re.match(line)
+                or (
+                    self.simple_start_code_re
+                    and self.simple_start_code_re.match(line)
+                    and (self.cell_marker_start or i == 0 or _BLANK_LINE.match(lines[i - 1]))
+                )
             ):
                 if self.explicit_end_marker_required:
                     # Metadata here was conditioned on finding an explicit end marker
@@ -742,6 +748,8 @@ class LightScriptCellReader(ScriptCellReader):
 
             if not self.ignore_end_marker and self.end_code_re:
                 if self.end_code_re.match(line):
+                    if explicit_markdown:
+                        self.metadata.pop("endofcell")
                     return i, i + 1, True
             elif _BLANK_LINE.match(line):
                 if not next_code_is_indented(lines[i:]):
@@ -813,6 +821,10 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
         else:
             self.cell_type = "code"
 
+        end_marker = None
+        if self.ext == ".q" and "endofcell" in self.metadata:
+            end_marker = self.comment + " " + str(self.metadata["endofcell"])
+
         next_cell = len(lines)
         parser = StringParser(self.language or self.default_language)
         fence = None
@@ -822,6 +834,12 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
                 continue
 
             parser.read_line(line)
+            if i > 0 and line == end_marker:
+                self.metadata.pop("endofcell")
+                next_cell = i + 1
+                while next_cell < len(lines) and _EMPTY_LINE.match(lines[next_cell]):
+                    next_cell += 1
+                return i, next_cell, True
 
             if self.cell_type in ("markdown", "raw"):
                 # In a markdown or raw cell, a fenced block (e.g. mermaid) may contain '%%' lines that are not cell markers (#1533)
