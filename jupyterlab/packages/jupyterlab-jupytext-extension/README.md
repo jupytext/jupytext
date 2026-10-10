@@ -32,7 +32,7 @@ jlpm
 jlpm install:extension     # Symlink into `{sys.prefix}/share/jupyter/labextensions`
 ```
 
-(see also the instructions at [developing.md](../../../docs/developing.md) on how to create a Python environment with a recent version of `nodejs`)
+(see also the instructions on [developing Jupytext](https://jupytext.org/reference/developing) on how to create a Python environment with a recent version of `nodejs`)
 
 Watch the source directory and automatically rebuild the `lib` folder:
 

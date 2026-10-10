@@ -1,6 +1,13 @@
 Jupytext ChangeLog
 ==================
 
+1.19.7dev (unreleased)
+----------------------
+
+**Changed**
+- Fixed documentation links in the README and JupyterLab extension README. Thanks to
+  [thjbdvlt](https://github.com/thjbdvlt) for the README fixes ([#1657](https://github.com/jupytext/jupytext/pull/1657)).
+
 1.19.6 (2026-10-04)
 -------------------
 
@@ -124,7 +131,7 @@ Jupytext ChangeLog
 - Trusted notebooks remain trusted after `jupytext --sync` ([#1505](https://github.com/mwouts/jupytext/issues/1505))
 - We have fixed the homepage link in `package.json`. Thanks to [Michał Krassowski](https://github.com/krassowski) for making this PR ([#1494](https://github.com/mwouts/jupytext/pull/1494))
 - Thanks to [Brigitta Sipőcz](https://github.com/bsipocz) for fixing a broken link in our CLI ([#1428](https://github.com/mwouts/jupytext/pull/1428))
-- The `--quiet` flag now suppresses the `creating missing directory` warning when writing to a path that includes a prefix ([#1533](https://github.com/mwouts/jupytext/pull/1533))
+- The `--quiet` flag now suppresses the `creating missing directory` warning when writing to a path that includes a prefix ([#1526](https://github.com/jupytext/jupytext/pull/1526))
 
 
 **Changed**
