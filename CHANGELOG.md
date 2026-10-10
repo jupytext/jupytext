@@ -1,6 +1,13 @@
 Jupytext ChangeLog
 ==================
 
+1.19.7-dev (???)
+----------------
+
+**Added**
+- `jupytext --execute` has a new `--show-output` option that prints the stdout and stderr outputs of each cell to stderr while the notebook executes, so that the progress of long-running notebooks can be followed ([#1277](https://github.com/jupytext/jupytext/issues/1277)).
+
+
 1.19.6 (2026-10-04)
 -------------------
 
