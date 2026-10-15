@@ -187,6 +187,18 @@ def test_title_and_attribute(text="This is my title. .class", value=("This is my
     assert metadata_to_text(*value) == text
 
 
+@pytest.mark.parametrize("metadata", [".foo .bar", ".bar .foo", ".foo number=1 .bar"])
+def test_attribute_metadata_order_round_trip(metadata):
+    markdown = f"<!-- #region {metadata} -->\ntext\n<!-- #endregion -->\n"
+    converted = markdown
+    for _ in range(2):
+        nb = jupytext.reads(converted, "md")
+        assert nb.cells[0].metadata[".foo"] is None
+        assert nb.cells[0].metadata[".bar"] is None
+        converted = jupytext.writes(nb, "md")
+        assert converted == markdown
+
+
 def test_values_with_equal_signs_inside(text='python string="value=5"', value=("python", {"string": "value=5"})):
     compare(text_to_metadata(text), value)
     assert metadata_to_text(*value) == text
@@ -214,6 +226,36 @@ def test_parse_key_value_key():
         "key": "value",
         "key2": None,
     }
+
+
+@pytest.mark.parametrize(
+    "text,metadata",
+    [
+        (".foo .bar", {".foo": None, ".bar": None}),
+        (".bar .foo", {".bar": None, ".foo": None}),
+        ("foo bar", {"foo": None, "bar": None}),
+        (".foo number=1 .bar", {".foo": None, "number": 1, ".bar": None}),
+        ("number=1 .foo .bar", {"number": 1, ".foo": None, ".bar": None}),
+        (".foo .bar number=1", {".foo": None, ".bar": None, "number": 1}),
+    ],
+)
+def test_attribute_metadata_order(text, metadata):
+    parsed = parse_key_equal_value(text)
+    assert list(parsed.items()) == list(metadata.items())
+    assert metadata_to_text(parsed) == text
+
+
+@pytest.mark.parametrize(
+    "text,metadata",
+    [
+        ("foo=1 foo", {"foo": 1}),
+        ("foo foo=1", {"foo": 1}),
+        ("foo=1 foo=2 foo", {"foo": 2}),
+        ("foo foo", {"foo": None}),
+    ],
+)
+def test_duplicate_bare_metadata(text, metadata):
+    assert parse_key_equal_value(text) == metadata
 
 
 @pytest.mark.parametrize("key", ["ok", "also.ok", "all_right_55", "not,ok", "unexpected,key"])
