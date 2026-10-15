@@ -66,6 +66,11 @@ If you wanted to convert a collection of Markdown files to paired notebooks, and
 jupytext --set-formats ipynb,md --execute *.md
 ```
 
+By default the cell outputs are only saved in the notebook. To follow the progress of a long-running notebook, add `--show-output`: the stdout and stderr outputs of each cell are then printed to stderr while the cell runs (they are still saved in the notebook, and they do not mix with a notebook written to stdout with `-o -`):
+```bash
+jupytext --to notebook --execute --show-output notebook.md
+```
+
 #### Advanced usage: error tolerance
 
 If any notebook cell errors, execution will terminate and `jupytext` will not save the notebook. This can cause headaches as the details of any error would be encoded in the notebook, which would not have been saved. But there's an error-tolerant way to execute a notebook: `jupyter nbconvert` has a mode which will still save a notebook if a cell errors, producing something akin to what would happen if you ran all cells manually in Jupyter's notebook UI.
