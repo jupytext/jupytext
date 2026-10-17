@@ -9,7 +9,6 @@ license = { file = "LICENSE" }
 authors = [
     { name = "Marc Wouts", email = "marc.wouts@gmail.com" },
 ]
-readme = "build/README_with_absolute_links.md"
 requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -39,7 +38,7 @@ dependencies = [
     "pyyaml",
     "tomli;python_version<\"3.11\"",
 ]
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 
 [project.urls]
 Homepage = "https://github.com/jupytext/jupytext"
@@ -110,6 +109,7 @@ docs = [
 
 [tool.hatch.metadata.hooks.custom]
 path = "tools/absolute_links_in_readme.py"
+readme = "build/README_with_absolute_links.md"
 
 [tool.hatch.version]
 # Read version string from version.py and use it for the package
