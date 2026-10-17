@@ -93,6 +93,9 @@ test-cov = [
 test-ui = [
     "bash_kernel",
 ]
+test-fuzzing = [
+    "atheris==2.3.0",
+]
 dev = [
     "jupytext[test-cov,test-external]",
 ]
