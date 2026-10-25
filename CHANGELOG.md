@@ -22,6 +22,9 @@ Jupytext ChangeLog
   [#1647](https://github.com/jupytext/jupytext/pull/1647), [#1653](https://github.com/jupytext/jupytext/pull/1653),
   [#1654](https://github.com/jupytext/jupytext/pull/1654)).
 
+**Added**
+- Added the opt-in `markdown_blank_lines` option for paragraph breaks in `py:percent` Markdown cells ([#1627](https://github.com/jupytext/jupytext/issues/1627)).
+
 **Fixed**
 - Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default". Thanks to
   [Michał Krassowski](https://github.com/krassowski) for this PR ([#1632](https://github.com/jupytext/jupytext/pull/1632)).
