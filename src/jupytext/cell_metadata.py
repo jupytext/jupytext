@@ -350,10 +350,9 @@ def parse_key_equal_value(text):
     # Just an identifier?
     if not text.startswith("--") and is_identifier(text[last_space_pos + 1 :]):
         key = text[last_space_pos + 1 :]
-        value = None
-        result = {key: value}
-        if last_space_pos > 0:
-            result.update(parse_key_equal_value(text[:last_space_pos]))
+        result = parse_key_equal_value(text[:last_space_pos]) if last_space_pos > 0 else {}
+        # A bare key must not overwrite a value parsed on its left.
+        result.setdefault(key, None)
         return result
 
     # Iterate on the '=' signs, starting from the right
