@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1
         with:
           python_version: 3.x
 
