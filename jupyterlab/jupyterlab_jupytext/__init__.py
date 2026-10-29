@@ -1,6 +1,6 @@
 """Jupyter server and lab extension entry points"""
 
-import asyncio
+import inspect
 
 from jupytext.reraise import reraise
 
@@ -31,7 +31,7 @@ def load_jupyter_server_extension(app):  # pragma: no cover
 
     base_class = app.contents_manager_class
 
-    asynchronous = asyncio.iscoroutinefunction(base_class.get)
+    asynchronous = inspect.iscoroutinefunction(base_class.get)
     app.log.info(
         "[Jupytext Server Extension] Deriving "
         + ("an Async" if asynchronous else "a ")
@@ -39,7 +39,7 @@ def load_jupyter_server_extension(app):  # pragma: no cover
         + base_class.__name__
     )
 
-    if asyncio.iscoroutinefunction(base_class.get):
+    if inspect.iscoroutinefunction(base_class.get):
         app.contents_manager_class = build_async_jupytext_contents_manager_class(base_class)
     else:
         app.contents_manager_class = build_sync_jupytext_contents_manager_class(base_class)
