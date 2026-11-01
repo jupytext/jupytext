@@ -1,3 +1,5 @@
+import pytest
+
 from jupytext.stringparser import StringParser
 
 
@@ -77,3 +79,22 @@ comment that ends with four quotes
         sp.read_line(line)
 
     assert quoted == [1, 2]
+
+
+@pytest.mark.parametrize("quote", ['"""', "'''"])
+def test_multiline_string_with_quotes_and_cell_markers(quote):
+    other_quote = "'''" if quote == '"""' else '"""'
+    parser = StringParser("python")
+    parser.read_line("text = " + quote)
+    for line in ["plain text", "'single' and \"double\" quotes", "# %%", "", other_quote]:
+        parser.read_line(line)
+        assert parser.is_quoted() == quote[0]
+
+    # Closing one string and opening another on the same line must still be parsed.
+    parser.read_line(quote + "; other = " + other_quote)
+    assert parser.is_quoted() == other_quote[0]
+    parser.read_line("more text")
+    parser.read_line(other_quote)
+    assert not parser.is_quoted()
+    parser.read_line("value = 1")
+    assert not parser.is_quoted()
