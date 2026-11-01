@@ -34,6 +34,14 @@ class StringParser:
 
         self.triple_start = -1
 
+        # Skip lines without quotes, or lines inside a multiline string that
+        # cannot contain its closing triple quote.
+        if self.triple is not None:
+            if 3 * self.triple not in line:
+                return
+        elif '"' not in line and "'" not in line:
+            return
+
         for i, char in enumerate(line):
             if (
                 self.single is None
