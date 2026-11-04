@@ -62,7 +62,8 @@ def marimo_py_to_notebook(text):
     tmp_ipynb_file_name = tmp_ipynb_file.name
     tmp_ipynb_file.close()
 
-    with open(tmp_py_file_name, "w") as fp:
+    # Marimo reads and writes these files as UTF-8, whatever the locale encoding
+    with open(tmp_py_file_name, "w", encoding="utf-8") as fp:
         fp.write(text)
 
     marimo(
@@ -130,12 +131,13 @@ def notebook_to_marimo_py(notebook):
     tmp_ipynb_file_name = tmp_ipynb_file.name
     tmp_ipynb_file.close()
 
-    with open(tmp_ipynb_file_name, "w") as fp:
+    # Marimo reads and writes these files as UTF-8, whatever the locale encoding
+    with open(tmp_ipynb_file_name, "w", encoding="utf-8") as fp:
         nbformat.write(notebook, fp)
 
     marimo("convert", tmp_ipynb_file_name, "-o", tmp_py_file_name)
 
-    with open(tmp_py_file_name) as fp:
+    with open(tmp_py_file_name, encoding="utf-8") as fp:
         text = fp.read()
 
     os.remove(tmp_ipynb_file_name)
