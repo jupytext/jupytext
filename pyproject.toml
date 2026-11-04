@@ -79,7 +79,7 @@ test-external = [
   # Marimo notebooks
   "marimo>=0.17.6,<=0.19.4", #1485
   # Interaction with other contents managers
-  "jupyter-fs[fs]>=1.0"  # 1398
+  "jupyter-fs[fsspec]>=1.0"  # 1398
 ]
 # Coverage requirements
 test-cov = [
