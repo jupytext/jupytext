@@ -23,6 +23,7 @@ Jupytext ChangeLog
   [#1654](https://github.com/jupytext/jupytext/pull/1654)).
 
 **Fixed**
+- Empty Markdown lines no longer start block comments in q scripts, and cell boundaries and trailing blank lines are preserved in light, percent, and hydrogen formats. Thanks to [Ben Lubas](https://github.com/benlubas) for making a PR ([#1636](https://github.com/jupytext/jupytext/pull/1636)).
 - Menu entries such as "Rename Notebook…" name the file type again, instead of saying "default". Thanks to
   [Michał Krassowski](https://github.com/krassowski) for this PR ([#1632](https://github.com/jupytext/jupytext/pull/1632)).
 - Mermaid `%%` comments inside a markdown cell are no longer mistaken for `py:percent` cell markers ([#1533](https://github.com/mwouts/jupytext/issues/1533)).  Thanks to [Sanjay Santhanam](https://github.com/Sanjays2402) for his PR ([#1609](https://github.com/jupytext/jupytext/pull/1609))
