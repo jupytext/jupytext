@@ -19,7 +19,7 @@ df = pd.DataFrame(
 )
 ```
 
-```{code-cell} ipython3
+```{code-cell} R
 %%R -i df
 library("ggplot2")
 ggplot(data = df) + geom_point(aes(x = X, y = Y, color = Letter, size = Z))

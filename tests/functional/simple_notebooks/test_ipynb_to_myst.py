@@ -1,10 +1,11 @@
 import json
 import unittest.mock as mock
+import warnings
 from textwrap import dedent
 
 import pytest
 from jupyter_server.utils import ensure_async
-from nbformat.v4.nbbase import new_notebook
+from nbformat.v4.nbbase import new_code_cell, new_notebook
 from tornado.web import HTTPError
 
 import jupytext
@@ -257,3 +258,48 @@ async def test_myst_representation_same_cli_or_contents_manager(tmpdir, cwd_tmpd
     text_cm = tmpdir.join("contents_manager").join("notebook.md").read()
 
     compare(text_cm, text_api)
+
+
+@pytest.mark.requires_myst
+@pytest.mark.parametrize("magic_first", [True, False])
+def test_language_magic_keeps_its_myst_lexer(magic_first):
+    cells = [new_code_cell("%%bash -e\necho hello"), new_code_cell("x = 1")]
+    if not magic_first:
+        cells.reverse()
+    notebook = new_notebook(
+        cells=cells,
+        metadata={"language_info": {"name": "python", "pygments_lexer": "ipython3"}},
+    )
+
+    text = jupytext.writes(notebook, fmt="md:myst")
+
+    assert "```{code-cell} bash\n%%bash -e\necho hello" in text
+    assert "```{code-cell} ipython3\nx = 1" in text
+    with warnings.catch_warnings(record=True) as caught:
+        restored = jupytext.reads(text, fmt="md:myst")
+    assert not caught
+    assert [cell.source for cell in restored.cells] == [cell.source for cell in cells]
+    assert restored.metadata.jupytext.default_lexer == "ipython3"
+
+
+@pytest.mark.requires_myst
+def test_myst_different_lexer_without_magic_still_warns():
+    text = "```{code-cell} python\nx = 1\n```\n\n```{code-cell} r\nx <- 1\n```\n"
+    with pytest.warns(UserWarning, match="All code cells.*same language"):
+        myst_to_notebook(text)
+
+
+@pytest.mark.requires_myst
+def test_myst_csharp_directive_keeps_existing_lexer():
+    notebook = new_notebook(
+        cells=[new_code_cell("#!python\nx = 1"), new_code_cell("var x = 1;")],
+        metadata={"language_info": {"name": "csharp", "pygments_lexer": "csharp"}},
+    )
+
+    text = jupytext.writes(notebook, fmt="md:myst")
+
+    assert text.count("```{code-cell} csharp\n") == 2
+    with warnings.catch_warnings(record=True) as caught:
+        restored = jupytext.reads(text, fmt="md:myst")
+    assert not caught
+    assert [cell.source for cell in restored.cells] == [cell.source for cell in notebook.cells]
