@@ -13,6 +13,7 @@ import yaml
 from yaml.representer import SafeRepresenter
 
 from .cell_to_text import three_backticks_or_more
+from .languages import cell_language
 from .metadata_filter import _JUPYTER_METADATA_NAMESPACE
 
 try:
@@ -308,7 +309,10 @@ def myst_to_notebook(
             options, body_lines = read_fenced_cell(token, len(notebook.cells), "Code")
             assert token.info.startswith(code_directive)
             lexer = token.info[len(code_directive) :].strip()
-            if lexer:
+            magic_language = None
+            if body_lines and body_lines[0].startswith("%%"):
+                magic_language, _ = cell_language(body_lines.copy(), default_lexer, [])
+            if lexer and lexer != magic_language:
                 if not default_lexer:
                     default_lexer = lexer
                 elif lexer != default_lexer:
@@ -397,8 +401,13 @@ def notebook_to_myst(
                 cell_delimiter,
                 code_directive if cell.cell_type == "code" else raw_directive,
             )
-            if pygments_lexer and cell.cell_type == "code":
-                string += f" {pygments_lexer}"
+            if cell.cell_type == "code":
+                magic_language = None
+                if cell.source.startswith("%%"):
+                    magic_language, _ = cell_language(cell.source.splitlines(), pygments_lexer, [])
+                cell_lexer = magic_language or pygments_lexer
+                if cell_lexer:
+                    string += f" {cell_lexer}"
             string += "\n"
             metadata = cell.metadata
             if metadata:
