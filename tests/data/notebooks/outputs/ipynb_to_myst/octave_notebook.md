@@ -31,12 +31,12 @@ plot (x, sin (x));
 
 And to finish with, a Python cell
 
-```{code-cell}
+```{code-cell} python
 %%python
 a = 1
 ```
 
-```{code-cell}
+```{code-cell} python
 %%python
 a + 1
 ```
