@@ -41,6 +41,7 @@
   Node and `jlpm` from Pixi; run Git commits through Pixi when hooks are installed.
 - Build the JupyterLab extension with
   `pixi run -e build build-labextension` when that part of the project changes.
+- Gate jobs that execute project code on successful zizmor security auditing.
 - Follow the existing CI workflow structure and pin GitHub Actions to full commit
   SHAs. Keep required jobs included in the final `pass` job's dependencies.
 - Describe checks that actually ran. When a container engine is unavailable,
