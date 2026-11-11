@@ -19,7 +19,7 @@ except ImportError:
     import tomli as tomllib
 
 from collections import namedtuple
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import nbformat
 from tornado.web import HTTPError
@@ -329,8 +329,16 @@ def build_sync_jupytext_contents_manager_class(base_contents_manager_class):
                 if not exists:
                     return None
                 if alt_path == path:
-                    return model["last_modified"]
-                return (self.super.get(alt_path, content=False))["last_modified"]
+                    timestamp = model["last_modified"]
+                else:
+                    timestamp = (self.super.get(alt_path, content=False))[
+                        "last_modified"
+                    ]
+                # Some contents managers (including jupyter-fs/fsspec) return
+                # ISO-formatted strings instead of datetime objects.
+                if isinstance(timestamp, str):
+                    timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                return timestamp
 
             def read_one_file(alt_path, alt_fmt):
                 if alt_path == path:

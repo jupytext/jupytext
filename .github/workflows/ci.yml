@@ -33,6 +33,7 @@ jobs:
       security-events: write
 
   pre-commit:
+    needs: [ zizmor ]
     uses: ./.github/workflows/step_pre-commit.yml
 
   static-analysis:
