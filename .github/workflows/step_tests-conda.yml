@@ -40,13 +40,14 @@ jobs:
       - name: Install pixi
         uses: prefix-dev/setup-pixi@9dabb60412d3d2d967a8d682f7ce01317af40514 # v0.11.0
         with:
-          pixi-version: v0.68.0
+          pixi-version: v0.84.2
           cache: true
           activate-environment: default
           environments: "default build"
 
       - name: Update pixi environment
         if: matrix.dependency-mode == 'latest'
+        shell: bash
         # Each runner tests only its own platform. Serial solves avoid exhausting
         # runner memory while resolving the Conda and PyPI dependency graphs.
         run: >-
