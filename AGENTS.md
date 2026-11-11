@@ -2,8 +2,9 @@
 
 ## Working preferences
 
-- Create commits as `Codex, driven by Marc Wouts <mwouts.ai@gmail.com>`.
-
+- When mwouts (Marc Wouts) is driving the AI, create commits as
+  `Codex, driven by Marc Wouts <mwouts.ai@gmail.com>`. This identity preference
+  applies only to sessions driven by mwouts.
 - Make changes in a dedicated Git worktree on a task-specific branch. Reuse the
   worktree for the current task rather than editing the user's original checkout.
 - Check Git status before starting and preserve existing changes. Report the
