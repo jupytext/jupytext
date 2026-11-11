@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/base:trixie
 
-ARG PIXI_VERSION=v0.76.1
+ARG PIXI_VERSION=v0.84.2
 
 RUN curl -L -o /usr/local/bin/pixi -fsSL --compressed \
     "https://github.com/prefix-dev/pixi/releases/download/${PIXI_VERSION}/pixi-$(uname -m)-unknown-linux-musl" \
