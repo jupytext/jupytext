@@ -59,7 +59,7 @@ jobs:
           HATCH_BUILD_HOOKS_ENABLE=true python -m pip install -e .
 
           # Install a Jupyter Kernel
-          python -m ipykernel install --name jupytext-ci --user
+          python -m ipykernel install --name python_kernel --user
 
           # Test with pytest
           pytest -n logical --cov --cov-report=xml

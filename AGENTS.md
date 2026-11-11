@@ -2,6 +2,8 @@
 
 ## Working preferences
 
+- Create commits as `Codex, driven by Marc Wouts <mwouts.ai@gmail.com>`.
+
 - Make changes in a dedicated Git worktree on a task-specific branch. Reuse the
   worktree for the current task rather than editing the user's original checkout.
 - Check Git status before starting and preserve existing changes. Report the
