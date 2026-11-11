@@ -15,13 +15,16 @@ permissions:
 jobs:
   test-conda:
     name: >
-      ${{ matrix.os }} (${{ matrix.dependency-mode }} dependencies)
+      ${{ matrix.target.os }} (${{ matrix.dependency-mode }} dependencies)
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
+        target:
+          - { os: ubuntu-latest, platform: linux-64 }
+          - { os: macos-latest, platform: osx-arm64 }
+          - { os: windows-latest, platform: win-64 }
         dependency-mode: [ 'locked', 'latest' ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.target.os }}
     # We still need to run pixi bash as we need it for Windows. Ensure to prefix
     # command with pixi so that we can pixi environment
     defaults:
@@ -44,7 +47,11 @@ jobs:
 
       - name: Update pixi environment
         if: matrix.dependency-mode == 'latest'
-        run: pixi update
+        # Each runner tests only its own platform. Serial solves avoid exhausting
+        # runner memory while resolving the Conda and PyPI dependency graphs.
+        run: >-
+          pixi update --environment default --environment build
+          --platform ${{ matrix.target.platform }} --concurrent-solves 1
 
       - name: Build JupyterLab extension
         run: pixi run -e build build-labextension
