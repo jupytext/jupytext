@@ -299,6 +299,13 @@ def parse_jupytext_args(args=None):
         type=str,
         help="Execute the notebook at the given path (defaults to the notebook parent directory)",
     )
+    parser.add_argument(
+        "--show-output",
+        action="store_true",
+        help="When executing the notebook with --execute, print the stdout and stderr "
+        "output of each cell to stderr as the cell runs (the outputs are still saved "
+        "in the notebook).",
+    )
 
     parser.add_argument(
         "--quiet",
@@ -386,6 +393,9 @@ def jupytext(args=None, *, notary=None):
 
     if args.run_path:
         args.execute = True
+
+    if args.show_output and not args.execute:
+        raise ValueError("--show-output can only be used together with --execute")
 
     if (args.test or args.test_strict) and not args.output_format and not args.output and not args.sync:
         raise ValueError("Please provide one of --to, --output or --sync")
@@ -508,6 +518,28 @@ def jupytext(args=None, *, notary=None):
     finally:
         if notary_to_close:
             notary_to_close.store.close()
+
+
+def execute_preprocessor(show_output=False, **kwargs):
+    """Return a nbconvert ExecutePreprocessor. With show_output=True, the stream outputs
+    of each cell are echoed to stderr as they arrive, so that they never mix with a
+    notebook written to stdout"""
+    from nbconvert.preprocessors import ExecutePreprocessor
+
+    if not show_output:
+        return ExecutePreprocessor(**kwargs)
+
+    class ShowOutputExecutePreprocessor(ExecutePreprocessor):
+        def output(self, outs, msg, display_id, cell_index):
+            out = super().output(outs, msg, display_id, cell_index)
+            if out is not None and out.get("output_type") == "stream":
+                # Keep the [jupytext] messages on stdout in order with the cell outputs
+                sys.stdout.flush()
+                sys.stderr.write(out.get("text", ""))
+                sys.stderr.flush()
+            return out
+
+    return ShowOutputExecutePreprocessor(**kwargs)
 
 
 def jupytext_single_file(nb_file, args, log, notary):
@@ -746,9 +778,7 @@ def jupytext_single_file(nb_file, args, log, notary):
             resources = {}
 
         try:
-            from nbconvert.preprocessors import ExecutePreprocessor
-
-            exec_proc = ExecutePreprocessor(timeout=None, kernel_name=kernel_name)
+            exec_proc = execute_preprocessor(show_output=args.show_output, timeout=None, kernel_name=kernel_name)
             exec_proc.preprocess(notebook, resources=resources)
         except (ImportError, RuntimeError) as err:
             if args.pre_commit_mode:
