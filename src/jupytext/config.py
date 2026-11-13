@@ -331,7 +331,7 @@ def find_jupytext_configuration_file(path: typing.Union[str, Path], search_paren
 
     pyproject_path = path / PYPROJECT_FILE
     if pyproject_path.is_file():
-        with pyproject_path.open() as stream:
+        with pyproject_path.open(encoding="utf-8") as stream:
             doc = tomllib.loads(stream.read())
             if doc.get("tool", {}).get("jupytext") is not None:
                 return str(pyproject_path)
