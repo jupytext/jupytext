@@ -77,6 +77,24 @@ def test_find_jupytext_configuration_file(tmpdir):
     assert os.path.samefile(find_jupytext_configuration_file(str(nested)), str(local_config))
 
 
+@pytest.mark.parametrize("has_jupytext_config", [False, True])
+def test_find_utf8_pyproject_with_cp1252_locale(tmp_path, monkeypatch, has_jupytext_config):
+    pyproject = tmp_path / "pyproject.toml"
+    content = "# \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438\n"
+    if has_jupytext_config:
+        content += '[tool.jupytext]\nformats = "ipynb,py:percent"\n'
+    pyproject.write_text(content, encoding="utf-8")
+    original_open = Path.open
+
+    def cp1252_open(path, *args, **kwargs):
+        kwargs.setdefault("encoding", "cp1252")
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", cp1252_open)
+    result = find_jupytext_configuration_file(tmp_path, search_parent_dirs=False)
+    assert result == (str(pyproject) if has_jupytext_config else None)
+
+
 def test_jupytext_py_is_not_a_configuration_file(tmpdir):
     jupytext_py = tmpdir.join("jupytext.py")
     jupytext_py.write("# Not a config file!")

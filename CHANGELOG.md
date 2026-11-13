@@ -1,6 +1,11 @@
 Jupytext ChangeLog
 ==================
 
+Unreleased
+----------
+
+- Read `pyproject.toml` as UTF-8 when discovering configuration on non-UTF-8 locales.
+
 1.19.6 (2026-10-04)
 -------------------
 
