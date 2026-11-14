@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import pytest
 from jupyter_server.utils import ensure_async
-from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook
+from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, new_raw_cell
 
 import jupytext
 from jupytext.combine import combine_inputs_with_outputs
@@ -222,3 +222,35 @@ def test_combine_attachments():
 
     nb_source = combine_inputs_with_outputs(nb_source, nb_outputs)
     compare(nb_source, nb_outputs)
+
+
+@pytest.mark.parametrize("fmt", ["py:percent", "py:light", "md", "md:myst"])
+def test_combine_keeps_metadata_of_yaml_header_cell(fmt):
+    """The text formats write a leading YAML raw cell as the file header, without its metadata (#1687)"""
+    nb = new_notebook(
+        cells=[
+            new_raw_cell(
+                "---\ntitle: Minimal\n---",
+                metadata={"raw_mimetype": "text/markdown", "tags": ["remove-cell"]},
+            ),
+            new_markdown_cell("Some text"),
+            new_code_cell("1 + 1"),
+        ]
+    )
+
+    text = jupytext.writes(nb, fmt)
+    nb_source = jupytext.reads(text, fmt)
+    assert nb_source.cells[0].metadata == {}
+
+    nb_source = combine_inputs_with_outputs(nb_source, nb, fmt=fmt)
+
+    assert nb_source.cells[0].metadata == {"raw_mimetype": "text/markdown", "tags": ["remove-cell"]}
+
+
+def test_combine_does_not_restore_metadata_of_other_raw_cells():
+    nb_source = new_notebook(cells=[new_raw_cell("---\nnot: a header\n---")])
+    nb_outputs = new_notebook(cells=[new_raw_cell("---\nnot: a header\n---", metadata={"tags": ["removed"]})])
+
+    nb_source = combine_inputs_with_outputs(nb_source, nb_outputs, fmt="ipynb")
+
+    assert nb_source.cells[0].metadata == {}
