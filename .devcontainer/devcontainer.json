@@ -18,6 +18,7 @@
     "postCreateCommand": "bash .devcontainer/post-create.sh",
     "waitFor": "postCreateCommand",
     "remoteEnv": {
+        "GH_TOKEN": "${localEnv:GH_TOKEN}",
         "PATH": "${containerWorkspaceFolder}/.pixi/envs/default/bin:${containerEnv:PATH}"
     },
     "forwardPorts": [
