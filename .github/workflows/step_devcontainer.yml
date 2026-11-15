@@ -23,6 +23,7 @@ jobs:
           push: never
           runCmd: |
             set -e
+            gh --version
             test -w /home/vscode/.codex
             pixi run --locked python - <<'PY'
             import sys
