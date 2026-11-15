@@ -59,7 +59,3 @@
   interpreter. Use Pyright as the language server and Ruff for linting/formatting.
 - Maintain a CI smoke check that builds the configured container and verifies
   the editable package, kernel registration, and notebook execution.
-
-- Allow contributors to choose additional AI extensions in the development container.
-  Preserve local Codex history across rebuilds with its dedicated volume; keep
-  migration backups private and outside version control.
