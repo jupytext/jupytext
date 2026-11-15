@@ -7,6 +7,7 @@ from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, n
 import jupytext
 from jupytext.combine import combine_inputs_with_outputs
 from jupytext.compare import compare, compare_notebooks
+from jupytext.myst import is_myst_available
 
 
 def test_combine():
@@ -227,6 +228,9 @@ def test_combine_attachments():
 @pytest.mark.parametrize("fmt", ["py:percent", "py:light", "md", "md:myst"])
 def test_combine_keeps_metadata_of_yaml_header_cell(fmt):
     """The text formats write a leading YAML raw cell as the file header, without its metadata (#1687)"""
+    if fmt == "md:myst" and not is_myst_available():
+        pytest.skip("myst is not available")
+
     nb = new_notebook(
         cells=[
             new_raw_cell(
