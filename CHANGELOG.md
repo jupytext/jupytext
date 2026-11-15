@@ -5,8 +5,6 @@ Jupytext ChangeLog
 -----------------------
 
 **Fixed**
-- Read `pyproject.toml` as UTF-8 when discovering configuration on non-UTF-8 locales. Thanks to
-  [Davis Rens](https://github.com/davrens101) for the PR ([#1686](https://github.com/jupytext/jupytext/pull/1686)).
 - Building Jupytext from a source distribution no longer fails when the generated README is missing. Thanks to
   [Nico Della Torre](https://github.com/nicozdeb) for the PR ([#1671](https://github.com/jupytext/jupytext/pull/1671)).
 - The Jupyter server extension now uses `inspect.iscoroutinefunction`, avoiding a deprecation warning on Python 3.14
