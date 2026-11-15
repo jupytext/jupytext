@@ -351,6 +351,44 @@ def test_execute_show_output_to_stdout(tmpdir, capsys):
 @pytest.mark.requires_user_kernel_python3
 @pytest.mark.requires_nbconvert
 @pytest.mark.skip_on_windows
+def test_execute_show_output_arrives_before_cell_finishes(tmp_path, capsys):
+    """The cell cannot finish until its partial stream output is forwarded and flushed."""
+    release = tmp_path / "continue"
+    script = tmp_path / "notebook.py"
+    script.write_text(
+        f"""import time
+from pathlib import Path
+
+print("stream-ready", end="", flush=True)
+deadline = time.monotonic() + 10
+while not Path({str(release)!r}).exists():
+    if time.monotonic() > deadline:
+        raise TimeoutError("Cell output was not forwarded while execution was running")
+    time.sleep(0.05)
+print("stream-done", flush=True)
+""",
+        encoding="utf-8",
+    )
+
+    class ReleaseOnFlush(StringIO):
+        def flush(self):
+            super().flush()
+            if "stream-ready" in self.getvalue():
+                release.touch()
+
+    stream = ReleaseOnFlush()
+    with mock.patch("sys.stderr", stream):
+        jupytext(args=[str(script), "--to", "ipynb", "--execute", "--show-output", "-o", "-", "--quiet"])
+
+    assert release.exists()
+    assert stream.getvalue() == "stream-readystream-done\n"
+    nb = reads(capsys.readouterr().out, "ipynb")
+    assert "".join(output["text"] for cell in nb.cells for output in cell.outputs) == "stream-readystream-done\n"
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
 def test_execute_does_not_show_output_by_default(tmpdir, capsys):
     tmp_py = str(tmpdir.join("notebook.py"))
 
