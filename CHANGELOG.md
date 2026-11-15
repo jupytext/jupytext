@@ -1,6 +1,40 @@
 Jupytext ChangeLog
 ==================
 
+1.19.7dev0 (unreleased)
+----------------------
+
+**Security**
+- We have merged Dependabot security updates for the JupyterLab extension and the documentation website
+  ([#1661](https://github.com/jupytext/jupytext/pull/1661), [#1663](https://github.com/jupytext/jupytext/pull/1663),
+  [#1670](https://github.com/jupytext/jupytext/pull/1670), [#1685](https://github.com/jupytext/jupytext/pull/1685),
+  [#1689](https://github.com/jupytext/jupytext/pull/1689)).
+
+**Fixed**
+- Building Jupytext from a source distribution no longer fails when the generated README is missing. Thanks to
+  [Nico Della Torre](https://github.com/nicozdeb) for the PR ([#1671](https://github.com/jupytext/jupytext/pull/1671)).
+- The Jupyter server extension now uses `inspect.iscoroutinefunction`, avoiding a deprecation warning on Python 3.14
+  and preparing for the removal of `asyncio.iscoroutinefunction` in Python 3.16. Thanks to
+  [maoxor](https://github.com/maoxor) for this fix ([#1674](https://github.com/jupytext/jupytext/pull/1674)).
+- Conversions to and from `py:marimo` now use UTF-8 for temporary files, fixing errors and corrupted non-ASCII text
+  on Windows with a non-UTF-8 locale. Thanks to [Alpenj](https://github.com/Alpenj) for the PR
+  ([#1679](https://github.com/jupytext/jupytext/pull/1679)).
+- Fixed documentation links in the README. Thanks to [thjbbvlt](https://github.com/thjbbvlt) for this contribution
+  ([#1657](https://github.com/jupytext/jupytext/pull/1657)).
+- Fixed Pixi dependency resolution and notebook test kernel registration in CI, and aligned the development container's
+  Pixi version with CI ([#1682](https://github.com/jupytext/jupytext/pull/1682)).
+
+**Changed**
+- CI jobs now run in parallel after successful `zizmor` and `pre-commit` checks, and Pixi dependency updates are limited
+  to the tested platform with serial solves ([#1682](https://github.com/jupytext/jupytext/pull/1682)).
+- Updated the documentation website's Astro, Starlight, and Sharp dependencies
+  ([#1659](https://github.com/jupytext/jupytext/pull/1659), [#1666](https://github.com/jupytext/jupytext/pull/1666),
+  [#1669](https://github.com/jupytext/jupytext/pull/1669), [#1682](https://github.com/jupytext/jupytext/pull/1682)).
+- Updated the GitHub Actions used for CI and publishing
+  ([#1658](https://github.com/jupytext/jupytext/pull/1658), [#1667](https://github.com/jupytext/jupytext/pull/1667),
+  [#1668](https://github.com/jupytext/jupytext/pull/1668), [#1678](https://github.com/jupytext/jupytext/pull/1678)).
+
+
 1.19.6 (2026-10-04)
 -------------------
 
