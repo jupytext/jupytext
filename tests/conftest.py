@@ -51,7 +51,7 @@ def force_validate_nbformat(monkeypatch):
 
 
 @pytest.fixture
-def fresh_notary(tmp_path):
+def fresh_notary():
     notary = NotebookNotary(
         db_file=":memory:",
         secret=b"test-secret",
@@ -59,6 +59,16 @@ def fresh_notary(tmp_path):
     yield notary
     # Close the SQLite database connection to avoid ResourceWarnings on Python 3.13+
     notary.store.close()
+
+
+@pytest.fixture(autouse=True)
+def isolated_notebook_trust(monkeypatch, tmp_path, fresh_notary):
+    """Keep notebook trust local to each test, including CLI subprocesses."""
+    monkeypatch.setenv("JUPYTER_DATA_DIR", str(tmp_path / "jupyter"))
+    # Change the default on the function itself so existing imported aliases also
+    # use this test's notary. Explicit notary arguments still take precedence,
+    # and the CLI leaves closing the injected notary to fresh_notary's teardown.
+    monkeypatch.setattr(jupytext.cli.jupytext, "__kwdefaults__", {"notary": fresh_notary})
 
 
 @pytest.fixture(params=["sync", "async"])

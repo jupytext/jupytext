@@ -12,6 +12,7 @@ import nbformat
 import pytest
 from jupyter_client.kernelspec import find_kernel_specs, get_kernel_spec
 from jupyter_server.utils import ensure_async
+from nbformat.sign import NotebookNotary
 from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook
 
 from jupytext import __version__, read, reads, write, writes
@@ -21,6 +22,33 @@ from jupytext.formats import JupytextFormatError, long_form_one_format
 from jupytext.myst import is_myst_available
 from jupytext.paired_paths import InconsistentPath, paired_paths
 from jupytext.pandoc import is_pandoc_available
+
+
+@pytest.mark.parametrize("repeat", range(2))
+def test_cli_uses_fresh_notary(tmp_path, fresh_notary, repeat):
+    """Trust survives CLI calls within a test, but not between tests."""
+    notebook = new_notebook(cells=[new_code_cell("1 + 1")])
+    path = tmp_path / "notebook.ipynb"
+    write(notebook, path)
+    assert not fresh_notary.check_signature(notebook)
+
+    for _ in range(2):
+        jupytext([str(path), "--to", "ipynb"])
+        assert fresh_notary.check_signature(read(path))
+
+
+def test_cli_subprocess_uses_isolated_trust(tmp_path):
+    notebook = new_notebook(cells=[new_code_cell("1 + 1")])
+    path = tmp_path / "notebook.ipynb"
+    write(notebook, path)
+    check_call([sys.executable, "-m", "jupytext", str(path), "--to", "ipynb"])
+
+    notary = NotebookNotary(data_dir=os.environ["JUPYTER_DATA_DIR"])
+    try:
+        assert notary.check_signature(read(path))
+        assert notary.db_file == str(tmp_path / "jupyter" / "nbsignatures.db")
+    finally:
+        notary.store.close()
 
 
 def test_str2bool():
