@@ -20,6 +20,11 @@
 - When intentionally changing dependencies, run `pixi install` and include the
   resulting `pixi.lock` changes. Routine setup and CI should use the lockfile.
 - Preserve compatibility with the Python versions declared in `pyproject.toml`.
+- When changing the version, update `src/jupytext/version.py` and the first
+  version heading in `CHANGELOG.md` together. Use the canonical development
+  spelling, e.g. `1.19.7.dev0`, including the dot before `dev`.
+- Keep new changelog entries in the existing style, with PR links and contributor
+  credits. Mark development versions as unreleased.
 - Python code lives in `src/`, tests in `tests/`, the JupyterLab extension in
   `jupyterlab/`, and the current documentation in `website/src/content/docs/`.
   Follow [developing](website/src/content/docs/reference/developing.md) and
@@ -36,6 +41,9 @@
 - Tests that execute notebooks require the current environment's Jupyter kernel:
   `pixi run python -m ipykernel install --name python_kernel --user`.
   Check for unexpected skips when validating notebook execution.
+- After version or changelog changes, run
+  `pixi run pytest tests/functional/docs/test_changelog.py` to check that the
+  version matches the changelog and satisfies the project's version format.
 - Use the existing Ruff and pre-commit configuration. Run hooks on changed files
   with `pixi run pre-commit run --files <paths>`. The JupyterLab lint hook needs
   Node and `jlpm` from Pixi; run Git commits through Pixi when hooks are installed.
