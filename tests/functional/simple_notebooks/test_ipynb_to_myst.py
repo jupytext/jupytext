@@ -262,8 +262,18 @@ async def test_myst_representation_same_cli_or_contents_manager(tmpdir, cwd_tmpd
 
 @pytest.mark.requires_myst
 @pytest.mark.parametrize("magic_first", [True, False])
-def test_language_magic_keeps_its_myst_lexer(magic_first):
-    cells = [new_code_cell("%%bash -e\necho hello"), new_code_cell("x = 1")]
+@pytest.mark.parametrize(
+    "magic, lexer",
+    [
+        ("bash -e", "bash"),
+        ("R -w 400", "R"),
+        ("html", "html"),
+        ("script python", "ipython3"),
+        ("spark", "ipython3"),
+    ],
+)
+def test_language_magic_keeps_its_myst_lexer(magic_first, magic, lexer):
+    cells = [new_code_cell(f"%%{magic}\necho hello"), new_code_cell("x = 1")]
     if not magic_first:
         cells.reverse()
     notebook = new_notebook(
@@ -273,7 +283,7 @@ def test_language_magic_keeps_its_myst_lexer(magic_first):
 
     text = jupytext.writes(notebook, fmt="md:myst")
 
-    assert "```{code-cell} bash\n%%bash -e\necho hello" in text
+    assert f"```{{code-cell}} {lexer}\n%%{magic}\necho hello" in text
     assert "```{code-cell} ipython3\nx = 1" in text
     with warnings.catch_warnings(record=True) as caught:
         restored = jupytext.reads(text, fmt="md:myst")
@@ -303,3 +313,15 @@ def test_myst_csharp_directive_keeps_existing_lexer():
         restored = jupytext.reads(text, fmt="md:myst")
     assert not caught
     assert [cell.source for cell in restored.cells] == [cell.source for cell in notebook.cells]
+
+
+@pytest.mark.requires_myst
+@pytest.mark.parametrize("magic", ["script python", "spark"])
+def test_magic_without_pygments_lexer_or_notebook_lexer(magic):
+    notebook = new_notebook(cells=[new_code_cell(f"%%{magic}\nprint(1)")])
+
+    text = jupytext.writes(notebook, fmt="md:myst")
+
+    assert f"```{{code-cell}}\n%%{magic}\nprint(1)" in text
+    restored = jupytext.reads(text, fmt="md:myst")
+    assert restored.cells[0].source == notebook.cells[0].source
