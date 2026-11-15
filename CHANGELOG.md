@@ -4,12 +4,6 @@ Jupytext ChangeLog
 1.19.7dev0 (unreleased)
 ----------------------
 
-**Security**
-- We have merged Dependabot security updates for the JupyterLab extension and the documentation website
-  ([#1661](https://github.com/jupytext/jupytext/pull/1661), [#1663](https://github.com/jupytext/jupytext/pull/1663),
-  [#1670](https://github.com/jupytext/jupytext/pull/1670), [#1685](https://github.com/jupytext/jupytext/pull/1685),
-  [#1689](https://github.com/jupytext/jupytext/pull/1689)).
-
 **Fixed**
 - Building Jupytext from a source distribution no longer fails when the generated README is missing. Thanks to
   [Nico Della Torre](https://github.com/nicozdeb) for the PR ([#1671](https://github.com/jupytext/jupytext/pull/1671)).
@@ -33,6 +27,12 @@ Jupytext ChangeLog
 - Updated the GitHub Actions used for CI and publishing
   ([#1658](https://github.com/jupytext/jupytext/pull/1658), [#1667](https://github.com/jupytext/jupytext/pull/1667),
   [#1668](https://github.com/jupytext/jupytext/pull/1668), [#1678](https://github.com/jupytext/jupytext/pull/1678)).
+
+**Security**
+- We have merged Dependabot security updates for the JupyterLab extension and the documentation website
+  ([#1661](https://github.com/jupytext/jupytext/pull/1661), [#1663](https://github.com/jupytext/jupytext/pull/1663),
+  [#1670](https://github.com/jupytext/jupytext/pull/1670), [#1685](https://github.com/jupytext/jupytext/pull/1685),
+  [#1689](https://github.com/jupytext/jupytext/pull/1689)).
 
 
 1.19.6 (2026-10-04)
