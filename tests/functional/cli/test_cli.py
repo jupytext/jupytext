@@ -51,6 +51,18 @@ def test_cli_subprocess_uses_isolated_trust(tmp_path):
         notary.store.close()
 
 
+@pytest.mark.requires_user_kernel_python3
+def test_cli_subprocess_can_execute_with_user_kernel(tmp_path):
+    notebook = new_notebook(
+        cells=[new_code_cell("1 + 1")],
+        metadata={"kernelspec": {"name": "python_kernel", "display_name": "Python", "language": "python"}},
+    )
+    path = tmp_path / "notebook.ipynb"
+    write(notebook, path)
+    check_call([sys.executable, "-m", "jupytext", str(path), "--execute", "--to", "ipynb"])
+    assert read(path).cells[0].outputs[0].data["text/plain"] == "2"
+
+
 def test_str2bool():
     assert str2bool("d") is None
     assert str2bool("TRUE") is True
