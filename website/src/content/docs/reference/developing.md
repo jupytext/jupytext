@@ -39,7 +39,7 @@ VS Code uses the Pixi Python interpreter and enables pytest discovery in the Tes
 
 ### Codex history and container rebuilds
 
-The container installs the OpenAI Codex extension and excludes `anthropic.claude-code` from automatic extension installation. Codex stores its local state in `/home/vscode/.codex`, backed by a dedicated container volume. Rebuilding the same container preserves this volume; deleting its volumes deletes that history.
+The container installs the OpenAI Codex extension. Codex stores its local state in `/home/vscode/.codex`, backed by a dedicated container volume. Rebuilding the same container preserves this volume; deleting its volumes deletes that history.
 
 Before migrating an existing container to this configuration, close Codex and back up its state from a terminal in the old container:
 
