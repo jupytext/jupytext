@@ -4,6 +4,8 @@ Jupytext ChangeLog
 1.19.7.dev0 (unreleased)
 -----------------------
 
+See [changelog fragments](changelog.d/) for additional unreleased changes.
+
 **Fixed**
 - Building Jupytext from a source distribution no longer fails when the generated README is missing. Thanks to
   [Nico Della Torre](https://github.com/nicozdeb) for the PR ([#1671](https://github.com/jupytext/jupytext/pull/1671)).

@@ -23,8 +23,27 @@
 - When changing the version, update `src/jupytext/version.py` and the first
   version heading in `CHANGELOG.md` together. Use the canonical development
   spelling, e.g. `1.19.7.dev0`, including the dot before `dev`.
-- Keep new changelog entries in the existing style, with PR links and contributor
-  credits. Mark development versions as unreleased.
+- On every development version bump, include a link to `[changelog fragments](changelog.d/)`
+  immediately below the new version heading in `CHANGELOG.md`. Keep
+  `changelog.d/.gitkeep` so the directory exists even without fragments. Remove
+  the development-only link when finalizing that version's release notes.
+- Collect changelog entries during release preparation rather than asking
+  ordinary PRs to edit `CHANGELOG.md` or change the version. Fragments are
+  optional; do not require PR authors to provide one or block a PR for its absence.
+- When useful, record a release note in
+  `changelog.d/<PR-number>.<category>.md`, with category `added`, `changed`,
+  `fixed`, or `security`. Use a unique descriptive filename until the PR number
+  is known. Write Markdown bullets without headings, with PR links and
+  contributor credits. Documentation-only and internal changes usually need
+  no release note.
+- At release time, review merged PRs since the previous release as well as any
+  fragments, and add missing entries. Manually group, edit, and order entries in
+  `CHANGELOG.md` by importance or topic; fragment filenames do not determine
+  the published order. Avoid duplicates and combine related dependency updates.
+  Delete incorporated fragments in the same commit. No release tooling or
+  mandatory fragment CI check is configured.
+- Keep release notes in the existing changelog style, with PR links and
+  contributor credits. Mark development versions as unreleased.
 - Python code lives in `src/`, tests in `tests/`, the JupyterLab extension in
   `jupyterlab/`, and the current documentation in `website/src/content/docs/`.
   Follow [developing](website/src/content/docs/reference/developing.md) and
