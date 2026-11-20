@@ -178,6 +178,8 @@ class BaseCellExporter:
             and self.comment != "#'"
             and is_active(self.ext, self.metadata)
             and self.fmt.get("format_name") not in ["percent", "hydrogen"]
+            # the reader only uncomments (once) code cells in a language other than the default one
+            and (self.cell_type != "code" or same_language(self.language, self.default_language))
         ):
             source = copy(source)
             comment_magic(
