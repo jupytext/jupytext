@@ -1,3 +1,4 @@
+import inspect
 import os
 
 import pytest
@@ -77,7 +78,7 @@ def test_legacy_notebook_without_cell_ids():
 
 @pytest.mark.parametrize("legacy", [False, True])
 @pytest.mark.parametrize("action", [["--sync"], ["--to", "ipynb", "--update"]])
-def test_cli_keeps_explicit_and_existing_cell_ids(tmp_path, cwd_tmp_path, legacy, action):
+def test_cli_keeps_explicit_and_existing_cell_ids(tmp_path, legacy, action):
     script = tmp_path / "example.py"
     ipynb = script.with_suffix(".ipynb")
     (tmp_path / "pyproject.toml").write_text(
@@ -98,7 +99,7 @@ def test_cli_keeps_explicit_and_existing_cell_ids(tmp_path, cwd_tmp_path, legacy
     os.utime(ipynb, (100, 100))
     os.utime(script, (200, 200))
 
-    assert jupytext([*action, script.name]) == 0
+    assert jupytext([*action, str(script)]) == 0
     converted = read(ipynb)
     validate(converted)
     assert converted.cells[0].id == "renamed"
@@ -108,7 +109,7 @@ def test_cli_keeps_explicit_and_existing_cell_ids(tmp_path, cwd_tmp_path, legacy
     assert [cell.outputs[0].text for cell in converted.cells] == ["first", "second"]
 
 
-def test_outputs_follow_explicit_ids_when_identical_cells_are_reordered(tmp_path, cwd_tmp_path):
+def test_outputs_follow_explicit_ids_when_identical_cells_are_reordered(tmp_path):
     (tmp_path / "jupytext.toml").write_text("cell_id_to_title = true\n", encoding="utf-8")
     notebook = new_notebook(
         cells=[
@@ -116,11 +117,13 @@ def test_outputs_follow_explicit_ids_when_identical_cells_are_reordered(tmp_path
             for cell_id in ("first", "second")
         ]
     )
-    write(notebook, "example.ipynb")
-    (tmp_path / "example.py").write_text("# %% second\nprint(x)\n\n# %% first\nprint(x)\n", encoding="utf-8")
+    script = tmp_path / "example.py"
+    ipynb = script.with_suffix(".ipynb")
+    write(notebook, ipynb)
+    script.write_text("# %% second\nprint(x)\n\n# %% first\nprint(x)\n", encoding="utf-8")
 
-    assert jupytext(["--to", "ipynb", "--update", "example.py"]) == 0
-    converted = read("example.ipynb")
+    assert jupytext(["--to", "ipynb", "--update", str(script)]) == 0
+    converted = read(ipynb)
     assert [(cell.id, cell.outputs[0].text) for cell in converted.cells] == [("second", "second"), ("first", "first")]
 
 
@@ -148,7 +151,7 @@ async def test_contents_manager_opens_pair_with_cell_ids(tmp_path, cm):
 
 
 @pytest.mark.asyncio
-async def test_contents_manager_opens_pair_created_by_sync(tmp_path, cwd_tmp_path, cm):
+async def test_contents_manager_opens_pair_created_by_sync(tmp_path, cm):
     cm.root_dir = str(tmp_path)
     (tmp_path / "pyproject.toml").write_text(
         '[tool.jupytext]\ncell_id_to_title = true\nformats = "ipynb,py"\n', encoding="utf-8"
@@ -157,10 +160,13 @@ async def test_contents_manager_opens_pair_created_by_sync(tmp_path, cwd_tmp_pat
     ipynb = script.with_suffix(".ipynb")
     script.write_text("# + intro [markdown]\n# Heading\n", encoding="utf-8")
 
-    assert jupytext(["--sync", script.name]) == 0
+    assert jupytext(["--sync", str(script)]) == 0
     os.utime(script, (100, 100))
     os.utime(ipynb, (200, 200))
 
-    model = await ensure_async(cm.get(ipynb.name, require_hash=True))
+    supports_hash = "require_hash" in inspect.signature(cm.super.get).parameters
+    kwargs = {"require_hash": True} if supports_hash else {}
+    model = await ensure_async(cm.get(ipynb.name, **kwargs))
     assert model["content"].cells[0].id == "intro"
-    assert model["hash"]
+    if supports_hash:
+        assert model["hash"]
