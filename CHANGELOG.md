@@ -18,6 +18,11 @@ Jupytext ChangeLog
   metadata loss and [Eliot5566](https://github.com/Eliot5566) for the front-matter fix
   ([#1687](https://github.com/jupytext/jupytext/issues/1687), [#1688](https://github.com/jupytext/jupytext/pull/1688),
   [#1702](https://github.com/jupytext/jupytext/pull/1702)).
+- When adding a final newline would be the only change to a Python source, `jupytext --sync` leaves the script
+  as saved, preventing a cursor jump in VS Code. Thanks to [@sysy007uuu](https://github.com/sysy007uuu) for
+  reporting the issue and [Victor Negîrneac](https://github.com/caenrigen) for tracing it to Jupytext
+  ([Jupytext Sync [#42](https://github.com/mwouts/jupytext/issues/42)](https://github.com/caenrigen/vscode-jupytext-sync/issues/42),
+  [#1705](https://github.com/jupytext/jupytext/pull/1705)).
 - MyST round trips preserve syntax highlighting for cells that use recognized IPython language magics. Other
   magics such as `%%script` and `%%spark` keep the notebook lexer. Thanks to [Ilya Khalafi](https://github.com/IlyaKhalafi)
   for the PR ([#1396](https://github.com/jupytext/jupytext/issues/1396), [#1680](https://github.com/jupytext/jupytext/pull/1680)).
