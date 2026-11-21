@@ -184,8 +184,9 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
 
         notebook = new_notebook(cells=cells, metadata=metadata)
         if cell_ids_from_titles:
-            # Keep track of explicit IDs for pairing, outside the serialized notebook.
-            object.__setattr__(notebook, "_cell_ids_from_titles", frozenset(cell_ids_from_titles))
+            # Keep pairing state in the instance dictionary. NotebookNode's attribute
+            # access can resolve keys from the serialized notebook.
+            vars(notebook)["_cell_ids_from_titles"] = frozenset(cell_ids_from_titles)
         return notebook
 
     def filter_notebook(self, nb, metadata, preserve_cell_ids=True):

@@ -30,7 +30,7 @@ def read_pair(inputs, outputs, read_one_file, must_match=False):
         comparison_source = notebook
         fmt = inputs.fmt
         config = None
-        source_ids = getattr(notebook, "_cell_ids_from_titles", ())
+        source_ids = vars(notebook).get("_cell_ids_from_titles", ())
         if source_ids:
             config = JupytextConfiguration(cell_id_to_title=True)
             # A pairing such as "ipynb,py" leaves the source script format to be detected on read.
