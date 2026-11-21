@@ -7,11 +7,13 @@ from jupytext.version import __version__
 
 
 def replace_issue_number_with_links(text):
-    return re.sub(
-        r"([^\[-])#([0-9]+)",
-        r"\1[#\2](https://github.com/mwouts/jupytext/issues/\2)",
-        text,
-    )
+    def link_issue(match):
+        prefix, issue = match.groups()
+        if issue is None:
+            return match[0]
+        return f"{prefix}[#{issue}](https://github.com/mwouts/jupytext/issues/{issue})"
+
+    return re.sub(r"\[[^\]\n]*\]\([^\n)]*\)|([^\[-])#([0-9]+)", link_issue, text)
 
 
 @pytest.mark.parametrize(
@@ -28,6 +30,11 @@ def replace_issue_number_with_links(text):
         (
             "(#123) and [Another-project-#535](https://custom_url)",
             "([#123](https://github.com/mwouts/jupytext/issues/123)) and [Another-project-#535](https://custom_url)",
+        ),
+        (
+            "[Jupytext Sync #42](https://github.com/caenrigen/vscode-jupytext-sync/issues/42) and #123",
+            "[Jupytext Sync #42](https://github.com/caenrigen/vscode-jupytext-sync/issues/42) and "
+            "[#123](https://github.com/mwouts/jupytext/issues/123)",
         ),
     ],
 )

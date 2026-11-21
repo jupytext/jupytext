@@ -1,6 +1,19 @@
 Jupytext ChangeLog
 ==================
 
+1.20.1.dev0 (unreleased)
+-----------------------
+
+See [changelog fragments](changelog.d/) for additional unreleased changes.
+
+
+1.20.0 (2026-01-18, yanked)
+---------------------------
+
+The [1.20.0 files on PyPI](https://pypi.org/project/jupytext/1.20.0/) were yanked because they were
+Jupytext 1.19.0 builds uploaded under the wrong version number. The 1.20 series starts at 1.20.1.
+
+
 1.19.7 (2026-11-21)
 -------------------
 
@@ -21,7 +34,7 @@ Jupytext ChangeLog
 - When adding a final newline would be the only change to a Python source, `jupytext --sync` leaves the script
   as saved, preventing a cursor jump in VS Code. Thanks to [@sysy007uuu](https://github.com/sysy007uuu) for
   reporting the issue and [Victor Negîrneac](https://github.com/caenrigen) for tracing it to Jupytext
-  ([Jupytext Sync [#42](https://github.com/mwouts/jupytext/issues/42)](https://github.com/caenrigen/vscode-jupytext-sync/issues/42),
+  ([Jupytext Sync #42](https://github.com/caenrigen/vscode-jupytext-sync/issues/42),
   [#1705](https://github.com/jupytext/jupytext/pull/1705)).
 - MyST round trips preserve syntax highlighting for cells that use recognized IPython language magics. Other
   magics such as `%%script` and `%%spark` keep the notebook lexer. Thanks to [Ilya Khalafi](https://github.com/IlyaKhalafi)
@@ -654,7 +667,7 @@ a configuration file ([#967](https://github.com/mwouts/jupytext/issues/967))
 **Changed**
 - The extension for JupyterLab benefited from a series of improvements contributed by [Frédéric Collonval](https://github.com/fcollonval):
   - A new "Jupytext Notebook" factory offers the option to open text notebooks directly with the notebook view ([#803](https://github.com/mwouts/jupytext/issues/803)). To use it, follow the instructions in the [documentation](https://github.com/mwouts/jupytext/blob/main/docs/index.md#Install).
-  - The ICommandPalette is optional, for compatibility with RISE within JupyterLab [RISE[#605](https://github.com/mwouts/jupytext/issues/605)](https://github.com/damianavila/RISE/pull/605)
+  - The ICommandPalette is optional, for compatibility with RISE within JupyterLab [RISE #605](https://github.com/damianavila/RISE/pull/605)
   - Added support for translation
 - Branch `master` was renamed to `main` (links in the documentation were updated)
 
