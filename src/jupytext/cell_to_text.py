@@ -7,6 +7,7 @@ from copy import copy
 from .cell_metadata import (
     _IGNORE_CELL_METADATA,
     is_active,
+    is_valid_cell_id,
     metadata_to_double_percent_options,
     metadata_to_rmd_options,
     metadata_to_text,
@@ -61,6 +62,10 @@ class BaseCellExporter:
         self.fmt = fmt or {}
         self.ext = self.fmt.get("extension")
         self.cell_type = cell.cell_type
+        self.cell_id = None
+        if self.fmt.get("cell_id_to_title"):
+            cell_id = cell.get("id")
+            self.cell_id = cell_id if is_valid_cell_id(cell_id) else ""
         self.source = cell_source(cell)
         self.unfiltered_metadata = cell.metadata
         self.metadata = filter_metadata(
@@ -334,7 +339,7 @@ class LightScriptCellExporter(BaseCellExporter):
         # need explicit cell markers.
         if (
             self.cell_type == "markdown"
-            and (self.metadata or (self.no_empty_comment and self.use_cell_markers and "" in self.source))
+            and (self.metadata or self.cell_id or (self.no_empty_comment and self.use_cell_markers and "" in self.source))
         ) or self.use_triple_quotes():
             if is_active(self.ext, self.metadata):
                 self.explicit_markdown = self.no_empty_comment and self.cell_type == "markdown"
@@ -366,7 +371,7 @@ class LightScriptCellExporter(BaseCellExporter):
         ) or self.explicit_start_marker(source):
             self.metadata["endofcell"] = self.cell_marker_end or endofcell_marker(source, self.comment)
 
-        if not self.metadata or not self.use_cell_markers:
+        if not (self.metadata or self.cell_id) or not self.use_cell_markers:
             return source
 
         lines = []
@@ -378,9 +383,9 @@ class LightScriptCellExporter(BaseCellExporter):
         if explicit_markdown and not self.cell_marker_end and not self.cell_metadata_json:
             # Generated end markers contain only hyphens, so they need no JSON escaping.
             self.metadata.pop("endofcell")
-            options = metadata_to_double_percent_options(self.metadata, False) + f' endofcell="{endofcell}"'
+            options = metadata_to_double_percent_options(self.metadata, False, self.cell_id) + f' endofcell="{endofcell}"'
         else:
-            options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json)
+            options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json, self.cell_id)
         if options:
             cell_start.append(options)
         lines.append(" ".join(cell_start))
@@ -393,7 +398,7 @@ class LightScriptCellExporter(BaseCellExporter):
         start of cell marker?"""
         if not self.use_cell_markers:
             return False
-        if self.metadata:
+        if self.metadata or self.cell_id:
             return True
         if self.cell_marker_start:
             start_code_re = re.compile(
@@ -512,9 +517,9 @@ class DoublePercentCellExporter(BaseCellExporter):  # pylint: disable=W0223
 
         if endofcell is not None and not self.cell_metadata_json:
             self.metadata.pop("endofcell")
-            options = metadata_to_double_percent_options(self.metadata, False) + f' endofcell="{endofcell}"'
+            options = metadata_to_double_percent_options(self.metadata, False, self.cell_id) + f' endofcell="{endofcell}"'
         else:
-            options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json)
+            options = metadata_to_double_percent_options(self.metadata, self.cell_metadata_json, self.cell_id)
         indent = ""
         if self.is_code() and active and self.source:
             first_line = self.source[0]

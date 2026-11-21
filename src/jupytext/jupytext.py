@@ -59,6 +59,11 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
         self.config = config
         self.ext = self.fmt["extension"]
         self.implementation = get_format_implementation(self.ext, self.fmt.get("format_name"))
+        self.cell_id_to_title = (
+            self.implementation.format_name in ("light", "percent", "hydrogen")
+            and config is not None
+            and config.cell_id_to_title
+        )
 
     def update_fmt_with_notebook_options(self, metadata, read=False):
         """Update format options with the values in the notebook metadata, and record those
@@ -135,10 +140,17 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
             cells.append(new_code_cell(source="%matplotlib inline"))
 
         cell_metadata_json = False
+        cell_ids_from_titles = set()
+        cell_fmt = {**self.fmt, "cell_id_to_title": True} if self.cell_id_to_title else self.fmt
 
         while lines:
-            reader = self.implementation.cell_reader_class(self.fmt, default_language)
+            reader = self.implementation.cell_reader_class(cell_fmt, default_language)
             cell, pos = reader.read(lines)
+            if reader.cell_id is not None:
+                if reader.cell_id in cell_ids_from_titles:
+                    raise ValueError(f"Duplicate cell ID {reader.cell_id!r} in cell marker titles")
+                cell.id = reader.cell_id
+                cell_ids_from_titles.add(cell.id)
             cells.append(cell)
             cell_metadata_json = cell_metadata_json or reader.cell_metadata_json
             if pos <= 0:
@@ -170,7 +182,11 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
                 filtered_cells.append(cell)
             cells = filtered_cells
 
-        return new_notebook(cells=cells, metadata=metadata)
+        notebook = new_notebook(cells=cells, metadata=metadata)
+        if cell_ids_from_titles:
+            # Keep track of explicit IDs for pairing, outside the serialized notebook.
+            object.__setattr__(notebook, "_cell_ids_from_titles", frozenset(cell_ids_from_titles))
+        return notebook
 
     def filter_notebook(self, nb, metadata, preserve_cell_ids=True):
         self.update_fmt_with_notebook_options(nb.metadata)
@@ -259,6 +275,7 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
             "sphinx"
         )
         split_at_heading = self.fmt.get("split_at_heading", False)
+        cell_fmt = {**self.fmt, "cell_id_to_title": True} if self.cell_id_to_title else self.fmt
 
         for cell in nb.cells:
             if looking_for_first_markdown_cell and cell.cell_type == "markdown":
@@ -266,7 +283,7 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
                 looking_for_first_markdown_cell = False
 
             cell_exporters.append(
-                self.implementation.cell_exporter_class(cell, default_language, self.fmt, unsupported_keys=unsupported_keys)
+                self.implementation.cell_exporter_class(cell, default_language, cell_fmt, unsupported_keys=unsupported_keys)
             )
 
         _warn_on_unsupported_keys(unsupported_keys)
@@ -409,7 +426,7 @@ def read(fp, as_version=nbformat.NO_CONVERT, fmt=None, config=None, **kwargs):
         # Update the input format by reference if missing
         if isinstance(fmt, dict) and not fmt:
             fmt.update(long_form_one_format(divine_format(text)))
-        return reads(text, fmt)
+        return reads(text, fmt or None, as_version=as_version, config=config, **kwargs)
 
     if not hasattr(fp, "read"):
         # Treat fp as a file name

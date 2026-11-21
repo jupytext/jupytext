@@ -19,6 +19,7 @@ except (ImportError, SyntaxError):  # pragma: no cover
 from .cell_metadata import (
     is_active,
     is_json_metadata,
+    is_valid_cell_id,
     rmd_options_to_metadata,
     text_to_metadata,
 )
@@ -151,6 +152,7 @@ class BaseCellReader:
         self.explicit_soc = None
         self.explicit_eoc = None
         self.cell_type = None
+        self.cell_id = None
         self.language = None
         self.cell_metadata_json = fmt.get("cell_metadata_json", False)
         self.doxygen_equation_markers = fmt.get("doxygen_equation_markers", False)
@@ -613,6 +615,7 @@ class LightScriptCellReader(ScriptCellReader):
     def __init__(self, fmt=None, default_language=None):
         super().__init__(fmt, default_language)
         self.ext = self.ext or ".py"
+        self.cell_id_to_title = (fmt or {}).get("cell_id_to_title", False)
         script = _SCRIPT_EXTENSIONS[self.ext]
         self.default_language = default_language or script["language"]
         self.comment = script["comment"]
@@ -678,7 +681,11 @@ class LightScriptCellReader(ScriptCellReader):
             title = title.strip()
 
         if title:
-            metadata["title"] = title
+            cell_id = title.replace(" ", "_")
+            if self.cell_id_to_title and is_valid_cell_id(cell_id):
+                self.cell_id = cell_id
+            else:
+                metadata["title"] = title
 
         return None, metadata
 
@@ -739,6 +746,7 @@ class LightScriptCellReader(ScriptCellReader):
                     # before the next start marker. So we dismiss it.
                     self.metadata = None
                     self.language = None
+                    self.cell_id = None
 
                 if i > 0 and _BLANK_LINE.match(lines[i - 1]):
                     if i > 1 and _BLANK_LINE.match(lines[i - 2]):
