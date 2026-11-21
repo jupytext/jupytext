@@ -1,0 +1,22 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+begin_src jupyter-python
+c = '''
+title: "Quick test"
+output:
+  ioslides_presentation:
+    widescreen: true
+    smaller: true
+editor_options:
+     chunk_output_type console
+'''
+#+end_src
+
+#+begin_src jupyter-python
+import yaml
+print(yaml.dump(yaml.load(c)))
+#+end_src
+
+#+begin_src jupyter-python
+?next
+#+end_src

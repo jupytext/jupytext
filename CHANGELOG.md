@@ -1,7 +1,7 @@
 Jupytext ChangeLog
 ==================
 
-1.19.7.dev0 (unreleased)
+1.20.1.dev0 (unreleased)
 -----------------------
 
 See [changelog fragments](changelog.d/) for additional unreleased changes.

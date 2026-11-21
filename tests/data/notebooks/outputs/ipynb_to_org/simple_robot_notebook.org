@@ -1,0 +1,25 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Robot Framework
+#+PROPERTY: header-args:jupyter-robotframework :kernel robotkernel
+#+begin_src jupyter-robotframework
+,*** Settings ***
+
+Library  Collections
+#+end_src
+
+#+begin_src jupyter-robotframework
+,*** Keywords ***
+
+Head
+    [Arguments]  ${list}
+    ${value}=  Get from list  ${list}  0
+    [Return]  ${value}
+#+end_src
+
+#+begin_src jupyter-robotframework
+,*** Tasks ***
+
+Get head
+    ${array}=  Create list  1  2  3  4  5
+    ${head}=  Head  ${array}
+    Should be equal  ${head}  1
+#+end_src

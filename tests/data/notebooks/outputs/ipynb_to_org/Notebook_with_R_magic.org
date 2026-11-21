@@ -1,0 +1,28 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 2
+#+PROPERTY: header-args:jupyter-python :kernel python2
+* A notebook with R cells
+:PROPERTIES:
+:CUSTOM_ID: a-notebook-with-r-cells
+:END:
+This notebook shows the use of R cells to generate plots
+
+#+begin_src jupyter-python
+%load_ext rpy2.ipython
+#+end_src
+
+#+begin_src jupyter-python
+%%R
+suppressMessages(require(tidyverse))
+#+end_src
+
+#+begin_src jupyter-python
+%%R
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length, color=Species)) + geom_point()
+#+end_src
+
+The default plot dimensions are not good for us, so we use the -w and -h parameters in %%R magic to set the plot size
+
+#+begin_src jupyter-python
+%%R -w 400 -h 240
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length, color=Species)) + geom_point()
+#+end_src

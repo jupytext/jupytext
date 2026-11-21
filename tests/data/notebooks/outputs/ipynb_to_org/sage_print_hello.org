@@ -1,0 +1,5 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: SageMath 9.2
+#+PROPERTY: header-args:jupyter-sage :kernel sagemath
+#+begin_src jupyter-sage
+print("Hello world")
+#+end_src

@@ -1,0 +1,79 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+This notebook contains outputs of many different types: text, HTML, plots and errors.
+
+* Text outputs
+:PROPERTIES:
+:CUSTOM_ID: text-outputs
+:END:
+Using =print=, =sys.stdout= and =sys.stderr=
+
+#+begin_src jupyter-python
+import sys
+print('using print')
+sys.stdout.write('using sys.stdout.write')
+sys.stderr.write('using sys.stderr.write')
+#+end_src
+
+#+begin_src jupyter-python
+import logging
+logging.debug('Debug')
+logging.info('Info')
+logging.warning('Warning')
+logging.error('Error')
+#+end_src
+
+* HTML outputs
+:PROPERTIES:
+:CUSTOM_ID: html-outputs
+:END:
+Using =pandas=. Here we find two representations: both text and HTML.
+
+#+begin_src jupyter-python
+import pandas as pd
+pd.DataFrame([4])
+#+end_src
+
+#+begin_src jupyter-python
+from IPython.display import display
+display(pd.DataFrame([5]))
+display(pd.DataFrame([6]))
+#+end_src
+
+* Images
+:PROPERTIES:
+:CUSTOM_ID: images
+:END:
+
+#+begin_src jupyter-python
+%matplotlib inline
+#+end_src
+
+#+begin_src jupyter-python
+# First plot
+from matplotlib import pyplot as plt
+import numpy as np
+w, h = 3, 3
+data = np.zeros((h, w, 3), dtype=np.uint8)
+data[0,:] = [0,255,0]
+data[1,:] = [0,0,255]
+data[2,:] = [0,255,0]
+data[1:3,1:3] = [255, 0, 0]
+plt.imshow(data)
+plt.axis('off')
+plt.show()
+# Second plot
+data[1:3,1:3] = [255, 255, 0]
+plt.imshow(data)
+plt.axis('off')
+plt.show()
+#+end_src
+
+* Errors
+:PROPERTIES:
+:CUSTOM_ID: errors
+:END:
+
+#+begin_src jupyter-python
+undefined_variable
+#+end_src

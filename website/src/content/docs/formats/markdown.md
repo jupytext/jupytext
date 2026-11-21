@@ -165,3 +165,45 @@ In Pandoc Markdown, all cells are marked with pandoc divs (`:::`). The format is
 See for instance how our `World population.ipynb` notebook is [represented](https://github.com/jupytext/jupytext/blob/main/demo/World%20population.pandoc.md#) in the `md:pandoc` format.
 
 If you wish to use that format, please install `pandoc` in version 2.7.2 or above, with e.g. `conda install pandoc -c conda-forge`.
+
+## Org Mode
+
+The Org format was introduced in Jupytext 1.20.1.
+
+[Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
+Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
+
+
+Code cells are represented as `#+BEGIN_SRC jupyter-<language> ... #+END_SRC` blocks. Pandoc imports ordinary source blocks such as `#+BEGIN_SRC python` as fenced code in Markdown cells. The kernel metadata are recorded as top-level `#+PROPERTY: header-args` lines in the Org output, e.g.
+
+```org
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+PROPERTY: header-args:jupyter-python+ :session python3
+```
+
+Jupytext stores document-wide Babel properties in notebook metadata under `org_babel.header_args`. In Markdown-like formats this appears under `jupyter.org_babel`. Language-specific properties use the Org language name as the key, and a property that applies to all languages uses an empty key.
+
+```yaml
+jupyter:
+  org_babel:
+    header_args:
+      jupyter-python:
+        session: python3
+```
+
+Current limitations
+
+- Cell metadata is not preserved in the Org representation.
+- Consecutive Markdown cells are concatenated on round-trip, since Org prose has no native cell-boundary markers.
+- Raw cells are not preserved by the current Pandoc-based conversion path.
+- Org headers store the kernelspec and document-wide Babel properties. Block- and subtree-level Babel settings, and other notebook metadata, are outside the round-trip guarantee.
+- Pandoc may normalize code formatting, including tab indentation.
+- Org conversion stops with an error if Pandoc takes longer than 30 seconds.
+
+To use the Org format, install `pandoc` in version 2.7.2 or above, then convert with:
+
+```bash
+jupytext --to org notebook.ipynb
+jupytext --to ipynb notebook.org
+```

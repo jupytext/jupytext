@@ -40,6 +40,7 @@ from .languages import (
 )
 from .metadata_filter import filter_metadata, update_metadata_filters
 from .myst import MYST_FORMAT_NAME, myst_extensions, myst_to_notebook, notebook_to_myst
+from .org import notebook_to_org, org_to_notebook
 from .pandoc import md_to_notebook, notebook_to_md
 from .pep8 import pep8_lines_between_cells
 from .quarto import notebook_to_qmd, qmd_to_notebook
@@ -99,6 +100,9 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
         """Read a notebook represented as text"""
         if self.fmt.get("format_name") == "pandoc":
             return md_to_notebook(s)
+
+        if self.fmt.get("format_name") == "org" or self.ext == ".org":
+            return org_to_notebook(s)
 
         if self.fmt.get("format_name") == "quarto":
             return qmd_to_notebook(s)
@@ -214,6 +218,8 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
         """Return the text representation of the notebook"""
         if self.fmt.get("format_name") == "pandoc":
             return notebook_to_md(self.filter_notebook(nb, metadata))
+        if self.fmt.get("format_name") == "org" or self.ext == ".org":
+            return notebook_to_org(self.filter_notebook(nb, metadata))
         if self.fmt.get("format_name") == "quarto" or self.ext == ".qmd":
             return notebook_to_qmd(self.filter_notebook(nb, metadata))
         if self.fmt.get("format_name") == "marimo":

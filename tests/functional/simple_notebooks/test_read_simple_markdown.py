@@ -887,6 +887,37 @@ jupyter:
     compare_notebooks(nb2, nb)
 
 
+def test_org_babel_metadata(
+    no_jupytext_version_number,
+    nb=new_notebook(
+        metadata={
+            "org_babel": {"header_args": {"jupyter-python": {"session": "verification-games-fluxes"}}},
+            "kernelspec": {
+                "display_name": "Python 3",
+                "language": "python",
+                "name": "python3",
+            },
+        }
+    ),
+    md="""---
+jupyter:
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+  org_babel:
+    header_args:
+      jupyter-python:
+        session: verification-games-fluxes
+---
+""",
+):
+    md2 = jupytext.writes(nb, "md")
+    compare(md2, md)
+    nb2 = jupytext.reads(md, "md")
+    compare_notebooks(nb2, nb)
+
+
 def test_hide_notebook_metadata(
     no_jupytext_version_number,
     nb=new_notebook(

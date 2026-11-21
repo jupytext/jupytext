@@ -1,0 +1,78 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Javascript (Node.js)
+#+PROPERTY: header-args:jupyter-javascript :kernel javascript
+** A notebook that uses IJavascript kernel
+:PROPERTIES:
+:CUSTOM_ID: a-notebook-that-uses-ijavascript-kernel
+:END:
+
+#+begin_src jupyter-javascript
+let x = 5;
+const y = 6;
+var z = 10;
+#+end_src
+
+#+begin_src jupyter-javascript
+x + y;
+#+end_src
+
+#+begin_src jupyter-javascript
+function add(num1, num2) {
+    return num1 + num2
+}
+#+end_src
+
+#+begin_src jupyter-javascript
+add(x, y);
+#+end_src
+
+#+begin_src jupyter-javascript
+const arrowAdd = (num1, num2) => num1 + num2;
+#+end_src
+
+#+begin_src jupyter-javascript
+arrowAdd(x, y);
+#+end_src
+
+#+begin_src jupyter-javascript
+const myCar = {
+    color: "blue",
+    weight: 850,
+    model: "fiat",
+    start: () => "car started!",
+    doors: [1,2,3,4]
+}
+#+end_src
+
+#+begin_src jupyter-javascript
+console.log("color:", myCar.color);
+#+end_src
+
+#+begin_src jupyter-javascript
+console.log("start:", myCar.start());
+#+end_src
+
+#+begin_src jupyter-javascript
+for (let door of myCar.doors) {
+    console.log("I'm door", door)
+}
+#+end_src
+
+#+begin_src jupyter-javascript
+myCar;
+#+end_src
+
+#+begin_src jupyter-javascript
+class User {
+  constructor(name){
+    this.name = name;
+  }
+  sayHello(){
+    return "Hello, I'm " + this.name;
+  }
+}
+#+end_src
+
+#+begin_src jupyter-javascript
+let John = new User("John");
+John.sayHello();
+#+end_src
