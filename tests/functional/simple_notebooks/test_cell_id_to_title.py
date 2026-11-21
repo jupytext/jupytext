@@ -9,6 +9,7 @@ from tornado.web import HTTPError
 
 from jupytext import read, reads, write, writes
 from jupytext.cli import jupytext
+from jupytext.combine import combine_inputs_with_outputs
 from jupytext.config import JupytextConfiguration
 
 
@@ -34,6 +35,7 @@ def test_cell_id_to_title_round_trip(fmt, marker, filter_metadata):
 
     recreated = reads(text, f"py:{fmt}", config=config)
     validate(recreated)
+    assert "_cell_ids_from_titles" not in recreated
     assert [(cell.id, cell.cell_type, cell.source) for cell in recreated.cells] == [
         (cell.id, cell.cell_type, cell.source) for cell in notebook.cells
     ]
@@ -64,6 +66,14 @@ def test_duplicate_cell_ids_are_reported():
     text = "# %% A title\n1 + 1\n\n# %% A_title\n2 + 2\n"
     with pytest.raises(ValueError, match="Duplicate cell ID 'A_title'"):
         reads(text, "py:percent", config=config)
+
+
+def test_notebook_fields_do_not_supply_ids_for_pairing():
+    source = new_notebook(cells=[new_code_cell("1 + 1", id="source")])
+    source["_cell_ids_from_titles"] = ["source"]
+    outputs = new_notebook(cells=[new_code_cell("1 + 1", id="existing")])
+
+    assert combine_inputs_with_outputs(source, outputs).cells[0].id == "existing"
 
 
 def test_legacy_notebook_without_cell_ids():

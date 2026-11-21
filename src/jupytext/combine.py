@@ -50,7 +50,7 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
             nb_outputs.nbformat, nb_outputs.nbformat_minor, nb_source.nbformat
         )
     )
-    source_ids = getattr(nb_source, "_cell_ids_from_titles", ())
+    source_ids = vars(nb_source).get("_cell_ids_from_titles", ())
     nbformat_minor = max(nb_outputs.nbformat_minor, 5) if source_ids else nb_outputs.nbformat_minor
     nb_source.nbformat_minor = nbformat_minor
 
