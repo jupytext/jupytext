@@ -34,6 +34,28 @@ notebook_metadata_filter="-jupytext.text_representation.jupytext_version"
 
 Finally, note that you can _hide_ the notebook metadata in an HTML comment in `.md` files - just set `hide_notebook_metadata=true` either at the command line or in the `jupytext.toml` file.
 
+## Preserve cell IDs in scripts
+
+When you track a script in Git, you can keep its cell IDs when collaborators
+recreate the notebook. To opt in for `light`, `percent`, and `hydrogen` scripts,
+add this to your [`jupytext.toml`](/using/config/) file and share it with your collaborators.
+
+```toml
+cell_id_to_title = true
+```
+
+Jupytext writes cell IDs as titles in cell markers. For example, a
+`percent` script can start a Markdown cell with `# %% introduction [markdown]`.
+The cell ID is saved even with `cell_metadata_filter = "-all"`. If the cell also
+has a title in its metadata, Jupytext writes it as a separate `title="..."`
+attribute when the filter allows it.
+
+When reading a script, Jupytext replaces spaces in marker titles with
+underscores. An ID must contain 1 to 64 ASCII letters, digits, underscores, or
+hyphens, and must be unique within the notebook. Titles that do not satisfy
+the character or length rule remain cell metadata. Duplicate IDs cause a
+conversion error.
+
 ## Magic commands
 
 In the `percent` and `light` script formats, magic commands (Jupyter commands prefixed by `%` or `%%`) are commented out in scripts. You can change this by using the `comment_magics` option, either in the `jupytext.toml` file or at the command line with `jupytext --opt`.

@@ -112,6 +112,12 @@ class JupytextConfiguration(Configurable):
 
     default_cell_metadata_filter = Unicode("", help="Deprecated. Use 'cell_metadata_filter' instead", config=True)
 
+    cell_id_to_title = Bool(
+        False,
+        help="Store cell IDs in the cell marker titles of light, percent and hydrogen scripts",
+        config=True,
+    )
+
     comment_magics = Enum(
         values=[True, False],
         allow_none=True,
