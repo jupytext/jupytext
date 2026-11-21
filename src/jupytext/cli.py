@@ -663,6 +663,7 @@ def jupytext_single_file(nb_file, args, log, notary):
 
     # Read paired notebooks
     nb_files = [nb_file, nb_dest]
+    inputs_nb_file = None
     outputs_nb_file = None
     if args.sync:
         # If we are also setting the formats, we take the information
@@ -885,6 +886,16 @@ def jupytext_single_file(nb_file, args, log, notary):
                 timestamp_checker.check_timestamp(path)
 
                 modified = new_content != current_content
+                # Preserve the Python source when serialization only adds a final newline.
+                if (
+                    modified
+                    and path == inputs_nb_file
+                    and not nb_dest
+                    and not args.pipe
+                    and ext == ".py"
+                    and _only_adds_final_newline(current_content, new_content)
+                ):
+                    modified = False
                 if modified and args.show_changes:
                     diff = compare(
                         new_content,
@@ -1228,6 +1239,10 @@ class TimestampChecker:
 _callback_on_lazy_write = None
 
 
+def _only_adds_final_newline(original: str, serialized: str) -> bool:
+    return not original.endswith("\n") and serialized == original + "\n"
+
+
 def load_paired_notebook(
     notebook,
     fmt,
@@ -1271,7 +1286,7 @@ def load_paired_notebook(
                 timestamp_checker.get_and_check_timestamp(alt_path)
                 nb = read(alt_path, fmt=alt_fmt, config=config)
                 alt_text = writes(nb, fmt=fmt0, config=config)
-                if alt_text != text0:
+                if alt_text != text0 and not (fmt0["extension"] == ".py" and _only_adds_final_newline(text0, alt_text)):
                     diff = compare(alt_text, text0, alt_path, path0, return_diff=True)
                     raise InconsistentVersions(
                         f"{shlex.quote(alt_path)} and {shlex.quote(path0)} are inconsistent.\n"
