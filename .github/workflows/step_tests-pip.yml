@@ -90,7 +90,7 @@ jobs:
           sudo apt install ./*.deb
 
       - name: Test with pytest
-        continue-on-error: ${{ matrix.experimental }}
+        continue-on-error: ${{ matrix.experimental || false }}
         run: pytest -n logical --cov --cov-report=xml
 
       - name: Test lab extension

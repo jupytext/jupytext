@@ -378,8 +378,8 @@ def assert_conversion_same_as_mirror(nb_file, fmt, mirror_name, compare_notebook
     if fmt.get("format_name") == "marimo":
         lines = expected.splitlines()
         lines = [
-            # mirror files were generated with marimo 0.17.8
-            f'__generated_with = "{marimo_version()}"' if line == '__generated_with = "0.17.8"' else line
+            # mirror files were generated with marimo 0.25.2
+            f'__generated_with = "{marimo_version()}"' if line == '__generated_with = "0.25.2"' else line
             for line in lines
         ]
         expected = "\n".join(lines) + "\n"
