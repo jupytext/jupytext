@@ -1,31 +1,74 @@
 Jupytext ChangeLog
 ==================
 
-1.19.7.dev0 (unreleased)
------------------------
+1.19.7 (2026-11-21)
+-------------------
 
-See [changelog fragments](changelog.d/) for additional unreleased changes.
+**Added**
+- Use `--show-output` with `--execute` to see cell stdout and stderr as the notebook runs. Live output goes to
+  stderr so stdout remains available for notebook output, and cell outputs are still saved in the notebook.
+  Thanks to [Helge Gehring](https://github.com/HelgeGehring) for the request and
+  [Joshua Bronson](https://github.com/ctcjab) for implementing it
+  ([#1277](https://github.com/jupytext/jupytext/issues/1277), [#1662](https://github.com/jupytext/jupytext/pull/1662)).
 
 **Fixed**
+- Syncing or updating a paired notebook preserves the metadata of a raw cell created from YAML front matter,
+  including tags, MIME type, and slideshow settings. Metadata edits in explicitly fenced MyST raw cells are
+  carried over from the text file. Thanks to [Thomas Thomsen](https://github.com/sronix) for reporting the original
+  metadata loss and [Eliot5566](https://github.com/Eliot5566) for the front-matter fix
+  ([#1687](https://github.com/jupytext/jupytext/issues/1687), [#1688](https://github.com/jupytext/jupytext/pull/1688),
+  [#1702](https://github.com/jupytext/jupytext/pull/1702)).
+- When adding a final newline would be the only change to a Python source, `jupytext --sync` leaves the script
+  as saved, preventing a cursor jump in VS Code. Thanks to [@sysy007uuu](https://github.com/sysy007uuu) for
+  reporting the issue and [Victor Negîrneac](https://github.com/caenrigen) for tracing it to Jupytext
+  ([Jupytext Sync [#42](https://github.com/mwouts/jupytext/issues/42)](https://github.com/caenrigen/vscode-jupytext-sync/issues/42),
+  [#1705](https://github.com/jupytext/jupytext/pull/1705)).
+- MyST round trips preserve syntax highlighting for cells that use recognized IPython language magics. Other
+  magics such as `%%script` and `%%spark` keep the notebook lexer. Thanks to [Ilya Khalafi](https://github.com/IlyaKhalafi)
+  for the PR ([#1396](https://github.com/jupytext/jupytext/issues/1396), [#1680](https://github.com/jupytext/jupytext/pull/1680)).
+- Light scripts with default cell markers round-trip magics in cells written in another language, such as
+  `%%bash` in a Python notebook. Thanks to [Surya S](https://github.com/imsurya26) for the PR
+  ([#1697](https://github.com/jupytext/jupytext/pull/1697)).
+- Empty Markdown lines no longer start block comments in q scripts. Cell boundaries and trailing blank lines
+  are preserved in light, percent, and hydrogen formats. Thanks to [Ben Lubas](https://github.com/benlubas)
+  for reporting and fixing this ([#1630](https://github.com/jupytext/jupytext/issues/1630),
+  [#1636](https://github.com/jupytext/jupytext/pull/1636)).
+- Markdown round trips preserve the order of bare cell metadata attributes. Thanks to
+  [Langning Zhang](https://github.com/Boulea7) for the PR ([#1665](https://github.com/jupytext/jupytext/pull/1665)).
+- Configuration discovery reads `pyproject.toml` as UTF-8 on systems with non-UTF-8 locales. Thanks to
+  [Davis Rens](https://github.com/davrens101) for the PR ([#1686](https://github.com/jupytext/jupytext/pull/1686)).
+- Conversions to and from `py:marimo` now use UTF-8 for temporary files, fixing errors and corrupted non-ASCII text
+  on Windows with a non-UTF-8 locale. Thanks to [Hyungjoo Jeon](https://github.com/Alpenj) for the PR
+  ([#1679](https://github.com/jupytext/jupytext/pull/1679)).
 - Building Jupytext from a source distribution no longer fails when the generated README is missing. Thanks to
   [Nico Della Torre](https://github.com/nicozdeb) for the PR ([#1671](https://github.com/jupytext/jupytext/pull/1671)).
 - The Jupyter server extension now uses `inspect.iscoroutinefunction`, avoiding a deprecation warning on Python 3.14
   and preparing for the removal of `asyncio.iscoroutinefunction` in Python 3.16. Thanks to
-  [maoxor](https://github.com/maoxor) for this fix ([#1674](https://github.com/jupytext/jupytext/pull/1674)).
-- Conversions to and from `py:marimo` now use UTF-8 for temporary files, fixing errors and corrupted non-ASCII text
-  on Windows with a non-UTF-8 locale. Thanks to [Alpenj](https://github.com/Alpenj) for the PR
-  ([#1679](https://github.com/jupytext/jupytext/pull/1679)).
-- Fixed documentation links in the README. Thanks to [thjbbvlt](https://github.com/thjbbvlt) for this contribution
+  [mao](https://github.com/maoxor) for this fix ([#1674](https://github.com/jupytext/jupytext/pull/1674)).
+- Fixed documentation links in the README. Thanks to [thjbdvlt](https://github.com/thjbdvlt) for this contribution
   ([#1657](https://github.com/jupytext/jupytext/pull/1657)).
 - Fixed Pixi dependency resolution and notebook test kernel registration in CI, and aligned the development container's
   Pixi version with CI ([#1682](https://github.com/jupytext/jupytext/pull/1682)).
 
 **Changed**
+- Script parsing skips quote scanning on lines that cannot change the parser's state. Thanks to
+  [mscavnicky](https://github.com/mscavnicky) for the PR ([#1676](https://github.com/jupytext/jupytext/pull/1676)).
+- Regenerated the Marimo notebook examples with Marimo 0.25.2 ([#1486](https://github.com/jupytext/jupytext/pull/1486)).
+- CI now tests loading paired and standalone notebooks through Jupyter Collaboration. Thanks to
+  [Rayan Salhab](https://github.com/cyphercodes) for the original tests ([#1552](https://github.com/jupytext/jupytext/pull/1552),
+  [#1699](https://github.com/jupytext/jupytext/pull/1699)).
+- CI tests with newer Pandoc releases. Pixi resolves Quarto separately because its Conda package pins Pandoc
+  ([#1700](https://github.com/jupytext/jupytext/pull/1700)).
+- CLI tests use isolated notebook trust databases to prevent lock errors during parallel runs
+  ([#1693](https://github.com/jupytext/jupytext/pull/1693)).
+- CI now runs for GitHub merge queue groups. Contributors can supply optional changelog fragments to be collected
+  at release time ([#1691](https://github.com/jupytext/jupytext/pull/1691), [#1692](https://github.com/jupytext/jupytext/pull/1692)).
 - CI jobs now run in parallel after successful `zizmor` and `pre-commit` checks, and Pixi dependency updates are limited
   to the tested platform with serial solves ([#1682](https://github.com/jupytext/jupytext/pull/1682)).
-- Updated the documentation website's Astro, Starlight, and Sharp dependencies
+- Updated the JupyterLab extension and documentation website dependencies, including Astro, Starlight, and Sharp
   ([#1659](https://github.com/jupytext/jupytext/pull/1659), [#1666](https://github.com/jupytext/jupytext/pull/1666),
-  [#1669](https://github.com/jupytext/jupytext/pull/1669), [#1682](https://github.com/jupytext/jupytext/pull/1682)).
+  [#1669](https://github.com/jupytext/jupytext/pull/1669), [#1682](https://github.com/jupytext/jupytext/pull/1682),
+  [#1696](https://github.com/jupytext/jupytext/pull/1696)).
 - Updated the GitHub Actions used for CI and publishing
   ([#1658](https://github.com/jupytext/jupytext/pull/1658), [#1667](https://github.com/jupytext/jupytext/pull/1667),
   [#1668](https://github.com/jupytext/jupytext/pull/1668), [#1678](https://github.com/jupytext/jupytext/pull/1678)).
@@ -35,6 +78,14 @@ See [changelog fragments](changelog.d/) for additional unreleased changes.
   ([#1661](https://github.com/jupytext/jupytext/pull/1661), [#1663](https://github.com/jupytext/jupytext/pull/1663),
   [#1670](https://github.com/jupytext/jupytext/pull/1670), [#1685](https://github.com/jupytext/jupytext/pull/1685),
   [#1689](https://github.com/jupytext/jupytext/pull/1689)).
+
+**Known issues**
+- With Jupyter Collaboration, saving one member of an open pair can discard unsaved edits in the other. Open only
+  the paired text file as a notebook. Jupytext still saves outputs to the `.ipynb` file. Thanks to
+  [Guillaume Therin](https://github.com/gtherin) for reporting this
+  ([#1648](https://github.com/jupytext/jupytext/issues/1648)).
+- Pandoc 3.10 can truncate the Jupytext format version in Markdown metadata and prevent paired notebooks from
+  reopening. Upgrade to Pandoc 3.10.1 or later ([#1545](https://github.com/jupytext/jupytext/issues/1545)).
 
 
 1.19.6 (2026-10-04)
