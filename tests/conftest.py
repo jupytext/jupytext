@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from jupyter_client.kernelspec import find_kernel_specs, get_kernel_spec
+from jupyter_core.paths import jupyter_data_dir
 import nbformat
 from nbformat import reads as nb_reads, validate
 from nbformat.v4 import nbbase
@@ -51,7 +52,7 @@ def force_validate_nbformat(monkeypatch):
 
 
 @pytest.fixture
-def fresh_notary(tmp_path):
+def fresh_notary():
     notary = NotebookNotary(
         db_file=":memory:",
         secret=b"test-secret",
@@ -59,6 +60,19 @@ def fresh_notary(tmp_path):
     yield notary
     # Close the SQLite database connection to avoid ResourceWarnings on Python 3.13+
     notary.store.close()
+
+
+@pytest.fixture(autouse=True)
+def isolated_notebook_trust(monkeypatch, tmp_path, fresh_notary):
+    """Keep notebook trust local to each test, including CLI subprocesses."""
+    # Keep user-installed kernels visible in subprocesses, including pre-commit
+    # virtualenvs, while redirecting writable trust data to the test directory.
+    monkeypatch.setenv("JUPYTER_PATH", jupyter_data_dir(), prepend=os.pathsep)
+    monkeypatch.setenv("JUPYTER_DATA_DIR", str(tmp_path / "jupyter"))
+    # Change the default on the function itself so existing imported aliases also
+    # use this test's notary. Explicit notary arguments still take precedence,
+    # and the CLI leaves closing the injected notary to fresh_notary's teardown.
+    monkeypatch.setattr(jupytext.cli.jupytext, "__kwdefaults__", {"notary": fresh_notary})
 
 
 @pytest.fixture(params=["sync", "async"])
