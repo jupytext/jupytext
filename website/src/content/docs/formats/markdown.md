@@ -165,3 +165,5 @@ In Pandoc Markdown, all cells are marked with pandoc divs (`:::`). The format is
 See for instance how our `World population.ipynb` notebook is [represented](https://github.com/jupytext/jupytext/blob/main/demo/World%20population.pandoc.md#) in the `md:pandoc` format.
 
 If you wish to use that format, please install `pandoc` in version 2.7.2 or above, with e.g. `conda install pandoc -c conda-forge`.
+
+If you use Pandoc 3.10, upgrade to 3.10.1 or later. Pandoc 3.10 can truncate the format version in the Markdown metadata and prevent Jupytext from reopening paired notebooks. See [Jupytext issue #1545](https://github.com/jupytext/jupytext/issues/1545).
