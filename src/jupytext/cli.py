@@ -818,8 +818,8 @@ def jupytext_single_file(nb_file, args, log, notary):
 
                 # If the destination is not ipynb, we convert to/back that format
                 if dest_fmt["extension"] != ".ipynb":
-                    dest_text = writes(notebook, fmt=dest_fmt)
-                    notebook = reads(dest_text, fmt=dest_fmt)
+                    dest_text = writes(notebook, fmt=dest_fmt, config=config)
+                    notebook = reads(dest_text, fmt=dest_fmt, config=config)
 
                 text = writes(notebook, fmt=fmt, config=config)
 
@@ -858,7 +858,7 @@ def jupytext_single_file(nb_file, args, log, notary):
             _callback_on_lazy_write(path)
         if path == "-":
             timestamp_checker.check_all_timestamps()
-            write(notebook, "-", fmt=fmt)
+            write(notebook, "-", fmt=fmt, config=config)
             return
 
         nonlocal untracked_files
