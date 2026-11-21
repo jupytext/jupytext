@@ -11,6 +11,7 @@ import sys
 import warnings
 from copy import copy
 from tempfile import NamedTemporaryFile
+from typing import Optional
 
 from nbformat.sign import NotebookNotary
 
@@ -1161,7 +1162,7 @@ def git_timestamp(path):
     return get_timestamp(path)
 
 
-def get_timestamp(path: str) -> float | None:
+def get_timestamp(path: str) -> Optional[float]:
     if not os.path.isfile(path):
         return None
     return os.stat(path).st_mtime
@@ -1180,9 +1181,9 @@ class TimestampChecker:
 
     def __init__(self, pre_commit_mode: bool = False):
         self.pre_commit_mode = pre_commit_mode
-        self._timestamps: dict[str, float | None] = {}
+        self._timestamps: dict[str, Optional[float]] = {}
 
-    def get_and_check_timestamp(self, path: str) -> float | None:
+    def get_and_check_timestamp(self, path: str) -> Optional[float]:
         if path in self._timestamps:
             ts = self.check_timestamp(path)
         else:
@@ -1194,7 +1195,7 @@ class TimestampChecker:
 
         return ts
 
-    def check_timestamp(self, path: str) -> float | None:
+    def check_timestamp(self, path: str) -> Optional[float]:
         if path not in self._timestamps:
             raise ValueError(
                 f"The timestamp of {shlex.quote(path)} was not previously recorded. So far Jupytext has only recorded timestamps for {', '.join(shlex.quote(p) for p in self._timestamps)}"
@@ -1221,7 +1222,7 @@ class TimestampChecker:
         for path in self._timestamps:
             self.check_timestamp(path)
 
-    def check_file_is_newest(self, path: str) -> float | None:
+    def check_file_is_newest(self, path: str) -> Optional[float]:
         """Check that the given file is the most recent among all files whose timestamp
         was recorded by this TimestampChecker. Return its timestamp."""
         ts = self._timestamps[path]
