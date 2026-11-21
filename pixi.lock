@@ -12536,7 +12536,7 @@ packages:
   - pytest-randomly ; extra == 'test-integration'
   - pytest-xdist ; extra == 'test-integration'
   - bash-kernel ; extra == 'test-ui'
-  requires_python: '>=3.9'
+  requires_python: '>=3.10'
 - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
   name: docutils
   version: 0.22.4
