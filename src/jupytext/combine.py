@@ -1,13 +1,12 @@
 """Combine source and outputs from two notebooks"""
 
 import re
-from copy import copy
 
 from nbformat import NotebookNode
 
 from .cell_metadata import _IGNORE_CELL_METADATA
 from .formats import long_form_one_format
-from .header import _DEFAULT_NOTEBOOK_METADATA, _HEADER_RE
+from .header import _DEFAULT_NOTEBOOK_METADATA, FrontMatterCell
 from .metadata_filter import restore_filtered_metadata
 
 _BLANK_LINE = re.compile(r"^\s*$")
@@ -31,14 +30,6 @@ def same_content(ref, test, endswith=False):
     if endswith and test:
         return ref.endswith(test)
     return ref == test
-
-
-def is_yaml_header_cell(cell):
-    """Is this a raw cell with a YAML header, which text formats write as the file header?"""
-    if cell.cell_type != "raw":
-        return False
-    lines = cell.source.strip("\n\t ").splitlines()
-    return len(lines) >= 2 and bool(_HEADER_RE.match(lines[0])) and bool(_HEADER_RE.match(lines[-1]))
 
 
 def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
@@ -87,25 +78,24 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
 
     outputs_map = map_outputs_to_inputs(nb_source.cells, nb_outputs.cells)
 
-    # The metadata of a leading YAML raw cell is not written in the text header
-    header_cell_has_no_metadata = ext not in (None, ".ipynb") and fmt.get("root_level_metadata_as_raw_cell", True)
-
     cells = []
-    for i, (source_cell, j) in enumerate(zip(nb_source.cells, outputs_map)):
+    for source_cell, j in zip(nb_source.cells, outputs_map):
         if j is None:
             cells.append(source_cell)
             continue
 
         output_cell = nb_outputs.cells[j]
 
-        # Outputs and optional attributes are taken from the notebook with outputs
-        cell = copy(output_cell)
+        # Keep the stored outputs and attributes, and use the source cell's origin.
+        is_frontmatter_cell = isinstance(source_cell, FrontMatterCell)
+        cell_cls = FrontMatterCell if is_frontmatter_cell else NotebookNode
+        cell = cell_cls(output_cell)
 
         # Cell text is taken from the source notebook
         cell.source = source_cell.source
 
         # We also restore the cell metadata that has been filtered
-        if i == 0 and header_cell_has_no_metadata and is_yaml_header_cell(source_cell):
+        if is_frontmatter_cell:
             source_cell_metadata_filter = "-all"
         elif format_name == "spin" and source_cell.cell_type != "code":
             # The 'spin' format does not allow metadata on non-code cells

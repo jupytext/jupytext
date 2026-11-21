@@ -5,7 +5,7 @@ import re
 
 import nbformat
 import yaml
-from nbformat.v4.nbbase import new_raw_cell
+from nbformat.v4.nbbase import NotebookNode, new_raw_cell
 from yaml.representer import SafeRepresenter
 
 from .languages import (
@@ -33,6 +33,15 @@ _UTF8_HEADER = " -*- coding: utf-8 -*-"
 
 # Change this to False in tests
 INSERT_AND_CHECK_VERSION_NUMBER = True
+
+
+class FrontMatterCell(NotebookNode):
+    """A raw cell synthesized from front matter, which stores no cell metadata."""
+
+
+def _new_frontmatter_cell(source, **kwargs):
+    # Keep the origin in memory without adding a field to the serialized cell.
+    return FrontMatterCell(new_raw_cell(source, **kwargs))
 
 
 def insert_or_test_version_number():
@@ -257,7 +266,7 @@ def header_to_metadata_and_cell(lines, header_prefix, header_suffix, ext=None, r
 
         if header:
             if root_level_metadata_as_raw_cell:
-                cell = new_raw_cell(
+                cell = _new_frontmatter_cell(
                     source="\n".join(["---"] + header + ["---"]),
                     metadata=(
                         {}
@@ -301,7 +310,7 @@ def metadata_to_metadata_and_cell(nb, metadata, fmt, unsupported_keys=None):
     # move remaining metadata (i.e. frontmatter) to the first notebook cell
     if nb.metadata and fmt.get("root_level_metadata_as_raw_cell", True):
         frontmatter = yaml.safe_dump(nb.metadata, sort_keys=False)
-        nb.cells.insert(0, new_raw_cell("---\n" + frontmatter + "---"))
+        nb.cells.insert(0, _new_frontmatter_cell("---\n" + frontmatter + "---"))
     # attach the stashed metadata to notebook
     nb.metadata = metadata
     return nb

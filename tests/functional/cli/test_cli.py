@@ -13,7 +13,7 @@ import pytest
 from jupyter_client.kernelspec import find_kernel_specs, get_kernel_spec
 from jupyter_server.utils import ensure_async
 from nbformat.sign import NotebookNotary
-from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook
+from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, new_raw_cell
 
 from jupytext import __version__, read, reads, write, writes
 from jupytext.cli import jupytext, parse_jupytext_args, str2bool, system
@@ -61,6 +61,33 @@ def test_cli_subprocess_can_execute_with_user_kernel(tmp_path):
     write(notebook, path)
     check_call([sys.executable, "-m", "jupytext", str(path), "--execute", "--to", "ipynb"])
     assert read(path).cells[0].outputs[0].data["text/plain"] == "2"
+
+
+@pytest.mark.requires_myst
+@pytest.mark.parametrize("args", [["--sync"], ["--from", "md:myst", "--to", "ipynb", "--update"]])
+@pytest.mark.parametrize("tags", [["edited"], []])
+def test_cli_preserves_metadata_edits_to_explicit_myst_raw_cell(tmp_path, args, tags):
+    source = "---\n- first\n- second\n---"
+    notebook = new_notebook(
+        cells=[new_raw_cell(source, metadata={"tags": ["old"]})],
+        metadata={"jupytext": {"formats": "ipynb,md:myst"}},
+    )
+    ipynb_path = tmp_path / "notebook.ipynb"
+    md_path = tmp_path / "notebook.md"
+    write(notebook, ipynb_path)
+    md_path.write_text(
+        "---\njupyter:\n  jupytext:\n    formats: ipynb,md:myst\n---\n\n"
+        "```{raw-cell}\n" + (":tags: [edited]\n" if tags else "\n") + source + "\n```\n",
+        encoding="utf-8",
+    )
+    timestamp = md_path.stat().st_mtime - 2
+    os.utime(ipynb_path, (timestamp, timestamp))
+
+    jupytext([*args, str(md_path)])
+
+    cell = read(ipynb_path).cells[0]
+    assert cell.source == source
+    assert cell.metadata == ({"tags": tags} if tags else {})
 
 
 def test_str2bool():
