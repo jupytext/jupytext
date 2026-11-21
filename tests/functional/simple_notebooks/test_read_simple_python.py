@@ -1196,3 +1196,17 @@ def test_magic_in_other_language_cell_round_trips_in_light_format(source):
     )
     text = jupytext.writes(nb, "py:light")
     compare_notebooks(jupytext.reads(text, "py:light"), nb, "py:light")
+
+
+@pytest.mark.parametrize("cell_markers", ["%,-", "+,%pwd"])
+def test_magic_in_other_language_cell_keeps_custom_light_cell_boundaries(cell_markers):
+    nb = new_notebook(
+        cells=[new_code_cell("%%bash\n%pwd\necho done")],
+        metadata={
+            "kernelspec": {"name": "python3", "language": "python", "display_name": "Python 3"},
+            "jupytext": {"cell_markers": cell_markers},
+        },
+    )
+    script = jupytext.writes(nb, "py:light")
+    restored = jupytext.reads(script, "py:light")
+    assert [cell.source for cell in restored.cells] == ["%%bash\n# %pwd\necho done"]
