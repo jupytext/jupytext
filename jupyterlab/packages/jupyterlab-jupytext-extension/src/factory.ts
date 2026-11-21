@@ -25,6 +25,24 @@ import { IRisePreviewFactory } from 'jupyterlab-rise';
 
 import { FACTORY, FILE_TYPES } from './tokens';
 
+class JupytextNotebookWidgetFactory extends NotebookWidgetFactory {
+  constructor(
+    options: NotebookWidgetFactory.IOptions<NotebookPanel>,
+    private readonly notebookFactory: NotebookWidgetFactory.IFactory,
+  ) {
+    super(options);
+  }
+
+  override get contentProviderId(): string | undefined {
+    // Other extensions can assign the Notebook provider after registration.
+    return super.contentProviderId ?? this.notebookFactory.contentProviderId;
+  }
+
+  override set contentProviderId(value: string | undefined) {
+    super.contentProviderId = value;
+  }
+}
+
 export function createFactory(
   kernelFileTypeNames: string[],
   toolbarRegistry: IToolbarWidgetRegistry,
@@ -53,21 +71,24 @@ export function createFactory(
   );
   // Duplicate notebook factory to apply it on Jupytext notebooks
   // Mirror: https://github.com/jupyterlab/jupyterlab/blob/8a8c3752564f37493d4eb6b4c59008027fa83880/packages/notebook-extension/src/index.ts#L860
-  const factory = new NotebookWidgetFactory({
-    name: FACTORY,
-    label: trans.__(FACTORY),
-    fileTypes: allFileTypes,
-    modelName: notebookFactory.modelName ?? 'notebook',
-    preferKernel: notebookFactory.preferKernel ?? true,
-    canStartKernel: notebookFactory.canStartKernel ?? true,
-    rendermime,
-    contentFactory,
-    editorConfig: notebookFactory.editorConfig,
-    notebookConfig: notebookFactory.notebookConfig,
-    mimeTypeService: editorServices.mimeTypeService,
-    toolbarFactory: toolbarFactory,
-    translator,
-  });
+  const factory = new JupytextNotebookWidgetFactory(
+    {
+      name: FACTORY,
+      label: trans.__(FACTORY),
+      fileTypes: allFileTypes,
+      modelName: notebookFactory.modelName ?? 'notebook',
+      preferKernel: notebookFactory.preferKernel ?? true,
+      canStartKernel: notebookFactory.canStartKernel ?? true,
+      rendermime,
+      contentFactory,
+      editorConfig: notebookFactory.editorConfig,
+      notebookConfig: notebookFactory.notebookConfig,
+      mimeTypeService: editorServices.mimeTypeService,
+      toolbarFactory: toolbarFactory,
+      translator,
+    },
+    notebookFactory,
+  );
   docRegistry.addWidgetFactory(factory);
 
   // The list of extensions in the Jupytext Notebook factory.
