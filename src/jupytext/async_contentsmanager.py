@@ -65,6 +65,10 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
             # fmt is the current format, and formats the paired formats.
             self.paired_notebooks = dict()
 
+            # Per opened notebook, remember the physical files it was loaded from.
+            # Metadata-only polling must not acknowledge edits on disk.
+            self._paired_file_timestamps = {}
+
             # Configuration cache, useful when notebooks are listed in a given directory
             self.cached_config = namedtuple("cached_config", "path config_file config")
             self.super = super()
@@ -116,6 +120,28 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
                     self.log.info("Creating directory %s", parent_dir)
                     await self.super.save(dict(type="directory"), parent_dir)
 
+        async def _paired_file_timestamp(self, path):
+            try:
+                return (await self.super.get(path, content=False))["last_modified"]
+            except HTTPError as err:
+                if err.status_code != 404:
+                    raise
+                return None
+
+        async def _check_paired_files(self, path, paths):
+            previous = self._paired_file_timestamps.get(path, {})
+            for alt_path in paths:
+                if alt_path == path or alt_path not in previous:
+                    continue
+                timestamp = await self._paired_file_timestamp(alt_path)
+                # A deleted twin can be recreated without overwriting any edits.
+                if timestamp is not None and timestamp != previous[alt_path]:
+                    raise HTTPError(
+                        409,
+                        f"Paired file {alt_path} changed on disk since {path} was loaded or saved. "
+                        "Save a copy of your unsaved edits, then reload the notebook before saving again.",
+                    )
+
         async def save(self, model, path=""):
             """Save the file model and return the model with no content."""
             if model["type"] != "notebook":
@@ -127,6 +153,10 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
                 config = await self.get_config(path)
                 jupytext_formats = notebook_formats(nbk, config, path)
                 _, jupytext_formats = self._drop_formats_if_they_dont_match_path(path, None, jupytext_formats)
+                _, current_fmt = find_base_path_and_format(path, jupytext_formats)
+                paths = [alt_path for alt_path, _ in paired_paths(path, current_fmt, jupytext_formats)]
+                # Check every twin before writing any member of the pair.
+                await self._check_paired_files(path, paths)
                 self.update_paired_notebooks(path, jupytext_formats)
 
                 async def save_one_file(path, fmt):
@@ -168,8 +198,17 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
 
                     return await self.super.save(text_model, path)
 
-                return await write_pair(path, jupytext_formats, save_one_file)
+                result = await write_pair(path, jupytext_formats, save_one_file)
+                if len(paths) > 1:
+                    self._paired_file_timestamps[path] = {
+                        alt_path: await self._paired_file_timestamp(alt_path) for alt_path in paths
+                    }
+                else:
+                    self._paired_file_timestamps.pop(path, None)
+                return result
 
+            except HTTPError:
+                raise
             except Exception as e:
                 self.log.error("Error while saving file: %s %s", path, e, exc_info=True)
                 raise HTTPError(500, f"Unexpected error while saving file: {path} {e}")
@@ -404,6 +443,10 @@ to your jupytext.toml file
             if not outputs.timestamp:
                 set_kernelspec_from_language(model["content"])
 
+            if len(timestamps) > 1:
+                self._paired_file_timestamps[path] = timestamps
+            else:
+                self._paired_file_timestamps.pop(path, None)
             return model
 
         async def new_untitled(self, path="", type="", ext=""):
