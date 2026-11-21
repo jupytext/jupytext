@@ -73,7 +73,7 @@ See how our `World population.ipynb` notebook is [represented](https://github.co
 
 Since Jupytext v1.19, you can use the `py:marimo` format, in which text notebooks are converted to Jupyter notebooks, and back, using [Marimo](https://marimo.io/).
 
-Our [implementation](https://github.com/jupytext/jupytext/blob/main/src/jupytext/marimo.py) calls Marimo's converter directly (this requires Marimo v1.16.3 or later).
+Our [implementation](https://github.com/jupytext/jupytext/blob/main/src/jupytext/marimo.py) calls Marimo's converter directly (this requires Marimo v0.16.3 or later).
 
 Please note that:
 - The format is available only for Python notebooks.
