@@ -36,9 +36,10 @@ Finally, note that you can _hide_ the notebook metadata in an HTML comment in `.
 
 ## Preserve cell IDs in scripts
 
-When you track a script in Git, you can keep its cell IDs when collaborators
-recreate the notebook. To opt in for `light`, `percent`, and `hydrogen` scripts,
-add this to your [`jupytext.toml`](/using/config/) file and share it with your collaborators.
+Added in v1.20.1, the `cell_id_to_title` option keeps cell IDs when collaborators
+recreate a notebook from a script tracked in Git. To opt in for `light`,
+`percent`, and `hydrogen` scripts, add this to your
+[`jupytext.toml`](/using/config/) file and share it with your collaborators.
 
 ```toml
 cell_id_to_title = true
