@@ -306,6 +306,10 @@ myst-parser = "*"
 [tool.pixi.feature.dev.dependencies]
 pandoc = ">=3.0,<3.10"  # 1545
 
+[tool.pixi.feature.dev.pypi-dependencies]
+# The Collaboration load tests use the server component directly.
+jupyter-server-ydoc = ">=3.0.2,<4"
+
 # Dedicated environment for building the JupyterLab extension.
 [tool.pixi.feature.build.dependencies]
 python = "3.13.*"
