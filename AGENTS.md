@@ -44,6 +44,8 @@
   mandatory fragment CI check is configured.
 - Keep release notes in the existing changelog style, with PR links and
   contributor credits. Mark development versions as unreleased.
+- Keep MyST lexer handling independent of Pygments; do not add it as a runtime
+  dependency.
 - Python code lives in `src/`, tests in `tests/`, the JupyterLab extension in
   `jupyterlab/`, and the current documentation in `website/src/content/docs/`.
   Follow [developing](website/src/content/docs/reference/developing.md) and

@@ -13,6 +13,7 @@ import yaml
 from yaml.representer import SafeRepresenter
 
 from .cell_to_text import three_backticks_or_more
+from .languages import cell_language
 from .metadata_filter import _JUPYTER_METADATA_NAMESPACE
 
 try:
@@ -241,6 +242,67 @@ def read_cell_metadata(token, cell_index):
     return metadata
 
 
+# Only use magic names that are also standard lexer aliases. In particular,
+# execution magics such as %%script and %%spark are not lexer names.
+_MYST_MAGIC_LEXERS = {
+    "R",
+    "bash",
+    "c#",
+    "c++",
+    "clojure",
+    "cs",
+    "csharp",
+    "cython",
+    "f#",
+    "fsharp",
+    "gnuplot",
+    "go",
+    "groovy",
+    "haskell",
+    "html",
+    "idl",
+    "java",
+    "javascript",
+    "js",
+    "julia",
+    "latex",
+    "logtalk",
+    "lua",
+    "markdown",
+    "matlab",
+    "maxima",
+    "ocaml",
+    "octave",
+    "perl",
+    "powershell",
+    "pypy",
+    "python",
+    "python2",
+    "python3",
+    "q",
+    "robotframework",
+    "ruby",
+    "rust",
+    "sage",
+    "sas",
+    "scala",
+    "scheme",
+    "sh",
+    "sql",
+    "stata",
+    "tcl",
+    "typescript",
+}
+
+
+def _magic_lexer(source, default_lexer):
+    """Return a language magic's lexer when it has a known lexer alias."""
+    if not source or not source[0].startswith("%%"):
+        return None
+    language, _ = cell_language(source.copy(), default_lexer, [])
+    return language if language in _MYST_MAGIC_LEXERS else None
+
+
 def myst_to_notebook(
     text,
     code_directive=CODE_DIRECTIVE,
@@ -308,7 +370,8 @@ def myst_to_notebook(
             options, body_lines = read_fenced_cell(token, len(notebook.cells), "Code")
             assert token.info.startswith(code_directive)
             lexer = token.info[len(code_directive) :].strip()
-            if lexer:
+            magic_language = _magic_lexer(body_lines, default_lexer)
+            if lexer and lexer != magic_language:
                 if not default_lexer:
                     default_lexer = lexer
                 elif lexer != default_lexer:
@@ -397,8 +460,11 @@ def notebook_to_myst(
                 cell_delimiter,
                 code_directive if cell.cell_type == "code" else raw_directive,
             )
-            if pygments_lexer and cell.cell_type == "code":
-                string += f" {pygments_lexer}"
+            if cell.cell_type == "code":
+                magic_language = _magic_lexer(cell.source.splitlines(), pygments_lexer)
+                cell_lexer = magic_language or pygments_lexer
+                if cell_lexer:
+                    string += f" {cell_lexer}"
             string += "\n"
             metadata = cell.metadata
             if metadata:
