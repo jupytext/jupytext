@@ -212,3 +212,83 @@ def test_meaningful_error_when_pandoc_is_missing(tmpdir):
 
     with pytest.raises(PandocError):
         jupytext_cli([str(nb_file), "--to", "org"])
+
+
+@pytest.mark.requires_pandoc
+def test_org_round_trip_preserves_literal_source_lines():
+    source = """cat <<'EOF'
+<<tag>>
+#+PROPERTY: header-args:bash :results silent
+#+JUPYTER_KERNEL_DISPLAY_NAME: literal text
+EOF"""
+    org = f"#+begin_src jupyter-bash\n{source}\n#+end_src\n"
+    notebook = jupytext.reads(org, "org")
+    assert notebook.cells[0].source == source
+    assert "org_babel" not in notebook.metadata
+
+    restored = jupytext.reads(jupytext.writes(notebook, "org"), "org")
+    assert restored.cells[0].source == source
+
+
+@pytest.mark.requires_pandoc
+def test_org_round_trip_preserves_document_babel_args_without_a_kernel():
+    org = """#+PROPERTY: header-args :exports both
+#+PROPERTY: header-args:python :results output replace :file output/report.csv
+#+PROPERTY: header-args:python+ :var label="a :b c" :dir /tmp/results
+#+PROPERTY: header-args:R :session analysis
+
+#+begin_src python
+print("hello")
+#+end_src
+"""
+    notebook = jupytext.reads(org, "org")
+    expected = {
+        "": {"exports": "both"},
+        "python": {
+            "results": "output replace",
+            "file": "output/report.csv",
+            "var": 'label="a :b c"',
+            "dir": "/tmp/results",
+        },
+        "R": {"session": "analysis"},
+    }
+    assert notebook.metadata.org_babel.header_args == expected
+    assert "kernelspec" not in notebook.metadata
+
+    restored = jupytext.reads(jupytext.writes(notebook, "org"), "org")
+    assert restored.metadata.org_babel.header_args == expected
+    assert restored.cells[0].cell_type == "markdown"
+    assert restored.cells[0].source == notebook.cells[0].source
+
+
+@pytest.mark.requires_pandoc
+def test_org_round_trip_preserves_cpp_kernel():
+    kernel = {"name": "xcpp17", "language": "c++", "display_name": "C++17"}
+    notebook = new_notebook(
+        metadata={"kernelspec": kernel, "org_babel": {"header_args": {"jupyter-c++": {"session": "cpp"}}}},
+        cells=[new_code_cell("int x = 42;")],
+    )
+    restored = jupytext.reads(jupytext.writes(notebook, "org"), "org")
+    assert restored.metadata.kernelspec == kernel
+    assert restored.metadata.org_babel == notebook.metadata.org_babel
+    assert restored.cells[0].cell_type == "code"
+    assert restored.cells[0].source == notebook.cells[0].source
+
+
+@pytest.mark.requires_pandoc
+def test_org_reports_pandoc_timeout(monkeypatch):
+    from subprocess import TimeoutExpired
+
+    from jupytext import org, pandoc
+
+    original_run = pandoc.subprocess.run
+
+    def time_out_conversion(cmd, **kwargs):
+        if "--from" in cmd:
+            assert kwargs["timeout"] == org._ORG_TIMEOUT_SECONDS
+            raise TimeoutExpired(cmd, kwargs["timeout"])
+        return original_run(cmd, **kwargs)
+
+    monkeypatch.setattr(pandoc.subprocess, "run", time_out_conversion)
+    with pytest.raises(PandocError, match="Pandoc conversion timed out"):
+        jupytext.reads("#+begin_src python\npass\n#+end_src\n", "org")

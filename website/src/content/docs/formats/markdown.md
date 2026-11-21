@@ -174,7 +174,7 @@ If you use Pandoc 3.10, upgrade to 3.10.1 or later. Pandoc 3.10 can truncate the
 Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
 
 
-Code cells are represented as `#+BEGIN_SRC ... #+END_SRC` blocks. The kernel metadata are recorded as top-level `#+PROPERTY: header-args` lines in the Org output, e.g.
+Code cells are represented as `#+BEGIN_SRC jupyter-<language> ... #+END_SRC` blocks. Pandoc imports ordinary source blocks such as `#+BEGIN_SRC python` as fenced code in Markdown cells. The kernel metadata are recorded as top-level `#+PROPERTY: header-args` lines in the Org output, e.g.
 
 ```org
 #+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
@@ -182,7 +182,7 @@ Code cells are represented as `#+BEGIN_SRC ... #+END_SRC` blocks. The kernel met
 #+PROPERTY: header-args:jupyter-python+ :session python3
 ```
 
-Additional Org Babel header arguments are synchronized with notebook metadata under `jupyter.org_babel` in Markdown-like formats, which corresponds to the `org_babel` entry in the notebook metadata:
+Jupytext stores document-wide Babel properties in notebook metadata under `org_babel.header_args`. In Markdown-like formats this appears under `jupyter.org_babel`. Language-specific properties use the Org language name as the key, and a property that applies to all languages uses an empty key.
 
 ```yaml
 jupyter:
@@ -192,11 +192,14 @@ jupyter:
         session: python3
 ```
 
-Current limitations:
+Current limitations
+
 - Cell metadata is not preserved in the Org representation.
 - Consecutive Markdown cells are concatenated on round-trip, since Org prose has no native cell-boundary markers.
 - Raw cells are not preserved by the current Pandoc-based conversion path.
-- Only the kernel metadata and Org Babel header arguments are serialized in Org headers; other notebook metadata remain subject to Jupytext's metadata filtering and are not represented directly in the `.org` file.
+- Org headers store the kernelspec and document-wide Babel properties. Block- and subtree-level Babel settings, and other notebook metadata, are outside the round-trip guarantee.
+- Pandoc may normalize code formatting, including tab indentation.
+- Org conversion stops with an error if Pandoc takes longer than 30 seconds.
 
 To use the Org format, install `pandoc` in version 2.7.2 or above, then convert with:
 
