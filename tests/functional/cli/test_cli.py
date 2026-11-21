@@ -588,6 +588,42 @@ def test_sync(ipynb_py_file, tmpdir, cwd_tmpdir, capsys):
     assert os.path.getmtime(tmp_ipynb) <= os.path.getmtime(tmp_py)
 
 
+@pytest.mark.parametrize("source_is_python", [True, False])
+def test_sync_python_notebook_without_final_newline(tmp_path, source_is_python):
+    (tmp_path / "jupytext.toml").write_text('formats = "ipynb,py:percent"\nnotebook_metadata_filter = "-all"\n')
+    script = tmp_path / "notebook.py"
+    notebook = tmp_path / "notebook.ipynb"
+    script_content = b"# %%\nprint(2)"
+    script.write_bytes(script_content)
+    write(new_notebook(cells=[new_code_cell("print(1)")]), notebook)
+
+    older, newer = (notebook, script) if source_is_python else (script, notebook)
+    os.utime(older, (newer.stat().st_mtime - 2,) * 2)
+
+    assert jupytext(["--sync", str(script)]) == 0
+    if source_is_python:
+        assert script.read_bytes() == script_content
+        assert read(notebook).cells[0].source == "print(2)"
+        assert script.stat().st_mtime >= notebook.stat().st_mtime
+    else:
+        assert script.read_text() == "# %%\nprint(1)\n"
+
+
+def test_pre_commit_sync_accepts_python_notebook_without_final_newline(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    system("git", "init", "-q")
+    (tmp_path / "jupytext.toml").write_text('formats = "ipynb,py:percent"\nnotebook_metadata_filter = "-all"\n')
+    script = tmp_path / "notebook.py"
+    notebook = tmp_path / "notebook.ipynb"
+    script_content = b"# %%\nprint(1)"
+    script.write_bytes(script_content)
+    write(new_notebook(cells=[new_code_cell("print(1)")]), notebook)
+    system("git", "add", str(script), str(notebook))
+
+    assert jupytext(["--sync", "--pre-commit-mode", str(script)]) == 0
+    assert script.read_bytes() == script_content
+
+
 @pytest.mark.requires_pandoc
 def test_sync_pandoc(ipynb_to_pandoc, tmpdir, cwd_tmpdir, capsys):
     tmp_ipynb = "notebook.ipynb"
