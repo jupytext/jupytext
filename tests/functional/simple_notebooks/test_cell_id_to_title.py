@@ -22,12 +22,15 @@ def test_cell_id_to_title_round_trip(fmt, marker, filter_metadata):
         config.cell_metadata_filter = "-all"
     notebook = new_notebook(
         cells=[
+            new_raw_cell("---\ntitle: Example\n---", id="frontmatter"),
             new_markdown_cell("# Heading", id="intro-1", metadata={"title": "Read me"}),
             new_code_cell("1 + 1", id="calculate_2"),
             new_raw_cell("Unformatted", id="raw-3"),
         ]
     )
     text = writes(notebook, f"py:{fmt}", config=config)
+    assert text.startswith("# ---\n# title: Example\n")
+    assert "#     raw_header_cell_id: frontmatter\n" in text
     assert f"{marker} intro-1 [markdown]" in text
     assert f"{marker} calculate_2" in text
     assert f"{marker} raw-3" in text
@@ -35,12 +38,13 @@ def test_cell_id_to_title_round_trip(fmt, marker, filter_metadata):
 
     recreated = reads(text, f"py:{fmt}", config=config)
     validate(recreated)
-    assert "_cell_ids_from_titles" not in recreated
+    assert "_cell_ids_from_text" not in recreated
+    assert "raw_header_cell_id" not in recreated.metadata.get("jupytext", {})
     assert [(cell.id, cell.cell_type, cell.source) for cell in recreated.cells] == [
         (cell.id, cell.cell_type, cell.source) for cell in notebook.cells
     ]
-    assert recreated.cells[0].metadata.get("title") == (None if filter_metadata else "Read me")
-    assert notebook.cells[0].metadata.title == "Read me"
+    assert recreated.cells[1].metadata.get("title") == (None if filter_metadata else "Read me")
+    assert notebook.cells[1].metadata.title == "Read me"
 
 
 @pytest.mark.parametrize("title", ["A title!", "é", "a" * 65])
@@ -61,6 +65,37 @@ def test_cell_id_to_title_is_opt_in():
     assert reads(text, "py:percent", config=config).cells[0].metadata.title == "A title"
 
 
+@pytest.mark.parametrize("config", [None, JupytextConfiguration(cell_id_to_title=False)])
+def test_script_header_cannot_enable_cell_id_to_title(config):
+    text = """# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       cell_id_to_title: true
+# ---
+
+# %% A title
+1 + 1
+
+# %% A title
+2 + 2
+"""
+    notebook = reads(text, "py:percent", config=config)
+    assert [cell.metadata.title for cell in notebook.cells] == ["A title", "A title"]
+    assert writes(notebook, "py:percent", config=config).count("# %% A title\n") == 2
+
+
+def test_empty_yaml_raw_cell_keeps_its_id():
+    config = JupytextConfiguration(cell_id_to_title=True, notebook_metadata_filter="-all")
+    notebook = new_notebook(cells=[new_raw_cell("---\n---", id="frontmatter")])
+    text = writes(notebook, "py:light", config=config)
+    recreated = reads(text, "py:light", config=config)
+    assert [(cell.id, cell.cell_type, cell.source) for cell in recreated.cells] == [("frontmatter", "raw", "---\n---")]
+    assert recreated.metadata.jupytext.notebook_metadata_filter == "-all"
+
+
 def test_duplicate_cell_ids_are_reported():
     config = JupytextConfiguration(cell_id_to_title=True)
     text = "# %% A title\n1 + 1\n\n# %% A_title\n2 + 2\n"
@@ -70,7 +105,7 @@ def test_duplicate_cell_ids_are_reported():
 
 def test_notebook_fields_do_not_supply_ids_for_pairing():
     source = new_notebook(cells=[new_code_cell("1 + 1", id="source")])
-    source["_cell_ids_from_titles"] = ["source"]
+    source["_cell_ids_from_text"] = ["source"]
     outputs = new_notebook(cells=[new_code_cell("1 + 1", id="existing")])
 
     assert combine_inputs_with_outputs(source, outputs).cells[0].id == "existing"
@@ -138,12 +173,19 @@ def test_outputs_follow_explicit_ids_when_identical_cells_are_reordered(tmp_path
 
 
 @pytest.mark.asyncio
-async def test_contents_manager_opens_pair_with_cell_ids(tmp_path, cm):
+@pytest.mark.parametrize("id_to_change", ["frontmatter", "intro"])
+async def test_contents_manager_opens_pair_with_cell_ids(tmp_path, cm, id_to_change):
     cm.root_dir = str(tmp_path)
     (tmp_path / "jupytext.toml").write_text('formats = "ipynb,py:light"\ncell_id_to_title = true\n', encoding="utf-8")
     script = tmp_path / "example.py"
     ipynb = script.with_suffix(".ipynb")
-    notebook = new_notebook(cells=[new_markdown_cell("Heading", id="intro"), new_code_cell("1 + 1", id="code")])
+    notebook = new_notebook(
+        cells=[
+            new_raw_cell("---\ntitle: Example\n---", id="frontmatter"),
+            new_markdown_cell("Heading", id="intro"),
+            new_code_cell("1 + 1", id="code"),
+        ]
+    )
     config = JupytextConfiguration(cell_id_to_title=True)
     text = writes(notebook, "py:light", config=config).replace("# + code\n", "# +\n")
     script.write_text(text, encoding="utf-8")
@@ -152,9 +194,9 @@ async def test_contents_manager_opens_pair_with_cell_ids(tmp_path, cm):
     os.utime(ipynb, (200, 200))
 
     model = await ensure_async(cm.get(ipynb.name))
-    assert [cell.id for cell in model["content"].cells] == ["intro", "code"]
+    assert [cell.id for cell in model["content"].cells] == ["frontmatter", "intro", "code"]
 
-    script.write_text(text.replace("# + intro ", "# + older "), encoding="utf-8")
+    script.write_text(text.replace(id_to_change, "older"), encoding="utf-8")
     os.utime(script, (100, 100))
     with pytest.raises(HTTPError, match="is more recent"):
         await ensure_async(cm.get(ipynb.name))

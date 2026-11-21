@@ -30,7 +30,7 @@ def read_pair(inputs, outputs, read_one_file, must_match=False):
         comparison_source = notebook
         fmt = inputs.fmt
         config = None
-        source_ids = vars(notebook).get("_cell_ids_from_titles", ())
+        source_ids = vars(notebook).get("_cell_ids_from_text", ())
         if source_ids:
             config = JupytextConfiguration(cell_id_to_title=True)
             # A pairing such as "ipynb,py" leaves the source script format to be detected on read.
@@ -39,7 +39,7 @@ def read_pair(inputs, outputs, read_one_file, must_match=False):
             )
             if "format_name" in text_repr:
                 fmt = {**fmt, "format_name": text_repr["format_name"]}
-            # Untitled cells carry temporary IDs. Compare only the IDs specified in the script.
+            # Cells without explicit IDs carry temporary IDs. Compare only the IDs specified in the script.
             comparison_source = copy(notebook)
             comparison_source.cells = list(notebook.cells)
             for i, (cell, output_cell) in enumerate(

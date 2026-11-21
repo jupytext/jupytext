@@ -49,7 +49,8 @@ Jupytext writes cell IDs as titles in cell markers. For example, a
 `percent` script can start a Markdown cell with `# %% introduction [markdown]`.
 The cell ID is saved even with `cell_metadata_filter = "-all"`. If the cell also
 has a title in its metadata, Jupytext writes it as a separate `title="..."`
-attribute when the filter allows it.
+attribute when the filter allows it. If the notebook starts with a YAML raw cell,
+Jupytext keeps its ID in the script's YAML header.
 
 When reading a script, Jupytext replaces spaces in marker titles with
 underscores. An ID must contain 1 to 64 ASCII letters, digits, underscores, or
