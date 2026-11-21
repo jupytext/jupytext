@@ -12552,7 +12552,7 @@ packages:
   - pytest-randomly ; extra == 'test-integration'
   - pytest-xdist ; extra == 'test-integration'
   - bash-kernel ; extra == 'test-ui'
-  requires_python: '>=3.9'
+  requires_python: '>=3.10'
 - pypi: https://files.pythonhosted.org/packages/01/33/e591f9d3d8d6c9cfc02ae95f3e3c44920f2d18050f3f252c244e0f293a0e/msgspec-0.22.0-cp313-cp313-win_amd64.whl
   name: msgspec
   version: 0.22.0
