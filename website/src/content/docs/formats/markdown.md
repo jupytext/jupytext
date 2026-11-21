@@ -168,6 +168,8 @@ If you wish to use that format, please install `pandoc` in version 2.7.2 or abov
 
 ## Org Mode
 
+The Org format was introduced in Jupytext 1.20.1.
+
 [Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
 Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
 
