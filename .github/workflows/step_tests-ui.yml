@@ -14,22 +14,33 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@v0.9.1
+        uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e # v0.11.3
         with:
-          pixi-version: v0.59.0
+          pixi-version: v0.84.2
           cache: true
+          activate-environment: default
+          environments: "default build"
+
+      - name: Build JupyterLab extension
+        run: pixi run -e build build-labextension
+
+      - name: Fix jlpm (use build env's pip-installed version)
+        run: |
+          mkdir -p ~/.local/bin
+          ln -sf "${{ github.workspace }}/.pixi/envs/build/bin/jlpm" ~/.local/bin/jlpm
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install from source
         run: |
-          eval "$(pixi shell-hook)"
           HATCH_BUILD_HOOKS_ENABLE=true python -m pip install -e '.[test-ui]'
 
       - name: Uninstall jupyter-fs
         run: |
-          eval "$(pixi shell-hook)"
           # Uninstall jupyter-fs as it overrides the original browser-test.js to
           # check its own functionality (https://github.com/jpmorganchase/jupyter-fs/blob/main/jupyterfs/browser-test.js)
           pip uninstall jupyter-fs -y
@@ -38,25 +49,19 @@ jobs:
         working-directory: jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
-        run: |
-          eval "$(pixi shell-hook)"
-          jlpm install
+        run: jlpm install
 
       - name: Install browser
         working-directory: jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests
-        run: |
-          eval "$(pixi shell-hook)"
-          jlpm playwright install chromium
+        run: jlpm playwright install chromium
 
       - name: Integration tests
         working-directory: jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests
-        run: |
-          eval "$(pixi shell-hook)"
-          jlpm playwright test
+        run: jlpm playwright test
 
       - name: Upload UI Test artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ui-test-output
           path: |

@@ -66,6 +66,32 @@ def separator(path):
     return "/"
 
 
+def _path_reach(path, sep):
+    """Return a path's anchor, leading climbs, and normalized components."""
+    if path.startswith(sep):
+        anchor = sep
+        path = path[len(sep) :]
+    elif len(path) >= 3 and path[1] == ":" and path[2] == sep:
+        anchor = path[:2]
+        path = path[3:]
+    else:
+        anchor = ""
+
+    climb = 0
+    parts = []
+    for part in path.split(sep):
+        if part in ("", "."):
+            continue
+        if part == "..":
+            if parts:
+                parts.pop()
+            else:
+                climb += 1
+        else:
+            parts.append(part)
+    return anchor, climb, parts
+
+
 def get_prefix_root_prefix_dir_prefix_file_name(prefix: str) -> tuple[str, str, str]:
     if "//" in prefix:
         prefix_root, prefix = prefix.rsplit("//", 1)
@@ -248,6 +274,7 @@ def full_path(base, fmt):
 
         # Local path separator (\\ on windows)
         sep = separator(base)
+        prefix_root = prefix_root.replace("/", sep)
         prefix_dir = prefix_dir.replace("/", sep)
 
         if (prefix_root != "") != ("//" in base):
@@ -328,5 +355,27 @@ def paired_paths(main_path, fmt, formats):
 
     if len(paths) > len(set(paths)):
         raise InconsistentPath("Duplicate paired paths for this notebook. Please fix jupytext.formats.")
+
+    # A paired file must stay within the notebook's own directory tree. Reject any
+    # format whose prefix (e.g. '../../../' or an absolute path) makes a paired path
+    # reach further up, or to a different root, than the notebook itself - otherwise
+    # untrusted 'formats' metadata could drive writes outside the working tree.
+    sep = separator(main_path)
+    main_anchor, main_climb, _ = _path_reach(main_path, sep)
+    root_path = base.rsplit("//", 1)[0] if "//" in base else ""
+    if root_path:
+        root_anchor, root_climb, root_parts = _path_reach(root_path, sep)
+
+    for alt_path in paths:
+        anchor, climb, parts = _path_reach(alt_path, sep)
+        escapes = anchor != main_anchor or climb > main_climb
+        if root_path:
+            escapes = escapes or (anchor != root_anchor or climb != root_climb or parts[: len(root_parts)] != root_parts)
+        if escapes:
+            raise InconsistentPath(
+                f"Paired path '{alt_path}' escapes the directory of the notebook '{main_path}'. "
+                "A prefix like '../' or an absolute path in 'formats' must stay within the "
+                "notebook's directory tree."
+            )
 
     return list(zip(paths, formats))

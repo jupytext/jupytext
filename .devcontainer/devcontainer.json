@@ -1,0 +1,63 @@
+{
+    "name": "Jupytext development",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".",
+        "options": [
+            "--platform=linux/amd64"
+        ]
+    },
+    "runArgs": [
+        "--platform=linux/amd64"
+    ],
+    "remoteUser": "vscode",
+    "mounts": [
+        "source=${devcontainerId}-pixi,target=${containerWorkspaceFolder}/.pixi,type=volume",
+        "source=${devcontainerId}-codex,target=/home/vscode/.codex,type=volume"
+    ],
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "waitFor": "postCreateCommand",
+    "remoteEnv": {
+        "GH_TOKEN": "${localEnv:GH_TOKEN}",
+        "PATH": "${containerWorkspaceFolder}/.pixi/envs/default/bin:${containerEnv:PATH}"
+    },
+    "forwardPorts": [
+        8888,
+        4321
+    ],
+    "portsAttributes": {
+        "8888": {
+            "label": "JupyterLab"
+        },
+        "4321": {
+            "label": "Jupytext website"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-pyright.pyright",
+                "charliermarsh.ruff",
+                "openai.chatgpt"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/default/bin/python",
+                "python.languageServer": "None",
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestArgs": [
+                    "tests"
+                ],
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                },
+                "python.useEnvironmentsExtension": false,
+                "files.watcherExclude": {
+                    "**/.pixi/**": true,
+                    "**/node_modules/**": true
+                }
+            }
+        }
+    }
+}

@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "lib": ["es2018", "dom"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "lib": ["es2019", "dom"],
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "noEmitOnError": true,
     "noUnusedLocals": true,
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "strictNullChecks": false,
-    "target": "es2018",
+    "strictNullChecks": true,
+    "target": "es2019",
     "types": ["node"],
     "esModuleInterop": true,
     "skipLibCheck": true

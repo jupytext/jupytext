@@ -1,76 +1,31 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
-# -- Project information -----------------------------------------------------
+# Minimal Sphinx configuration — serves HTTP redirects from jupytext.readthedocs.io
+# to the new jupytext.org site via sphinx-reredirects.
+# The actual documentation now lives in website/ (Astro + Starlight).
 
 project = "Jupytext"
-copyright = "2018-2025, The Jupytext Team"
-author = "The Jupytext Team"
 
-# -- General configuration ---------------------------------------------------
+extensions = ["myst_parser", "sphinx_reredirects"]
+source_suffix = {".md": "markdown"}
+root_doc = "index"
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
-extensions = ["sphinx_copybutton", "myst_parser"]
-
-# Auto-generated header anchors
-myst_heading_anchors = 3
-
-html_context = {
-    "display_github": True,  # Integrate GitHub
-    "github_user": "mwouts",  # Username
-    "github_repo": "jupytext",  # Repo name
-    "github_version": "main",  # Version
-    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+redirects = {
+    "index": "https://jupytext.org/",
+    "install": "https://jupytext.org/getting-started/install/",
+    "text-notebooks": "https://jupytext.org/getting-started/text-notebooks/",
+    "formats-scripts": "https://jupytext.org/formats/scripts/",
+    "formats-markdown": "https://jupytext.org/formats/markdown/",
+    "languages": "https://jupytext.org/formats/languages/",
+    "paired-notebooks": "https://jupytext.org/using/paired-notebooks/",
+    "using-cli": "https://jupytext.org/using/cli/",
+    "using-pre-commit": "https://jupytext.org/using/pre-commit/",
+    "config": "https://jupytext.org/using/config/",
+    "jupyterlab-extension": "https://jupytext.org/integrations/jupyterlab/",
+    "jupyter-collaboration": "https://jupytext.org/integrations/jupyter-collaboration/",
+    "vs-code": "https://jupytext.org/integrations/vs-code/",
+    "advanced-options": "https://jupytext.org/reference/advanced-options/",
+    "tutorials": "https://jupytext.org/reference/tutorials/",
+    "faq": "https://jupytext.org/reference/faq/",
+    "contributing": "https://jupytext.org/reference/contributing/",
+    "developing": "https://jupytext.org/reference/developing/",
+    "changelog": "https://github.com/jupytext/jupytext/blob/main/CHANGELOG.md",
 }
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".ipynb_checkpoints"]
-
-# -- Options for HTML output -------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = "alabaster"
-
-html_sidebars = {"**": ["about.html", "navigation.html", "searchbox.html"]}
-
-html_theme_options = {
-    "github_button": True,
-    "github_banner": True,
-    "github_user": "mwouts",
-    "github_repo": "jupytext",
-    "github_type": "star",
-    "logo": "logo.svg",
-    "show_relbars": True,
-}
-
-pygments_style = "sphinx"
-master_doc = "index"  # Makes `index.md` the main file
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "jupytext"

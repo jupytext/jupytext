@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#16161d"/>
+  <text x="16" y="14" text-anchor="middle" font-family="Avenir Next, Avenir, Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" font-weight="700" fill="#ff5500">-jupy</text>
+  <text x="16" y="25" text-anchor="middle" font-family="Avenir Next, Avenir, Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" font-weight="700" fill="#76c043">+text</text>
+</svg>

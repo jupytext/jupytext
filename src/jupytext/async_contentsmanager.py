@@ -232,12 +232,6 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
                     model["mimetype"] = None
                     try:
                         model["content"] = reads(model["content"], fmt=fmt, config=config)
-                        # mark all code cells from text notebooks as 'trusted'
-                        # as they don't have any outputs, cf. #941
-                        for cell in model["content"].cells:
-                            if cell.cell_type == "code":
-                                cell["metadata"]["trusted"] = True
-
                     except Exception as err:
                         self.log.error("Error while reading file: %s %s", path, err, exc_info=True)
                         raise HTTPError(500, str(err))

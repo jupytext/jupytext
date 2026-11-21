@@ -706,6 +706,7 @@ _VALID_FORMAT_OPTIONS = _BINARY_FORMAT_OPTIONS + [
     "cell_metadata_filter",
     "cell_markers",
     "custom_cell_magics",
+    "custom_language_magics",
 ]
 _VALID_FORMAT_NAMES = {fmt.format_name for fmt in JUPYTEXT_FORMATS}
 

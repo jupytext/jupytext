@@ -1,0 +1,115 @@
+---
+import '../styles/landing.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Jupytext — Jupyter notebooks as plain text',
+	description = 'Jupytext turns Jupyter notebooks into plain text files you can edit in any IDE, version control with clean diffs, and refactor with AI assistants.',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og/jupytext-card.png', Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+		<link rel="canonical" href={canonical} />
+
+		<!-- Open Graph / social -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={ogImage} />
+		<meta name="twitter:card" content="summary_large_image" />
+
+
+</head>
+	<body class="lp">
+		<slot />
+
+		<script is:inline>
+			// Copy-to-clipboard buttons.
+			document.addEventListener('click', async (e) => {
+				const btn = e.target.closest('[data-copy]');
+				if (!btn) return;
+				try {
+					await navigator.clipboard.writeText(btn.dataset.copy);
+					const prev = btn.textContent;
+					btn.textContent = 'Copied!';
+					setTimeout(() => (btn.textContent = prev), 1400);
+				} catch {}
+			});
+
+			// GitHub stars badge.
+			fetch('https://api.github.com/repos/jupytext/jupytext')
+				.then(r => r.json())
+				.then(d => {
+					const n = d.stargazers_count;
+					if (!n) return;
+					const label = n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+					document.getElementById('gh-stars').textContent = ' ★ ' + label;
+				})
+				.catch(() => {});
+
+			// Lightweight tabs (quickstart, demo, etc.)
+			document.querySelectorAll('[data-tabs]').forEach((group) => {
+				const tabs = [...group.querySelectorAll('[role="tab"]')];
+				const panels = [...group.querySelectorAll('[role="tabpanel"]')];
+				tabs.forEach((tab, i) => {
+					tab.addEventListener('click', () => {
+						tabs.forEach((t) => t.setAttribute('aria-selected', 'false'));
+						panels.forEach((p) => (p.hidden = true));
+						tab.setAttribute('aria-selected', 'true');
+						panels[i].hidden = false;
+					});
+				});
+			});
+
+			// Demo card copy button — copies text of the visible panel's <pre>.
+			document.querySelectorAll('[data-demo-copy]').forEach((btn) => {
+				btn.addEventListener('click', () => {
+					const card = btn.closest('[data-tabs]');
+					const panel = card && card.querySelector('[role="tabpanel"]:not([hidden])');
+					const pre = panel && panel.querySelector('pre');
+					const text = pre ? pre.innerText : '';
+					if (!text) return;
+					navigator.clipboard.writeText(text).catch(() => {});
+					const prev = btn.textContent;
+					btn.textContent = 'copied ✓';
+					setTimeout(() => (btn.textContent = prev), 1400);
+				});
+			});
+
+			// Hamburger menu toggle.
+			const hamburger = document.getElementById('lp-hamburger');
+			const mobileMenu = document.getElementById('lp-mobile-menu');
+			if (hamburger && mobileMenu) {
+				hamburger.addEventListener('click', () => {
+					const open = !mobileMenu.hidden;
+					mobileMenu.hidden = open;
+					hamburger.setAttribute('aria-expanded', String(!open));
+				});
+				mobileMenu.querySelectorAll('a').forEach(a => {
+					a.addEventListener('click', () => {
+						mobileMenu.hidden = true;
+						hamburger.setAttribute('aria-expanded', 'false');
+					});
+				});
+			}
+		</script>
+	</body>
+</html>

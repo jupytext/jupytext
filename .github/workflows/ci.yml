@@ -13,6 +13,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  merge_group:
+    types: [ checks_requested ]
   schedule:
     - cron: "0 11 * * 4"
 
@@ -26,50 +28,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  zizmor:
+    uses: ./.github/workflows/step_zizmor.yml
+    permissions:
+      contents: read
+      security-events: write
+
   pre-commit:
+    needs: [ zizmor ]
     uses: ./.github/workflows/step_pre-commit.yml
 
   static-analysis:
-    needs: [ pre-commit ]
+    needs: [ zizmor, pre-commit ]
     uses: ./.github/workflows/step_static-analysis.yml
     permissions:
       contents: read
       security-events: write
 
-  test-pip:
-    needs: [ pre-commit ]
-    uses: ./.github/workflows/step_tests-pip.yml
-    with:
-      coverage: ${{ github.event_name != 'schedule' }}
-
   coverage:
-    needs: [ test-pip ]
+    needs: [ zizmor, pre-commit ]
     uses: ./.github/workflows/step_coverage.yml
-    if: github.event_name != 'schedule'
+
+  test-pip:
+    needs: [ zizmor, pre-commit ]
+    uses: ./.github/workflows/step_tests-pip.yml
 
   test-conda:
-    needs: [ pre-commit ]
+    needs: [ zizmor, pre-commit ]
     uses: ./.github/workflows/step_tests-conda.yml
-    with:
-      coverage: ${{ github.event_name != 'schedule' }}
 
   test-ui:
-    needs: [ test-pip ]
+    needs: [ zizmor, pre-commit ]
     uses: ./.github/workflows/step_tests-ui.yml
 
   build:
-    needs: [ test-pip, test-conda, test-ui ]
+    needs: [ zizmor, pre-commit ]
     uses: ./.github/workflows/step_build.yml
     with:
       upload: ${{ inputs.upload-build-artifacts || false }}
 
+  devcontainer:
+    needs: [ zizmor, pre-commit ]
+    uses: ./.github/workflows/step_devcontainer.yml
+
   pass:
     name: Pass
-    needs: [ pre-commit, static-analysis, test-pip, coverage, test-conda, test-ui, build ]
+    needs: [ zizmor, pre-commit, static-analysis, test-pip, coverage, test-conda, test-ui, build, devcontainer ]
     runs-on: ubuntu-latest
     steps:
-      - uses: re-actors/alls-green@release/v1
+      - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: coverage
     if: always()

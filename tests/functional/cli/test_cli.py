@@ -1366,6 +1366,25 @@ def test_pipe_with_quiet_does_not_print(tmp_path, capsys):
     assert tmp_py.read_text() == "# %%\n1 + 1\n"
 
 
+def test_quiet_does_not_print_when_creating_missing_directory(tmp_path, monkeypatch, capsys):
+    """In quiet mode, jupytext should not print a warning when creating a missing directory (#1285)"""
+    monkeypatch.chdir(tmp_path)
+    tmp_py = tmp_path / "script.py"
+    tmp_py.write_text("# %%\n1+1\n")
+
+    output_dir = tmp_path / "jupyter_execute"
+    assert not output_dir.exists()
+
+    # The double slash in './jupyter_execute//ipynb' is the jupytext syntax for a prefix directory
+    jupytext(["--quiet", "script.py", "--to", "./jupyter_execute//ipynb"])
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+    assert output_dir.exists()
+    assert (output_dir / "script.ipynb").exists()
+
+
 def test_update_formats_1386(python_notebook, tmp_path, capsys):
     """
     Test that we can change the formats in an already paired notebook

@@ -6,6 +6,8 @@
 build
 /dist
 docs/_build
+website/dist
+website/.astro
 
 # Will be created by postBuild
 demo/get_started.ipynb
@@ -24,9 +26,6 @@ demo/get_started.ipynb
 *.pyc
 .ipynb_checkpoints
 .jupyter_ystore.db*
-
-# Marimo
-__marimo__
 
 # Test related files
 .coverage

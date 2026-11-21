@@ -1,0 +1,423 @@
+---
+import { Image } from 'astro:assets';
+import LandingLayout from '../layouts/LandingLayout.astro';
+import logo from '../assets/logo.png';
+
+import rawIpynb from '../../../tests/unit/data/landing_page/notebook.ipynb?raw';
+import rawPercent from '../../../tests/unit/data/landing_page/notebook_percent.py?raw';
+import rawLight from '../../../tests/unit/data/landing_page/notebook_light.py?raw';
+import rawMarimo from '../../../tests/unit/data/landing_page/notebook_marimo.py?raw';
+import rawMd from '../../../tests/unit/data/landing_page/notebook.md?raw';
+import rawMyst from '../../../tests/unit/data/landing_page/notebook.myst.md?raw';
+import rawQmd from '../../../tests/unit/data/landing_page/notebook.qmd?raw';
+
+const GH = 'https://github.com/jupytext/jupytext';
+
+const formats = [
+	{
+		id: 'percent',
+		label: 'py:percent',
+		filename: 'notebook.py',
+		featured: true,
+		best: 'Explicit # %% cell markers — understood by VS Code, PyCharm, Spyder, supported in 30+ languages.',
+		code: rawPercent.trimEnd(),
+	},
+	{
+		id: 'light',
+		label: 'py:light',
+		filename: 'notebook.py',
+		best: 'Minimal markers — barely looks different from a regular script. Use py:nomarker to drop them entirely.',
+		code: rawLight.trimEnd(),
+	},
+	{
+		id: 'marimo',
+		label: 'py:marimo',
+		filename: 'notebook.py',
+		best: 'Each cell becomes a reactive function — open the file directly in Marimo.',
+		code: rawMarimo.replace(/^__generated_with = ".*"\n/m, '').trimEnd(),
+	},
+	{
+		id: 'md',
+		label: 'md',
+		filename: 'notebook.md',
+		best: 'Plain GitHub Markdown — prose-first, readable everywhere.',
+		code: rawMd.trimEnd(),
+	},
+	{
+		id: 'myst',
+		label: 'md:myst',
+		filename: 'notebook.myst.md',
+		featured: true,
+		best: 'Rich directives and cross-references for Jupyter Book and technical publishing.',
+		code: rawMyst.trimEnd(),
+	},
+	{
+		id: 'quarto',
+		label: 'qmd',
+		filename: 'notebook.qmd',
+		best: 'Multi-language scientific publishing — Python, R, Julia and more via the Quarto system.',
+		code: rawQmd.trimEnd(),
+	},
+];
+
+
+// Fetch live stats at build time
+let ghStars = '7.2k';
+let ghContributors = '100+';
+let pypiDownloads = '3M+';
+
+try {
+	const ghRes = await fetch('https://api.github.com/repos/jupytext/jupytext');
+	if (ghRes.ok) {
+		const gh = await ghRes.json();
+		const n = gh.stargazers_count;
+		if (n) ghStars = n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+	}
+} catch {}
+
+
+try {
+	const pypiRes = await fetch('https://pypistats.org/api/packages/jupytext/recent');
+	if (pypiRes.ok) {
+		const pypi = await pypiRes.json();
+		const n = pypi.data?.last_month;
+		if (n) pypiDownloads = n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + 'M' : n >= 1000 ? Math.round(n / 1000) + 'k' : String(n);
+	}
+} catch {}
+---
+
+<LandingLayout>
+	<!-- Nav -->
+	<header class="lp-nav">
+		<div class="lp-container">
+			<a href="/" aria-label="Jupytext home"><Image src={logo} alt="Jupytext" width={140} densities={[1.5, 2]} /></a>
+			<nav class="lp-nav-links">
+				<a class="nav-hide-sm" href="/getting-started/introduction/">Docs</a>
+				<a class="nav-hide-sm" href="/getting-started/install/">Get started</a>
+				<a href={GH} target="_blank" rel="noopener">GitHub<span id="gh-stars" class="gh-stars"> ★ {ghStars}</span></a>
+				<button class="lp-hamburger" id="lp-hamburger" aria-label="Open menu" aria-expanded="false">
+					<span></span><span></span><span></span>
+				</button>
+			</nav>
+		</div>
+	</header>
+	<div class="lp-mobile-menu" id="lp-mobile-menu" hidden>
+		<a href="#formats">Formats</a>
+		<a href="#features">Features</a>
+		<a href="#get-started">Get started</a>
+		<a href="#paired">Paired notebooks</a>
+		<a href="#sync">Synchronization</a>
+		<a href="#ai">Works with AI</a>
+		<a href="#about">About</a>
+		<div class="lp-mobile-menu-sep"></div>
+		<a href="/getting-started/introduction/">Docs</a>
+		<a href={GH} target="_blank" rel="noopener">GitHub</a>
+	</div>
+
+	<!-- Hero -->
+	<section id="formats">
+		<div class="lp-container">
+			<div class="section-head">
+				<div class="lp-hero-eyebrow">Jupyter ecosystem · open source</div>
+				<h1>Your notebooks,<br>as plain <span class="grad">text.</span></h1>
+				<p class="lede">
+					Jupytext saves Jupyter notebooks as <code>.py</code> or <code>.md</code> files — easy to edit
+					in any IDE, friendly to version control, and trivial for AI assistants to read and refactor.
+				</p>
+			</div>
+		</div>
+		<div class="lp-container" style="margin-top: 2.5rem">
+			<div class="lp-demo-split">
+				<!-- Left: tabbed text format viewer -->
+				<div class="lp-demo-card" data-tabs>
+					<div class="lp-demo-tabbar">
+						<div class="lp-demo-group-cluster">
+							<span class="lp-demo-group-lbl">Script formats</span>
+							<div class="lp-demo-group-tabs">
+								{formats.slice(0, 3).map((f) => (
+									<button class:list={['lp-demo-tab', f.featured && 'lp-demo-tab--featured']} role="tab" aria-selected={f.id === 'percent' ? 'true' : 'false'}>
+										{f.label}{f.featured && <span class="lp-demo-dot" aria-hidden="true"></span>}
+									</button>
+								))}
+							</div>
+						</div>
+						<div class="lp-demo-group-cluster">
+							<span class="lp-demo-group-lbl">Markdown formats</span>
+							<div class="lp-demo-group-tabs">
+								{formats.slice(3).map((f) => (
+									<button class:list={['lp-demo-tab', f.featured && 'lp-demo-tab--featured']} role="tab" aria-selected="false">
+										{f.label}{f.featured && <span class="lp-demo-dot" aria-hidden="true"></span>}
+									</button>
+								))}
+							</div>
+						</div>
+						<div class="lp-demo-group-cluster" style="border-right:0">
+							<span class="lp-demo-group-lbl">Jupyter</span>
+							<div class="lp-demo-group-tabs">
+								<button class="lp-demo-tab" role="tab" aria-selected="false">ipynb<span class="lp-demo-dot" aria-hidden="true"></span></button>
+							</div>
+						</div>
+					</div>
+					<div class="lp-demo-panels">
+						{formats.map((f) => (
+							<div role="tabpanel" hidden={f.id !== 'percent'}>
+								<pre class="lp-demo-pre">{f.code}</pre>
+								{f.best && <p class="lp-demo-note">{f.best}</p>}
+							</div>
+						))}
+						<div role="tabpanel" hidden>
+							<pre class="lp-demo-pre">{rawIpynb.trimEnd()}</pre>
+							<p class="lp-demo-note">JSON format · contains outputs and metadata, but not well suited to manual edits or version control</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Right: always-visible rendered notebook -->
+				<div class="lp-demo-rendered">
+					<div class="lp-nb-render">
+						<div class="lp-nb-md">
+							<h2>Quarterly Sales</h2>
+							<p>A look at Q4 revenue by region.</p>
+						</div>
+						<div class="lp-nb-cell">
+							<span class="lp-nb-prompt">[1]:</span>
+							<pre class="lp-nb-code">import pandas as pd
+df = pd.read_csv("sales.csv")</pre>
+						</div>
+						<div class="lp-nb-cell">
+							<span class="lp-nb-prompt">[2]:</span>
+							<div class="lp-nb-output">
+								<pre class="lp-nb-code">df.groupby("region")["revenue"].sum().plot.bar()</pre>
+								<div class="lp-nb-chart">
+									<div class="lp-nb-bars">
+										<div class="lp-nb-bar" style="height:62px"></div>
+										<div class="lp-nb-bar" style="height:85px"></div>
+										<div class="lp-nb-bar" style="height:44px"></div>
+										<div class="lp-nb-bar" style="height:73px"></div>
+									</div>
+									<div class="lp-nb-labels">
+										<span class="lp-nb-label">North</span>
+										<span class="lp-nb-label">South</span>
+										<span class="lp-nb-label">East</span>
+										<span class="lp-nb-label">West</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<p class="lp-demo-note">Text notebooks render exactly the same in Jupyter. Outputs are not saved — <a href="#paired">pair with an .ipynb</a> to keep them.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- What Jupytext enables -->
+	<section id="features">
+		<div class="lp-container">
+			<div class="section-head">
+				<span class="eyebrow">What Jupytext enables</span>
+				<h2>Get more done with text notebooks</h2>
+			</div>
+			<div class="lp-grid lp-grid-2">
+				<article class="lp-feature">
+					<div class="ico">&lt;/&gt;</div>
+					<h3>Edit anywhere</h3>
+					<p>Open notebooks in VS Code, PyCharm, Vim — any editor, with full language tooling.</p>
+				</article>
+				<article class="lp-feature">
+					<div class="ico">✦</div>
+					<h3>Ready for AI</h3>
+					<p>Coding agents read and edit the clean text form — so AI can refactor, explain and extend your notebooks.</p>
+				</article>
+				<article class="lp-feature">
+					<div class="ico">PR</div>
+					<h3>Review like code</h3>
+					<p>No outputs, no base64 blobs — just clean diffs your team can actually review in a pull request.</p>
+				</article>
+				<article class="lp-feature">
+					<div class="ico">↑</div>
+					<h3>Raise the quality bar</h3>
+					<p>One pre-commit hook — <code>ruff check</code> and <code>ruff format</code> — and every notebook commit meets the same standard as your production code.</p>
+				</article>
+				</div>
+		</div>
+
+	</section>
+
+	<!-- Getting started: install & open -->
+	<section id="get-started">
+		<div class="lp-container">
+			<div class="section-head">
+				<span class="eyebrow">Getting started</span>
+				<h2>Create your first text notebook</h2>
+			</div>
+			<div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;margin-bottom:2.5rem">
+				<div class="lp-install">
+					<span class="prompt">$</span>
+					<span>pip install jupytext</span>
+					<button class="lp-copy" data-copy="pip install jupytext">copy</button>
+				</div>
+				<p class="lp-install-note">Then restart your Jupyter server to activate the extension.</p>
+			</div>
+			<div class="lp-grid">
+				<article class="lp-feature">
+					<div class="ico">+</div>
+					<h3>New text notebook</h3>
+					<p>In JupyterLab, use <strong>File → New Text Notebook</strong> to start fresh with a <code>.py</code> or <code>.md</code> file — or ask your AI assistant to write one.</p>
+				</article>
+				<article class="lp-feature">
+					<div class="ico">↗</div>
+					<h3>Open as a notebook</h3>
+					<p>Right-click any <code>.py</code>, <code>.md</code>, or <code>.qmd</code> file in the JupyterLab file browser and choose <strong>Open With → Notebook</strong>.</p>
+				</article>
+			</div>
+			<div class="lp-callout">
+				<span class="lp-callout-icon">!</span>
+				<p><strong>Auto-reload isn't universal.</strong> In Jupyter, use <strong>File → Reload Notebook from Disk</strong> to pick up changes made to the <code>.py</code> file in another editor.</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- Getting started: paired notebooks -->
+	<section id="paired">
+		<div class="lp-container">
+			<div class="section-head">
+				<span class="eyebrow">Paired notebooks</span>
+				<h2>Best of both worlds</h2>
+				<p>Text notebooks don't store outputs. Pair them with an <code>.ipynb</code> and Jupytext keeps both in sync on every save — commit the text, keep the outputs. The text file always has precedence, and Jupytext raises an error if the <code>.ipynb</code> was modified outside of Jupyter.</p>
+			</div>
+			<div class="lp-steps">
+				<div class="lp-step">
+					<h3>Menu</h3>
+					<p>In JupyterLab open the <code>.ipynb</code> notebook, then use:</p>
+					<p class="lp-menu-path"><strong>File → Jupytext → Pair Notebook with percent Script</strong></p>
+					<p class="lp-or">or</p>
+					<p class="lp-menu-path"><strong>File → Jupytext → Pair Notebook with MyST Markdown</strong></p>
+					<p>And if you opened the text notebook as a notebook, the same menu lets you pair it with an <code>.ipynb</code>. No terminal needed.</p>
+				</div>
+				<div class="lp-step">
+					<h3>jupytext.toml</h3>
+					<p>Drop a config file at your project root to pair all notebooks at once:</p>
+					<pre class="lp-mini-code"><span class="cmt"># jupytext.toml</span>
+formats = <span class="str">"ipynb,py:percent"</span></pre>
+					<p class="lp-or">or</p>
+					<pre class="lp-mini-code"><span class="cmt"># jupytext.toml</span>
+formats = <span class="str">"ipynb,md:myst"</span></pre>
+				</div>
+				<div class="lp-step">
+					<h3>pyproject.toml</h3>
+					<p>Or add a <code>[tool.jupytext]</code> section to your existing config:</p>
+					<pre class="lp-mini-code"><span class="cmt">[tool.jupytext]</span>
+formats = <span class="str">"ipynb,py:percent"</span></pre>
+					<p class="lp-or">or</p>
+					<pre class="lp-mini-code"><span class="cmt">[tool.jupytext]</span>
+formats = <span class="str">"ipynb,md:myst"</span></pre>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Sync -->
+	<section id="sync">
+		<div class="lp-container">
+			<div class="section-head">
+				<span class="eyebrow">Keeping in sync</span>
+				<h2>Syncs wherever you work</h2>
+				<p>Pair a text notebook with an <code>.ipynb</code> and Jupytext keeps both in sync automatically.</p>
+			</div>
+			<div class="lp-steps">
+				<div class="lp-step">
+					<h3>In Jupyter</h3>
+					<p>Sync happens automatically on save — both files are written together. On load, inputs come from the text file, outputs from the <code>.ipynb</code>.</p>
+				</div>
+				<div class="lp-step">
+					<h3>VS Code</h3>
+					<p>The <a href="/integrations/vs-code/">Jupytext-Sync extension</a> by Victor Negîrneac syncs both files whenever either one is saved — no terminal needed.</p>
+				</div>
+				<div class="lp-step">
+					<h3>pre-commit</h3>
+					<p>Wire <code>jupytext --sync</code> into a <a href="/using/pre-commit/">pre-commit hook</a> to keep pairs in sync on every commit.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- AI band -->
+	<section id="ai" class="lp-ai">
+		<div class="lp-container">
+			<div>
+				<span class="eyebrow">New superpower</span>
+				<h2>Notebooks your AI assistant can actually work with</h2>
+				<p>AI assistants are right at home with scripts and Markdown files. As a text notebook is just that, they read, edit and refactor it as fluently as any other source file — no JSON wrangling, no special tooling.</p>
+				<ul>
+					<li><span class="tick">✓</span> Ask an agent to refactor a cell — it edits the .py file, you reload in Jupyter.</li>
+					<li><span class="tick">✓</span> Outputs stay safe in the paired .ipynb while the text gets edited.</li>
+					<li><span class="tick">✓</span> Easily 1,000x more concise than .ipynb — so your AI grasps not just one notebook, but your whole collection at once.</li>
+				</ul>
+			</div>
+			<div class="lp-demo-card">
+				<div class="lp-demo-tabbar">
+					<div class="lp-demo-group-cluster" style="border-right:0">
+						<span class="lp-demo-group-lbl">Edit with AI</span>
+						<div class="lp-demo-group-tabs">
+							<span class="lp-demo-tab" style="border-bottom-color:var(--jt-orange);color:#fff;">analysis.py</span>
+						</div>
+					</div>
+				</div>
+				<pre class="lp-demo-pre"><span class="cmt"># %% [markdown]</span>
+<span class="cmt"># ### Refactor: vectorize the loop 🤖</span>
+
+<span class="del">- totals = []</span>
+<span class="del">- for r in regions:</span>
+<span class="del">-     totals.append(df[df.region==r].sales.sum())</span>
+<span class="add">+ totals = df.groupby("region").sales.sum()</span></pre>
+			</div>
+		</div>
+	</section>
+
+
+	<!-- Stats -->
+	<section class="lp-stats">
+		<div class="lp-container">
+			<a class="lp-stat" href="https://github.com/jupytext/jupytext" target="_blank" rel="noopener noreferrer"><div class="num">{ghStars}</div><div class="lab">GitHub stars</div></a>
+			<a class="lp-stat" href="https://pypistats.org/packages/jupytext" target="_blank" rel="noopener noreferrer"><div class="num">{pypiDownloads}</div><div class="lab">Downloads / month</div></a>
+			<a class="lp-stat" href="/formats/languages/"><div class="num">30+</div><div class="lab">Languages supported</div></a>
+			<a class="lp-stat" href="https://github.com/jupytext/jupytext/graphs/contributors" target="_blank" rel="noopener noreferrer"><div class="num">{ghContributors}</div><div class="lab">Contributors</div></a>
+			<a class="lp-stat" href="https://github.com/jupytext/jupytext/blob/main/LICENSE" target="_blank" rel="noopener noreferrer"><div class="num">MIT</div><div class="lab">Open source</div></a>
+		</div>
+	</section>
+
+	<!-- About -->
+	<section id="about" style="border-top:1px solid var(--lp-border)">
+		<div class="lp-container" style="max-width:44rem;text-align:center">
+			<div class="section-head">
+				<h2>Keeping in touch</h2>
+			</div>
+			<p style="color:var(--lp-text-dim);line-height:1.7">
+				Jupytext was created by <a href="https://www.linkedin.com/in/marc-wouts" target="_blank" rel="noopener">Marc Wouts</a>.
+				Follow Marc on LinkedIn for updates on Jupytext, his other open-source projects, and the occasional random topic.
+			</p>
+			<p style="color:var(--lp-text-dim);line-height:1.7">
+				Jupytext is completely free and open source under the <strong>MIT license</strong>. What keeps us going is
+				the excitement of learning through interactions with users and experts, and the satisfaction of sharing solutions with the community.
+				<br /><br />
+				Have a question, a bug report, or an idea? Join us on <a href="https://discord.gg/VfdAsYyn" target="_blank" rel="noopener">Discord</a>,
+				or open an issue or start a discussion on <a href={GH} target="_blank" rel="noopener">GitHub</a>.
+			</p>
+		</div>
+	</section>
+
+	<!-- Footer -->
+	<footer class="lp-footer">
+		<div class="lp-container">
+			<div>Jupytext — Jupyter notebooks as plain text. MIT licensed.</div>
+			<nav>
+				<a href="/getting-started/introduction/">Docs</a>
+				<a href="/getting-started/install/">Install</a>
+				<a href="/reference/faq/">FAQ</a>
+				<a href="/reference/contributing/">Contributing</a>
+				<a href={GH} target="_blank" rel="noopener">GitHub</a>
+			</nav>
+		</div>
+	</footer>
+</LandingLayout>

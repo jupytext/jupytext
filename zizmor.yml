@@ -1,0 +1,6 @@
+rules:
+  dangerous-triggers:
+    ignore:
+      # Needed to comment on PRs from forks. Known risk, but no external code is executed here that
+      # isn't pinned.
+      - comment-pr.yml:8

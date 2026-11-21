@@ -1,7 +1,6 @@
 {
     "name": "jupyterlab-jupytext-extensions",
     "version": "1.0.0",
-    "private": true,
     "files": [],
     "workspaces": [
         "packages/*"
@@ -32,10 +31,8 @@
         "lerna": "^7.1.4",
         "prettier": "^3.5.3",
         "stylelint": "^16.15.0",
-        "stylelint-config-prettier": "^9.0.4",
         "stylelint-config-recommended": "^15.0.0",
-        "stylelint-config-standard": "^37.0.0",
-        "stylelint-prettier": "^5.0.3"
+        "stylelint-config-standard": "^37.0.0"
     },
     "resolutions": {
         "tar": "7.5.3",
@@ -113,8 +110,7 @@
     "stylelint": {
         "extends": [
             "stylelint-config-recommended",
-            "stylelint-config-standard",
-            "stylelint-prettier/recommended"
+            "stylelint-config-standard"
         ],
         "rules": {
             "no-empty-source": null,
@@ -123,5 +119,6 @@
             "selector-no-vendor-prefix": null,
             "value-no-vendor-prefix": null
         }
-    }
+    },
+    "packageManager": "yarn@3.5.0"
 }

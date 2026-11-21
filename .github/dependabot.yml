@@ -5,34 +5,35 @@
 
 version: 2
 updates:
-  # Let's not bother about bumping top level dependencies as they are mostly
-  # developmental packages like linters. We can bump them manually
-  # when we make changes to extension packages to be consistent with JupyterLab.
-  # Importantly, these packages will not and should not effect the working of the
-  # extension, so lets try to keep maintenance low by ignoring this.
-  # - package-ecosystem: "npm" # See documentation for possible values
-  #   directory: "jupyterlab" # Location of package manifests
-  #   schedule:
-  #     interval: "weekly"
-  #   groups:
-  #     top-level-dependencies:
-  #       patterns:
-  #         - "*"
-
   - package-ecosystem: "npm" # See documentation for possible values
-    directory: "jupyterlab/packages/jupyterlab-jupytext-extension" # Location of package manifests
+    directories: # Location of package manifests
+      - "website"
+      - "jupyterlab"
+      - "jupyterlab/packages/jupyterlab-jupytext-extension"
     schedule:
       interval: "weekly"
+    # Ignore devDependencies
+    allow:
+      - dependency-type: "production"
     groups:
       jupytext-extension-dependencies:
+        applies-to: "version-updates"
         patterns:
           - "*"
+      jupytext-extension-security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
 
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests" # Location of package manifests
+  - package-ecosystem: "github-actions" # See documentation for possible values
+    directory: "/" # Workflow files stored in the default location of `.github/workflows`
     schedule:
       interval: "weekly"
     groups:
-      jupytext-extension-ui-tests-dependencies:
+      actions-dependencies:
         patterns:
           - "*"
+    cooldown:
+      default-days: 7

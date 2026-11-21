@@ -1,0 +1,66 @@
+/* Jupytext brand theming for Starlight.
+   Brand cues come straight from the logo: "-jupy" in orange (a removed line),
+   "+text" in green (an added line) — the git-diff metaphor at the heart of the project. */
+
+:root {
+	/* Brand palette */
+	--jt-orange: #ff5500; /* "-jupy"  */
+	--jt-orange-soft: #ff7a3c;
+	--jt-green: #76c043; /* "+text"  */
+	--jt-green-soft: #97d65f;
+	--jt-ink: #16161d;
+
+	/* Diff helpers reused across docs + landing */
+	--jt-diff-add-bg: rgba(118, 192, 67, 0.14);
+	--jt-diff-del-bg: rgba(255, 85, 0, 0.12);
+
+	/* A taller header so the logo can breathe */
+	--sl-nav-height: 4.5rem;
+}
+
+/* Bigger Jupytext logo in the docs site header */
+.site-title img {
+	height: 2.6rem;
+	width: auto;
+}
+@media (min-width: 50rem) {
+	.site-title img {
+		height: 3rem;
+	}
+}
+
+/* Light theme: orange-anchored accent ramp */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #ffe1d1;
+	--sl-color-accent: #e24a00;
+	--sl-color-accent-high: #8a3210;
+
+	--sl-color-text-accent: #d24400;
+	--sl-color-bg-nav: #fffaf6;
+}
+
+/* Dark theme */
+:root[data-theme='dark'],
+:root {
+	--sl-color-accent-low: #4a1e08;
+	--sl-color-accent: #ff5500;
+	--sl-color-accent-high: #ffd2bb;
+}
+
+/* Make inline code and links pop a touch more on brand */
+.sl-markdown-content a:not(:where(.not-content *)) {
+	text-underline-offset: 0.18em;
+}
+
+/* Diff-styled code blocks: lines starting with the marker get tinted.
+   We don't auto-parse diffs, but the landing reuses these utility classes. */
+.jt-diff .line-add {
+	background: var(--jt-diff-add-bg);
+	display: inline-block;
+	width: 100%;
+}
+.jt-diff .line-del {
+	background: var(--jt-diff-del-bg);
+	display: inline-block;
+	width: 100%;
+}

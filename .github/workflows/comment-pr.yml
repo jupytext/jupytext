@@ -1,5 +1,10 @@
 name: Comment PR
 
+#####
+# This workflow is triggered by pull_request_target event.
+# Never checkout the PR and run ANY local code on it.
+#####
+
 on:
   pull_request_target:
 
@@ -11,11 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Comment PR
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Comment PR
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@e4a76dd2b0a3c2027c3fd84147a67c22ee4c90fa # v3
         with:
           message: |
             Thank you for making this pull request.
@@ -26,5 +28,5 @@ jobs:
             ```
             HATCH_BUILD_HOOKS_ENABLE=true pip install git+${{ github.event.pull_request.head.repo.clone_url }}@${{ github.event.pull_request.head.ref }}
             ```
-            (this requires `nodejs`, see more at [Developing Jupytext](https://jupytext.readthedocs.io/en/latest/developing.html))
-          comment_tag: binder_link
+            (this requires `nodejs`, see more at [Developing Jupytext](https://jupytext.org/reference/developing/))
+          comment-tag: binder_link

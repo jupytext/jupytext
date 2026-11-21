@@ -158,7 +158,8 @@ def dump_yaml_blocks(data, compact=True):
         tags: [hide-output, show-input]
         ---
     """
-    string = yaml.dump(data, Dumper=CompactDumper, sort_keys=False)
+    # Allow unicode characters for taking accents into account
+    string = yaml.dump(data, Dumper=CompactDumper, sort_keys=False, allow_unicode=True)
     lines = string.splitlines()
     if compact and all(line and line[0].isalpha() for line in lines):
         return "\n".join([f":{line}" for line in lines]) + "\n\n"

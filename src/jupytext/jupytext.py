@@ -146,7 +146,8 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
             lines = lines[pos:]
 
         custom_cell_magics = self.fmt.get("custom_cell_magics", "").split(",")
-        set_main_and_cell_language(metadata, cells, self.implementation.extension, custom_cell_magics)
+        custom_language_magics = self.fmt.get("custom_language_magics", "").split(",")
+        set_main_and_cell_language(metadata, cells, self.implementation.extension, custom_cell_magics + custom_language_magics)
         cell_metadata = set()
         for cell in cells:
             cell_metadata.update(cell.metadata.keys())
@@ -535,7 +536,7 @@ def write(nb, fp, version=nbformat.NO_CONVERT, fmt=None, config=None, **kwargs):
         _, ext = os.path.splitext(fp)
         fmt = copy(fmt or {})
         fmt = long_form_one_format(fmt, update={"extension": ext})
-        create_prefix_dir(fp, fmt)
+        create_prefix_dir(fp, fmt, None)
 
         with open(fp, "w", encoding="utf-8") as stream:
             write(nb, stream, version=version, fmt=fmt, config=config, **kwargs)
@@ -551,12 +552,15 @@ def write(nb, fp, version=nbformat.NO_CONVERT, fmt=None, config=None, **kwargs):
         fp.write("\n")
 
 
-def create_prefix_dir(nb_file, fmt):
+def create_prefix_dir(nb_file, fmt, log):
     """Create directory if fmt has a prefix"""
     if "prefix" in fmt:
         nb_dir = os.path.dirname(nb_file) + os.path.sep
         if not os.path.isdir(nb_dir):
-            logging.log(logging.WARNING, "[jupytext] creating missing directory %s", nb_dir)
+            if log is not None:
+                log(f"[jupytext] creating missing directory {nb_dir}")
+            else:
+                logging.log(logging.WARNING, "[jupytext] creating missing directory %s", nb_dir)
             os.makedirs(nb_dir)
 
 

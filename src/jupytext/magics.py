@@ -44,7 +44,10 @@ _MAGIC_FORCE_ESC_RE["csharp"] = re.compile(r"^(// |//)*#![a-zA-Z](.*)//\s*noesca
 _MAGIC_RE["go"] = re.compile(r"^(// |//)*(!|!\*|%|%%|%%%)[a-zA-Z]")
 
 # Commands starting with a question or exclamation mark have to be escaped
-_PYTHON_HELP_OR_BASH_CMD = re.compile(r"^\s*(# |#)*\s*(\?|!)\s*[A-Za-z\.\~\$\\\/\{\}]")
+# The comment prefixes are grouped with the trailing whitespace so that a
+# whitespace-only line does not trigger quadratic backtracking (two \s* runs
+# around a nullable group)
+_PYTHON_HELP_OR_BASH_CMD = re.compile(r"^\s*(?:(?:# |#)+\s*)?(\?|!)\s*[A-Za-z\.\~\$\\\/\{\}]")
 
 # A bash command not followed by an equal sign or a parenthesis is a magic command
 _PYTHON_MAGIC_CMD = re.compile(
@@ -69,7 +72,7 @@ _SCRIPT_LANGUAGES = [_SCRIPT_EXTENSIONS[ext]["language"] for ext in _SCRIPT_EXTE
 def is_magic(line, language, global_escape_flag=True, explicitly_code=False):
     """Is the current line a (possibly escaped) Jupyter magic, and should it be commented?"""
     language = usual_language_name(language)
-    if language in ["octave", "matlab", "sas", "logtalk"] or language not in _SCRIPT_LANGUAGES:
+    if language in ["octave", "matlab", "sas", "jenner", "logtalk"] or language not in _SCRIPT_LANGUAGES:
         return False
     if _MAGIC_FORCE_ESC_RE[language].match(line):
         return True

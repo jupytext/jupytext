@@ -47,6 +47,35 @@ def test_full_path_dotdot():
     assert full_path("scripts/test", fmt=fmt) == "scripts/test.py"
 
 
+@pytest.mark.parametrize(
+    "formats",
+    [
+        "notebooks///ipynb,../../../../../../tmp/escape///py:light",
+        "notebooks///ipynb,/tmp/escape///py:light",
+    ],
+)
+def test_paired_path_cannot_escape_notebook_tree(formats):
+    nb_file = "notebooks/nb.ipynb"
+    with pytest.raises(InconsistentPath, match="escapes the directory"):
+        paired_paths(nb_file, "notebooks///ipynb", formats)
+
+
+@pytest.mark.parametrize(
+    "os_sep,nb_file",
+    [
+        ("/", "/parent/repo/notebooks/nb.ipynb"),
+        ("\\", r"C:\parent\repo\notebooks\nb.ipynb"),
+    ],
+)
+def test_absolute_paired_path_cannot_escape_root(os_sep, nb_file):
+    """An absolute notebook path can escape its paired root without climbing above '/'."""
+    formats = "notebooks///ipynb,/../tmp/escape///py:light"
+
+    with mock.patch("os.path.sep", os_sep):
+        with pytest.raises(InconsistentPath, match="escapes the directory"):
+            paired_paths(nb_file, "notebooks///ipynb", formats)
+
+
 def test_base_path_in_tree_from_root():
     fmt = long_form_one_format("scripts///py")
     assert base_path("scripts/subfolder/test.py", fmt=fmt) == "//subfolder/test"
@@ -347,4 +376,6 @@ def test_base_path_os_sep(os_sep):
     root = ("" if os_sep == "/" else "C:") + os_sep
     path = root + os_sep.join(["notebooks", "tutorials", "subfolder", "notebook.ipynb"])
     with mock.patch("os.path.sep", os_sep):
-        assert base_path(path, fmt) == root + os_sep.join(["//subfolder", "notebook"])
+        base = base_path(path, fmt)
+        assert base == root + os_sep.join(["//subfolder", "notebook"])
+        assert full_path(base, long_form_one_format(fmt)) == path

@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import pytest
 from jupyter_server.utils import ensure_async
@@ -6,6 +7,8 @@ from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook
 
 import jupytext
 from jupytext.compare import compare_cells, notebook_model
+
+pytestmark = pytest.mark.skipif(sys.version_info >= (3, 12), reason="https://github.com/mwouts/jupytext/issues/1509")
 
 
 @pytest.fixture(params=["sync", "async"])
@@ -27,6 +30,11 @@ def cm_from_fs_meta_manager(tmpdir, request):
             "url": f"osfs://{tmpdir}",
         }
     )
+
+    managers = [h for h in getattr(cm, "_managers", {}) if h != ""]
+    if not managers:
+        pytest.skip("jupyterfs osfs resource could not be initialized; optional dependency may be missing")
+
     return cm
 
 

@@ -42,3 +42,15 @@ def test_notebook_to_py_marimo(py_marimo, notebook):
 def test_marimo_py_to_notebook(py_marimo, notebook):
     actual = marimo_py_to_notebook(py_marimo)
     compare_notebooks(actual, notebook)
+
+
+@pytest.mark.requires_marimo
+@pytest.mark.parametrize("text", ["café", "안녕하세요", "✅"], ids=["latin", "korean", "emoji"])
+def test_marimo_round_trip_with_non_ascii_text(text):
+    notebook = new_notebook(cells=[new_code_cell(f'x = "{text}"')])
+
+    py_marimo = notebook_to_marimo_py(notebook)
+    assert f'x = "{text}"' in py_marimo
+
+    actual = marimo_py_to_notebook(py_marimo)
+    compare_notebooks(actual, notebook)

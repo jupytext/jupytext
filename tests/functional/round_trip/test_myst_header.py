@@ -109,3 +109,30 @@ def test_myst_frontmatter_metadata_combo(no_jupytext_version_number):
     actual_md = writes(actual_nb, fmt="md:myst", config=config)
     expected_md = md
     compare(actual_md, expected_md)
+
+
+@pytest.mark.requires_myst
+def test_myst_metadata_support_unicode_characters(
+    md="""---
+jupytext:
+  formats: md:myst
+  notebook_metadata_filter: -jupytext.text_representation.jupytext_version,settings,mystnb
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸőűŐŰçÇßØøÅåÆæœ
+mystnb:
+  execution_mode: 'off'
+settings:
+  output_matplotlib_strings: remove
+---
+""",
+):
+    nb = reads(md, fmt="md")
+    md2 = writes(nb, fmt="md")
+
+    compare(md2, md)

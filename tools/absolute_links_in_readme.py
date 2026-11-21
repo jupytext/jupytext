@@ -8,20 +8,17 @@ class AbsoluteLinksInReadme(MetadataHookInterface):
     """Hook that processes README.md to make relative links absolute."""
 
     def update(self, metadata):
-        """Process README.md when metadata is being prepared."""
-        readme_src_path = Path("README.md")
-        readme_output_path = Path("build/README_with_absolute_links.md")
-        base_url = "https://github.com/mwouts/jupytext/blob/main/"
+        """Set the readme from README.md, with relative links made absolute."""
+        readme_src_path = Path(self.root) / "README.md"
+        base_url = "https://github.com/jupytext/jupytext/blob/main/"
 
-        # Ensure the dist directory exists
-        readme_output_path.parent.mkdir(exist_ok=True)
+        metadata["readme"] = {
+            "content-type": "text/markdown",
+            "text": self.convert_links(readme_src_path, base_url),
+        }
 
-        self.convert_links(readme_src_path, readme_output_path, base_url)
-        return metadata
-
-    def convert_links(self, src_path, output_path, base_url):
+    def convert_links(self, src_path, base_url):
         """Convert relative links in README.md to absolute links."""
-        print(f"Processing {src_path} to generate {output_path} with absolute links")
         content = src_path.read_text(encoding="utf-8")
 
         # Find markdown links that don't start with http:// or https://
@@ -33,9 +30,4 @@ class AbsoluteLinksInReadme(MetadataHookInterface):
                 url = base_url + url
             return f"[{text}]({url})"
 
-        new_content = pattern.sub(replace_link, content)
-
-        # Write the processed content to the output file
-        output_path.parent.mkdir(exist_ok=True)
-        output_path.write_text(new_content, encoding="utf-8")
-        print(f"Generated {output_path} with absolute links")
+        return pattern.sub(replace_link, content)

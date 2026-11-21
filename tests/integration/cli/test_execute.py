@@ -298,3 +298,115 @@ def test_utf8_out_331(capsys, caplog):
     assert len(nb.cells) == 1
     print(nb.cells[0].outputs)
     assert nb.cells[0].outputs[0]["data"]["text/html"] == "\xd7"
+
+
+SHOW_OUTPUT_SCRIPT = """import sys
+
+print("to stdout")
+print("to stderr", file=sys.stderr)
+"""
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_show_output(tmpdir, capsys):
+    tmp_ipynb = str(tmpdir.join("notebook.ipynb"))
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    jupytext(args=[tmp_py, "--to", "ipynb", "--execute", "--show-output"])
+
+    captured = capsys.readouterr()
+    assert "to stdout\n" in captured.err
+    assert "to stderr\n" in captured.err
+    assert "to stdout" not in captured.out
+    assert "to stderr" not in captured.out
+
+    # The outputs are still saved in the notebook
+    nb = read(tmp_ipynb)
+    assert [output["text"] for cell in nb.cells for output in cell.outputs] == ["to stdout\n", "to stderr\n"]
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_show_output_to_stdout(tmpdir, capsys):
+    """The cell outputs go to stderr, so the notebook written to stdout remains valid"""
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    jupytext(args=[tmp_py, "--to", "ipynb", "--execute", "--show-output", "-o", "-"])
+
+    captured = capsys.readouterr()
+    assert "to stdout\n" in captured.err
+    nb = reads(captured.out, "ipynb")
+    assert [output["text"] for cell in nb.cells for output in cell.outputs] == ["to stdout\n", "to stderr\n"]
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_show_output_arrives_before_cell_finishes(tmp_path, capsys):
+    """The cell cannot finish until its partial stream output is forwarded and flushed."""
+    release = tmp_path / "continue"
+    script = tmp_path / "notebook.py"
+    script.write_text(
+        f"""import time
+from pathlib import Path
+
+print("stream-ready", end="", flush=True)
+deadline = time.monotonic() + 10
+while not Path({str(release)!r}).exists():
+    if time.monotonic() > deadline:
+        raise TimeoutError("Cell output was not forwarded while execution was running")
+    time.sleep(0.05)
+print("stream-done", flush=True)
+""",
+        encoding="utf-8",
+    )
+
+    class ReleaseOnFlush(StringIO):
+        def flush(self):
+            super().flush()
+            if "stream-ready" in self.getvalue():
+                release.touch()
+
+    stream = ReleaseOnFlush()
+    with mock.patch("sys.stderr", stream):
+        jupytext(args=[str(script), "--to", "ipynb", "--execute", "--show-output", "-o", "-", "--quiet"])
+
+    assert release.exists()
+    assert stream.getvalue() == "stream-readystream-done\n"
+    nb = reads(capsys.readouterr().out, "ipynb")
+    assert "".join(output["text"] for cell in nb.cells for output in cell.outputs) == "stream-readystream-done\n"
+
+
+@pytest.mark.requires_user_kernel_python3
+@pytest.mark.requires_nbconvert
+@pytest.mark.skip_on_windows
+def test_execute_does_not_show_output_by_default(tmpdir, capsys):
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    jupytext(args=[tmp_py, "--to", "ipynb", "--execute"])
+
+    captured = capsys.readouterr()
+    assert "to stdout" not in captured.out + captured.err
+    assert "to stderr" not in captured.out + captured.err
+
+
+def test_show_output_requires_execute(tmpdir):
+    tmp_py = str(tmpdir.join("notebook.py"))
+
+    with open(tmp_py, "w") as fp:
+        fp.write(SHOW_OUTPUT_SCRIPT)
+
+    with pytest.raises(ValueError, match="--show-output can only be used together with --execute"):
+        jupytext(args=[tmp_py, "--to", "ipynb", "--show-output"])

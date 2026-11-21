@@ -402,7 +402,7 @@ formats = "notebooks///ipynb,scripts///py:percent"
 )
 async def test_configuration_examples_from_documentation(config_file, config_contents, python_notebook, tmp_path, cm):
     """Here we make sure that the config examples from
-    https://jupytext.readthedocs.io/en/latest/config.html#configuring-paired-notebooks-globally
+    https://jupytext.org/using/config/#global-pairing
     just work
     """
     (tmp_path / config_file).write_text(config_contents)

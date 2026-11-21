@@ -7,7 +7,7 @@ from nbformat.v4.nbbase import new_code_cell, new_notebook
 import jupytext
 from jupytext.cli import jupytext as jupytext_cli
 
-doc_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs")
+doc_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "website", "src", "content", "docs")
 
 
 @pytest.mark.requires_user_kernel_python3
@@ -16,7 +16,7 @@ doc_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs")
 @pytest.mark.skipif(not os.path.isdir(doc_path), reason="Documentation folder is missing")
 def test_jupytext_commands_in_the_documentation_work(tmpdir):
     # Read the documentation as a bash notebook
-    using_cli = os.path.join(doc_path, "using-cli.md")
+    using_cli = os.path.join(doc_path, "using", "cli.md")
     assert os.path.isfile(using_cli)
     using_cli_nb = jupytext.read(using_cli)
 

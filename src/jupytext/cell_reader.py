@@ -28,7 +28,23 @@ from .pep8 import pep8_lines_between_cells
 from .stringparser import StringParser
 
 _BLANK_LINE = re.compile(r"^\s*$")
+_CODE_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+_EMPTY_LINE = re.compile(r"^$")
 _PY_INDENTED = re.compile(r"^\s")
+
+
+def _opening_fence(text):
+    """Return the fence (character, length) if the line opens a markdown fenced code block"""
+    match = _CODE_FENCE.match(text)
+    if not match or (match.group(1)[0] == "`" and "`" in match.group(2)):
+        return None
+    return match.group(1)[0], len(match.group(1))
+
+
+def _closes_fence(text, fence):
+    """Does the line close the given fence? Same character, at least as long, no info string"""
+    match = _CODE_FENCE.match(text)
+    return bool(match) and match.group(1)[0] == fence[0] and len(match.group(1)) >= fence[1] and not match.group(2).strip()
 
 
 def uncomment(lines, prefix="#", suffix=""):
@@ -307,7 +323,7 @@ class MarkdownCellReader(BaseCellReader):
 
     comment = ""
     start_code_re = re.compile(
-        r"^```(`*)(\s*)({})($|\s.*$)".format("|".join(_JUPYTER_LANGUAGES_LOWER_AND_UPPER).replace("+", "\\+"))
+        r"^```(`*)(\s*)({})($|\s.*$)".format("|".join(map(re.escape, _JUPYTER_LANGUAGES_LOWER_AND_UPPER)))
     )
     non_jupyter_code_re = re.compile(r"^```")
     end_code_re = re.compile(r"^```\s*$")
@@ -320,10 +336,17 @@ class MarkdownCellReader(BaseCellReader):
         self.split_at_heading = (fmt or {}).get("split_at_heading", False)
         self.in_region = False
         self.in_raw = False
+        custom_language_magics = (fmt or {}).get("custom_language_magics", "").split(",")
+        custom_language_magics = list(filter(None, custom_language_magics))
+        # Store the set of custom language magics (including upper-case variants) for matching
+        self.custom_language_magics = set(custom_language_magics) | {lang.upper() for lang in custom_language_magics}
         if self.format_version in ["1.0", "1.1"] and self.ext != ".Rmd":
             # Restore the pattern used in Markdown <= 1.1
             self.start_code_re = re.compile(r"^```(.*)")
             self.non_jupyter_code_re = re.compile(r"^```\{")
+        elif self.custom_language_magics and self.ext != ".Rmd":
+            all_languages = _JUPYTER_LANGUAGES_LOWER_AND_UPPER | self.custom_language_magics
+            self.start_code_re = re.compile(r"^```(`*)(\s*)({})($|\s.*$)".format("|".join(map(re.escape, all_languages))))
 
     def metadata_and_language_from_option_line(self, line):
         match_region = self.start_region_re.match(line)
@@ -352,7 +375,13 @@ class MarkdownCellReader(BaseCellReader):
 
     def options_to_metadata(self, options):
         if isinstance(options, tuple):
-            self.end_code_re = re.compile("```" + options[0])
+            # The start_code_re groups are: (extra_backticks, space, language, rest)
+            extra_backticks, _space, language, rest = options
+            self.end_code_re = re.compile("```" + extra_backticks)
+            if language in self.custom_language_magics:
+                self.cell_metadata_json = self.cell_metadata_json or is_json_metadata(rest)
+                _title, meta = text_to_metadata(rest)
+                return language, meta
             options = " ".join(options[1:])
         else:
             self.end_code_re = re.compile(r"^```\s*$")
@@ -398,7 +427,9 @@ class MarkdownCellReader(BaseCellReader):
                     language, metadata = self.options_to_metadata(self.start_code_re.findall(line)[0])
                     # Cells with a .noeval attribute are markdown cells #347
                     # R Markdown notebooks can have bibliography and index blocks, cf #1161 and #1429
-                    if language not in _JUPYTER_LANGUAGES_LOWER_AND_UPPER or metadata.get(".noeval", "") is None:
+                    if (
+                        language not in _JUPYTER_LANGUAGES_LOWER_AND_UPPER and language not in self.custom_language_magics
+                    ) or metadata.get(".noeval", "") is None:
                         in_explicit_code_block = True
                         prev_blank = 0
                         continue
@@ -590,8 +621,10 @@ class LightScriptCellReader(ScriptCellReader):
         self.explicit_end_marker_required = False
         if fmt and fmt.get("format_name", "light") == "light" and "cell_markers" in fmt and fmt["cell_markers"] != "+,-":
             self.cell_marker_start, self.cell_marker_end = fmt["cell_markers"].split(",", 1)
-            self.start_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + self.cell_marker_start + r"(.*)$")
-            self.end_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + self.cell_marker_end + r"\s*$")
+            self.start_code_re = re.compile(
+                "^" + re.escape(self.comment) + r"\s*" + re.escape(self.cell_marker_start) + r"(.*)$"
+            )
+            self.end_code_re = re.compile("^" + re.escape(self.comment) + r"\s*" + re.escape(self.cell_marker_end) + r"\s*$")
         else:
             self.start_code_re = re.compile("^" + re.escape(self.comment) + r"\s*\+(.*)$")
 
@@ -666,7 +699,7 @@ class LightScriptCellReader(ScriptCellReader):
             self.end_code_re = None
         elif not self.cell_marker_end:
             end_of_cell = self.metadata.get("endofcell", "-")
-            self.end_code_re = re.compile("^" + re.escape(self.comment) + " " + end_of_cell + r"\s*$")
+            self.end_code_re = re.compile("^" + re.escape(self.comment) + " " + re.escape(end_of_cell) + r"\s*$")
 
         return self.find_region_end(lines)
 
@@ -677,6 +710,9 @@ class LightScriptCellReader(ScriptCellReader):
         else:
             self.cell_type = "code"
 
+        explicit_markdown = (
+            self.ext == ".q" and self.cell_type == "markdown" and "endofcell" in self.metadata and not self.ignore_end_marker
+        )
         parser = StringParser(self.language or self.default_language)
         for i, line in enumerate(lines):
             # skip cell header
@@ -690,10 +726,13 @@ class LightScriptCellReader(ScriptCellReader):
             parser.read_line(line)
             # New code region
             # Simple code pattern in LightScripts must be preceded with a blank line
-            if self.start_code_re.match(line) or (
-                self.simple_start_code_re
-                and self.simple_start_code_re.match(line)
-                and (self.cell_marker_start or i == 0 or _BLANK_LINE.match(lines[i - 1]))
+            if not explicit_markdown and (
+                self.start_code_re.match(line)
+                or (
+                    self.simple_start_code_re
+                    and self.simple_start_code_re.match(line)
+                    and (self.cell_marker_start or i == 0 or _BLANK_LINE.match(lines[i - 1]))
+                )
             ):
                 if self.explicit_end_marker_required:
                     # Metadata here was conditioned on finding an explicit end marker
@@ -709,6 +748,8 @@ class LightScriptCellReader(ScriptCellReader):
 
             if not self.ignore_end_marker and self.end_code_re:
                 if self.end_code_re.match(line):
+                    if explicit_markdown:
+                        self.metadata.pop("endofcell")
                     return i, i + 1, True
             elif _BLANK_LINE.match(line):
                 if not next_code_is_indented(lines[i:]):
@@ -780,21 +821,50 @@ class DoublePercentScriptCellReader(LightScriptCellReader):
         else:
             self.cell_type = "code"
 
+        end_marker = None
+        if self.ext == ".q" and "endofcell" in self.metadata:
+            end_marker = self.comment + " " + str(self.metadata["endofcell"])
+
         next_cell = len(lines)
         parser = StringParser(self.language or self.default_language)
+        fence = None
         for i, line in enumerate(lines):
             if parser.is_quoted():
                 parser.read_line(line)
                 continue
 
             parser.read_line(line)
+            if i > 0 and line == end_marker:
+                self.metadata.pop("endofcell")
+                next_cell = i + 1
+                while next_cell < len(lines) and _EMPTY_LINE.match(lines[next_cell]):
+                    next_cell += 1
+                return i, next_cell, True
+
+            if self.cell_type in ("markdown", "raw"):
+                # In a markdown or raw cell, a fenced block (e.g. mermaid) may contain '%%' lines that are not cell markers (#1533)
+                text = uncomment([line], self.comment, self.comment_suffix)[0]
+                if fence:
+                    if _closes_fence(text, fence):
+                        fence = None
+                    continue
+                opening = _opening_fence(text)
+                if opening and any(
+                    _closes_fence(uncomment([next_line], self.comment, self.comment_suffix)[0], opening)
+                    for next_line in lines[i + 1 :]
+                ):
+                    fence = opening
+                    continue
+
             if i > 0 and (self.start_code_re.match(line) or self.alternative_start_code_re.match(line)):
                 next_cell = i
                 break
 
         if last_two_lines_blank(lines[:next_cell]):
             return next_cell - 2, next_cell, False
-        if next_cell > 0 and _BLANK_LINE.match(lines[next_cell - 1]):
+        # Only an empty line separates two cells. A line that contains
+        # whitespace is part of the cell content and must be preserved (#1599)
+        if next_cell > 0 and _EMPTY_LINE.match(lines[next_cell - 1]):
             return next_cell - 1, next_cell, False
         return next_cell, next_cell, False
 

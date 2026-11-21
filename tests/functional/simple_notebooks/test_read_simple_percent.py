@@ -606,3 +606,130 @@ fmt.Printf("Hello World!")
     nb = jupytext.reads(go_percent, fmt="go:percent")
     go = jupytext.writes(nb, fmt="go:percent")
     compare(go, go_percent)
+
+
+def test_read_cell_with_trailing_whitespace_line():
+    """A last line made of spaces belongs to the cell, it is not a cell separator. See issue #1599"""
+    source = 'print("hello")\n# the following line has four spaces\n    '
+    nb = jupytext.reads("# %%\n" + source + "\n", fmt="py:percent")
+    assert len(nb.cells) == 1
+    (cell,) = nb.cells
+    compare(cell.source, source)
+
+
+def test_round_trip_cell_with_trailing_whitespace_line(no_jupytext_version_number):
+    """A cell ending with a whitespace-only line round trips. See issue #1599"""
+    source = 'print("hello")\n# the following line has four spaces\n    '
+    nb = new_notebook(
+        cells=[new_code_cell(source)],
+        metadata={"jupytext": {"main_language": "python"}},
+    )
+    text = jupytext.writes(nb, fmt="py:percent")
+    nb2 = jupytext.reads(text, fmt="py:percent")
+    compare(nb2.cells[0].source, source)
+
+
+def test_mermaid_comments_do_not_split_markdown_cell(
+    text="""# %% [markdown]
+# ```mermaid
+# stateDiagram-v2
+#     %% == States ==
+#     Idle --> Running
+# ```
+""",
+):
+    """Mermaid '%%' comments in a markdown cell are not cell markers. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert len(nb.cells) == 1
+    (cell,) = nb.cells
+    assert cell.cell_type == "markdown", cell.cell_type
+    compare(jupytext.writes(nb, fmt="py:percent"), text)
+
+
+def test_mermaid_comments_at_any_indent_do_not_split_markdown_cell(
+    text="""# %% [markdown]
+# Some diagram
+#
+# ```mermaid
+# %% not indented at all
+# stateDiagram-v2
+#       %% deeply indented
+#     Idle --> Running
+# ```
+""",
+):
+    """Mermaid '%%' comments are ignored whatever their indent. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert len(nb.cells) == 1
+    (cell,) = nb.cells
+    assert cell.cell_type == "markdown", cell.cell_type
+    compare(jupytext.writes(nb, fmt="py:percent"), text)
+
+
+def test_unclosed_fence_does_not_swallow_next_cells(
+    text="""# %% [markdown]
+# ```python
+# this fence is never closed
+
+# %%
+1 + 1
+
+# %% [markdown]
+# last
+""",
+):
+    """An unclosed fence in a markdown cell must not hide the following cell markers. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert [cell.cell_type for cell in nb.cells] == ["markdown", "code", "markdown"]
+
+
+def test_fence_is_closed_by_same_character_only(
+    text="""# %% [markdown]
+# ```
+# ~~~
+# a tilde line does not close a backtick fence
+# ```
+
+# %%
+1 + 1
+""",
+):
+    """A fence is closed by the same character only. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert [cell.cell_type for cell in nb.cells] == ["markdown", "code"]
+
+
+def test_fence_is_closed_by_a_fence_at_least_as_long(
+    text="""# %% [markdown]
+# ````
+# ```
+# %% a mermaid comment, still inside the four-backtick fence
+# ```
+# ````
+
+# %%
+1 + 1
+""",
+):
+    """A shorter fence does not close a longer one. See issue #1533"""
+    nb = jupytext.reads(text, fmt="py:percent")
+    assert [cell.cell_type for cell in nb.cells] == ["markdown", "code"]
+
+
+@pytest.mark.parametrize("fence", ["```", "~~~", "````"])
+def test_round_trip_markdown_cell_with_mermaid_comments(fence, no_jupytext_version_number):
+    """The notebook from issue #1533 round trips, including the cells that follow the diagram"""
+    diagram = f"""{fence}mermaid
+stateDiagram-v2
+    %% == States ==
+    Idle --> Running
+    %% == Transitions ==
+    Running --> Done
+{fence}"""
+    nb = new_notebook(
+        cells=[new_markdown_cell(diagram), new_code_cell("1 + 1"), new_markdown_cell("The end")],
+        metadata={"jupytext": {"main_language": "python"}},
+    )
+    text = jupytext.writes(nb, fmt="py:percent")
+    nb2 = jupytext.reads(text, fmt="py:percent")
+    compare_notebooks(nb2, nb, fmt="py:percent")

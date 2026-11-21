@@ -1,0 +1,25 @@
+{
+  "name": "jupytext-org",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Source for the jupytext.org website (Astro + Starlight).",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "astro": "astro",
+    "link-check": "linkinator ./dist --recurse --silent"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.42.10",
+    "astro": "^7.4.12",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "linkinator": "^7.6.1",
+    "typescript": "^6.0.3"
+  }
+}

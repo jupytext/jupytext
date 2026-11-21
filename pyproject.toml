@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.5.0", "hatch-jupyter-builder>=0.5", "jupyterlab>=4"]
+requires = ["hatchling>=1.5.0", "hatch-jupyter-builder>=0.5", "jupyter-builder>=1.0.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -9,7 +9,6 @@ license = { file = "LICENSE" }
 authors = [
     { name = "Marc Wouts", email = "marc.wouts@gmail.com" },
 ]
-readme = "build/README_with_absolute_links.md"
 requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -39,12 +38,12 @@ dependencies = [
     "pyyaml",
     "tomli;python_version<\"3.11\"",
 ]
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 
 [project.urls]
-Homepage = "https://github.com/mwouts/jupytext"
-"Source Code" = "https://github.com/mwouts/jupytext"
-Documentation = "https://jupytext.readthedocs.io"
+Homepage = "https://github.com/jupytext/jupytext"
+"Source Code" = "https://github.com/jupytext/jupytext"
+Documentation = "https://jupytext.org"
 
 [project.optional-dependencies]
 # Test related dependencies
@@ -78,7 +77,7 @@ test-external = [
   "gitpython",
   "pre-commit",
   # Marimo notebooks
-  "marimo>=0.19.6;python_version>=\"3.10\"", #1485
+  "marimo==0.25.2;python_version>=\"3.10\"", #1485
   # Interaction with other contents managers
   "jupyter-fs[fs]>=1.0"  # 1398
 ]
@@ -145,7 +144,7 @@ enable-by-default = false
 # extension. To install the extension, it is required to run
 # `HATCH_BUILD_HOOKS_ENABLE=true pip install .`
 # Runtime dependency for this build hook
-# We need jupyterlab as build time depdendency to get jlpm (wrapper around yarn)
+# We need jupyter-builder as build time depdendency to get jlpm (wrapper around yarn)
 # UPDATE 20260118: Based on https://github.com/jupyterlab/hatch-jupyter-builder/issues/146
 # we moved all the dependencies to build system dependencies
 # We use npm_builder to build the jupyterlab extension
@@ -285,26 +284,47 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.dependencies]
-python = ">=3.9,<3.14" # One test involving Black fails on the CI
-jupyterlab = ">=4.0"
+# jupyter-fs[fs] pulls in boto3 through fs-s3fs. Resolve it with Conda so its
+# python-dateutil constraint is considered before PyPI dependencies are solved.
+boto3 = "*"
+python = "3.13.13.*" # One test involving Black fails on the CI
+jupyterlab = ">=4.6.1,<5"
 nbformat = ">=5.1.2"
 pre-commit = ">=4.3"
 nodejs = ">=20"
 hatch = "*"
 pip = "*"
+jupyter-builder = ">=1.1.0,<2"
 
 [tool.pixi.feature.docs.dependencies]
 sphinx = "*"
+sphinx-reredirects = "*"
 sphinx-copybutton = "*"
 sphinx-rtd-theme = "*"
 myst-parser = "*"
 
 [tool.pixi.feature.dev.dependencies]
-pandoc = ">=3.0"
+pandoc = ">=3.0,<3.10"  # 1545
+
+# Dedicated environment for building the JupyterLab extension.
+[tool.pixi.feature.build.dependencies]
+python = "3.13.*"
+nodejs = ">=20"
+jupyterlab = ">=4.6.1,<5"
+jupyter-builder = ">=1.1.0,<2"
+
+[tool.pixi.feature.build.tasks]
+build-labextension = { cmd = "jlpm install && jlpm run build:prod", cwd = "jupyterlab" }
+
+# Quarto is only available on linux-64, osx-64, and osx-arm64
+[tool.pixi.feature.quarto.dependencies]
+quarto = ">=1.9.38,<2"
 
 [tool.pixi.environments]
 default = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
+build = { features = ["build"] }
+quarto = { features = ["dev", "quarto"], solve-group = "default" }
 
 [tool.pixi.pypi-dependencies]
 # Note: this does not build the jupyterlab-jupytext extension
