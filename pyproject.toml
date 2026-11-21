@@ -304,7 +304,7 @@ sphinx-rtd-theme = "*"
 myst-parser = "*"
 
 [tool.pixi.feature.dev.dependencies]
-pandoc = ">=3.0,<3.10"  # 1545
+pandoc = ">=3.0,!=3.10"  # Pandoc 3.10 can truncate the format version (#1545)
 
 [tool.pixi.feature.dev.pypi-dependencies]
 # The Collaboration load tests use the server component directly.
@@ -328,7 +328,8 @@ quarto = ">=1.9.38,<2"
 default = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
 build = { features = ["build"] }
-quarto = { features = ["dev", "quarto"], solve-group = "default" }
+# Quarto pins Pandoc, so resolve it separately from the default environment.
+quarto = { features = ["dev", "quarto"] }
 
 [tool.pixi.pypi-dependencies]
 # Note: this does not build the jupyterlab-jupytext extension
