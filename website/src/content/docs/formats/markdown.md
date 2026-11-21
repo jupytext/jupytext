@@ -170,6 +170,8 @@ If you use Pandoc 3.10, upgrade to 3.10.1 or later. Pandoc 3.10 can truncate the
 
 ## Org Mode
 
+The Org format was introduced in Jupytext 1.20.1.
+
 [Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
 Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
 
