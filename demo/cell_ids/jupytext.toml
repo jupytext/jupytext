@@ -1,0 +1,2 @@
+formats = "ipynb,py:percent"
+cell_id_to_title = true

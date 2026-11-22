@@ -1,99 +1,74 @@
-# In this notebook, we benchmark the Jupytext formats for Jupyter notebooks against the base format
-# Open this script as a notebook in Jupyter to run it and see the plots
+# %% [markdown]
+# # Benchmarking Jupytext formats
+#
+# This notebook measures how long it takes to write and read the same
+# [World Population notebook](World%20population.ipynb) in different formats.
+# It also reports the size of each serialized file in UTF-8 bytes. Run it from
+# the demo directory to see results for your environment.
 
-import time
-import copy
-import pandas as pd
-import plotly.graph_objects as go
-from plotly.colors import DEFAULT_PLOTLY_COLORS
+# %%
+from copy import deepcopy
+from shutil import which
+from statistics import median
+from time import perf_counter
 
-import nbformat
 import jupytext
+import nbformat
+from IPython.display import Markdown, display
 
-# The notebook to be tested
-notebook = jupytext.read('World population.ipynb')
+notebook = jupytext.read("World population.ipynb")
+without_outputs = deepcopy(notebook)
+for cell in without_outputs.cells:
+    if cell.cell_type == "code":
+        cell.outputs = []
+        cell.execution_count = None
 
-# Same notebook, with no outputs, for a fair comparison
-notebook_no_outputs = copy.deepcopy(notebook)
-for cell in notebook_no_outputs.cells:
-    cell.outputs = []
-    cell.execution_count = None
+# %% [markdown]
+# ## Measure each format
+#
+# Each result is the median of five conversions. The nbformat row provides a
+# baseline for reading and writing an ordinary Jupyter notebook. Pandoc is
+# included when its executable is available.
 
-# +
-JUPYTEXT_FORMATS = ['ipynb', 'md', 'py:light', 'py:percent', 'py:sphinx']
-
-# Let's see if we have pandoc here
-try:
-    jupytext.writes(notebook, fmt='md:pandoc')
-    JUPYTEXT_FORMATS.append('md:pandoc')
-except jupytext.formats.JupytextFormatError as err:
-    print(str(err))
-
-
-# Let's see if we have myst-parser installed here
-try:
-    jupytext.writes(notebook, fmt='myst')
-    JUPYTEXT_FORMATS.append('myst')
-except jupytext.formats.JupytextFormatError as err:
-    print(str(err))
-
-# -
+# %%
+formats = ["nbformat", "ipynb", "py:percent", "py:light", "py:sphinx", "md", "md:myst", "Rmd"]
+if which("pandoc"):
+    formats.append("md:pandoc")
 
 
-def sample_perf(nb, n=30):
-    samples = pd.DataFrame(
-        pd.np.NaN,
-        index=pd.MultiIndex.from_product(
-            (range(n), ['nbformat'] + JUPYTEXT_FORMATS), names=['sample', 'implementation']),
-        columns=pd.Index(['size', 'read', 'write'], name='measure'))
-
-    for i, fmt in samples.index:
-        t0 = time.time()
-        if fmt == 'nbformat':
-            text = nbformat.writes(nb)
+def measure(notebook, fmt, repeats=5):
+    write_times = []
+    read_times = []
+    for _ in range(repeats):
+        started = perf_counter()
+        if fmt == "nbformat":
+            text = nbformat.writes(notebook)
         else:
-            text = jupytext.writes(nb, fmt)
-        t1 = time.time()
-        samples.loc[(i, fmt), 'write'] = t1 - t0
-        samples.loc[(i, fmt), 'size'] = len(text)
-        t0 = time.time()
-        if fmt == 'nbformat':
+            text = jupytext.writes(notebook, fmt)
+        written = perf_counter()
+        if fmt == "nbformat":
             nbformat.reads(text, as_version=4)
         else:
             jupytext.reads(text, fmt)
-        t1 = time.time()
-        samples.loc[(i, fmt), 'read'] = t1 - t0
-    return samples
+        read_times.append(perf_counter() - written)
+        write_times.append(written - started)
+    return len(text.encode("utf-8")), 1000 * median(write_times), 1000 * median(read_times)
 
+# %% [markdown]
+# ## See what outputs cost
+#
+# Compare the two tables. An `.ipynb` file can store rich cell outputs such as
+# the population charts. Text formats typically store the inputs.
 
-def performance_plot(perf, title):
-    formats = ['nbformat'] + JUPYTEXT_FORMATS
-    mean = perf.groupby('implementation').mean().loc[formats]
-    std = perf.groupby('implementation').std().loc[formats]
-    data = [go.Bar(x=mean.index,
-                   y=mean[col],
-                   error_y=dict(
-                       type='data',
-                       array=std[col],
-                       color=color,
-                       thickness=0.5
-                   ) if col != 'size' else dict(),
-                   name=col,
-                   yaxis={'read': 'y1', 'write': 'y2', 'size': 'y3'}[col])
-            for col, color in zip(mean.columns, DEFAULT_PLOTLY_COLORS)]
-    layout = go.Layout(title=title,
-                       xaxis=dict(title='Implementation', anchor='y3'),
-                       yaxis=dict(domain=[0.7, 1], title='Read (secs)'),
-                       yaxis2=dict(domain=[0.35, .65], title='Write (secs)'),
-                       yaxis3=dict(domain=[0, .3], title='Size')
-                       )
-    return go.Figure(data=data, layout=layout)
-
-
-perf_no_outputs = sample_perf(notebook_no_outputs, 30)
-
-performance_plot(perf_no_outputs, 'Benchmarking Jupytext on the World Population notebook<br>(Outputs filtered)')
-
-perf = sample_perf(notebook, 30)
-
-performance_plot(perf, 'Benchmarking Jupytext on the World Population notebook<br>(With outputs)')
+# %%
+for label, example in [("With outputs", notebook), ("Without outputs", without_outputs)]:
+    rows = [
+        f"### {label}",
+        "",
+        "| Format | Bytes | Write (ms) | Read (ms) |",
+        "| :--- | ---: | ---: | ---: |",
+    ]
+    for fmt in formats:
+        size, write_ms, read_ms = measure(example, fmt)
+        rows.append(f"| `{fmt}` | {size:,} | {write_ms:.2f} | {read_ms:.2f} |")
+    display(Markdown("\n".join(rows)))

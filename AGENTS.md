@@ -9,6 +9,8 @@
   worktree for the current task rather than editing the user's original checkout.
 - Check Git status before starting and preserve existing changes. Report the
   worktree and branch, what changed, the checks run, and any validation limits.
+- Add follow-up commits when updating a pull request. Rewrite existing commits
+  only when explicitly requested.
 - Keep this file updated with explicitly agreed preferences and established
   project conventions. Current user instructions take precedence; update stale
   guidance when requirements change.
