@@ -1,0 +1,27 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+begin_src jupyter-python
+%%html
+<p><a href="https://github.com/mwouts/jupytext", style="color: rgb(0,0,255)">Jupytext</a> on GitHub</p>
+#+end_src
+
+#+begin_src jupyter-python
+%%latex
+$\frac{\pi}{2}$
+#+end_src
+
+#+begin_src jupyter-python
+%load_ext rpy2.ipython
+#+end_src
+
+#+begin_src jupyter-python
+%%R
+library(ggplot2)
+ggplot(data=data.frame(x=c('A', 'B'), y=c(5, 2)), aes(x,weight=y)) + geom_bar()
+#+end_src
+
+#+begin_src jupyter-python
+%matplotlib inline
+import pandas as pd
+pd.Series({'A':5, 'B':2}).plot(figsize=(3,2), kind='bar')
+#+end_src

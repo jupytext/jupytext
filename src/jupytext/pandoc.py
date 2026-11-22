@@ -14,7 +14,7 @@ class PandocError(OSError):
     """An error related to Pandoc"""
 
 
-def pandoc(args, filein=None, fileout=None):
+def pandoc(args, filein=None, fileout=None, *, timeout=None, input_text=None):
     """Execute pandoc with the given arguments"""
     cmd = ["pandoc"]
 
@@ -27,11 +27,18 @@ def pandoc(args, filein=None, fileout=None):
 
     cmd.extend(args.split())
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out, err = proc.communicate()
+    try:
+        proc = subprocess.run(
+            cmd,
+            input=input_text.encode("utf-8") if input_text is not None else None,
+            stdout=subprocess.PIPE,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise PandocError(f"Pandoc conversion timed out after {timeout} seconds") from exc
     if proc.returncode:
-        raise PandocError(f"pandoc exited with return code {proc.returncode}\n{str(err)}")
-    return out.decode("utf-8")
+        raise PandocError(f"pandoc exited with return code {proc.returncode}")
+    return proc.stdout.decode("utf-8")
 
 
 def is_pandoc_available(min_version="2.7.2", max_version=None):

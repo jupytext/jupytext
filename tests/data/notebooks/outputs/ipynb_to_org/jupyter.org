@@ -1,0 +1,25 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+* Jupyter notebook
+:PROPERTIES:
+:CUSTOM_ID: jupyter-notebook
+:END:
+This notebook is a simple jupyter notebook. It only has markdown and code cells. And it does not contain consecutive markdown cells. We start with an addition:
+
+#+begin_src jupyter-python
+a = 1
+b = 2
+a + b
+#+end_src
+
+Now we return a few tuples
+
+#+begin_src jupyter-python
+a, b
+#+end_src
+
+#+begin_src jupyter-python
+a, b, a+b
+#+end_src
+
+And this is already the end of the notebook

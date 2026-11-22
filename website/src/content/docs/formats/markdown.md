@@ -167,3 +167,59 @@ See for instance how our `World population.ipynb` notebook is [represented](http
 If you wish to use that format, please install `pandoc` in version 2.7.2 or above, with e.g. `conda install pandoc -c conda-forge`.
 
 If you use Pandoc 3.10, upgrade to 3.10.1 or later. Pandoc 3.10 can truncate the format version in the Markdown metadata and prevent Jupytext from reopening paired notebooks. See [Jupytext issue #1545](https://github.com/jupytext/jupytext/issues/1545).
+
+## Org Mode
+
+**Org support is experimental.** Jupytext introduced Org format version `0.1` in version 1.20.1. Pairing with Org can lose content or metadata when saving or syncing. Check your files before pairing them, and keep a copy of the originals. See the list of [known Org issues](https://github.com/jupytext/jupytext/issues?q=state%3Aopen%20label%3A%22org-format%22).
+
+[Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
+Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
+Keep the original file when converting a notebook or Org document and review the converted file before replacing the original.
+
+Code cells are represented as `#+BEGIN_SRC jupyter-<language> ... #+END_SRC` blocks. Pandoc imports ordinary source blocks such as `#+BEGIN_SRC python` as fenced code in Markdown cells. The kernel metadata are recorded as top-level `#+PROPERTY: header-args` lines in the Org output, e.g.
+
+```org
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+PROPERTY: header-args:jupyter-python+ :session python3
+```
+
+Jupytext stores document-wide Babel properties in notebook metadata under `org_babel.header_args`. In Markdown-like formats this appears under `jupyter.org_babel`. Language-specific properties use the Org language name as the key, and a property that applies to all languages uses an empty key.
+Repeated `:var` values are stored as a list in their original order.
+
+```yaml
+jupyter:
+  org_babel:
+    header_args:
+      jupyter-python:
+        session: python3
+```
+
+Current limitations
+
+- Cell metadata is not preserved in the Org representation.
+- Consecutive Markdown cells are concatenated on round-trip, since Org prose has no native cell-boundary markers.
+- Pandoc can write Markdown cell IDs as Org targets, which come back as HTML anchors in Markdown.
+- Raw cells are not preserved by the current Pandoc-based conversion path.
+- Org headers store the kernelspec and document-wide Babel properties. Other notebook metadata is absent from the Org representation.
+- Org comments and block- or subtree-level Babel settings can be lost on conversion.
+- Embedded notebook attachments cannot be exported to Org.
+- Org conversion stops with an error if Pandoc takes longer than 30 seconds.
+
+Run a [round-trip test](/using/cli/#testing-the-round-trip-conversion) from the file you plan to pair.
+
+```bash
+jupytext --test --to org notebook.ipynb
+jupytext --test --to ipynb notebook.org
+```
+
+These commands report differences without writing either file. Use `--test-strict` for a stricter comparison. For notebook inputs, the comparison covers cell content and metadata and ignores outputs and cell IDs.
+
+To sync by passing the `.org` path, declare `formats = "ipynb,org"` in `jupytext.toml`.
+
+Install Pandoc 3.4 or later to use the Org format.
+
+```bash
+jupytext --to org notebook.ipynb
+jupytext --to ipynb notebook.org
+```

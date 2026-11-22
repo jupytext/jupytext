@@ -211,6 +211,14 @@ JUPYTEXT_FORMATS = (
             current_version_number=pandoc_version(),
         ),
         NotebookFormatDescription(
+            format_name="org",
+            extension=".org",
+            header_prefix="",
+            cell_reader_class=None,
+            cell_exporter_class=None,
+            current_version_number="0.1",
+        ),
+        NotebookFormatDescription(
             format_name="quarto",
             extension=".qmd",
             header_prefix="",
@@ -245,7 +253,7 @@ JUPYTEXT_FORMATS = (
 
 NOTEBOOK_EXTENSIONS = list(dict.fromkeys([".ipynb"] + [fmt.extension for fmt in JUPYTEXT_FORMATS]))
 EXTENSION_PREFIXES = [".lgt", ".spx", ".pct", ".hyd", ".nb"]
-FORMATS_WITH_NO_CELL_METADATA = {"sphinx", "nomarker", "spin", "quarto", "marimo"}
+FORMATS_WITH_NO_CELL_METADATA = {"sphinx", "nomarker", "spin", "quarto", "marimo", "org"}
 
 
 def get_format_implementation(ext, format_name=None):
@@ -674,7 +682,7 @@ def short_form_one_format(jupytext_format: dict[str, str]) -> str:
             ".md",
             ".markdown",
             ".Rmd",
-        ] or jupytext_format["format_name"] in ["pandoc", MYST_FORMAT_NAME]:
+        ] or jupytext_format["format_name"] in ["pandoc", "org", MYST_FORMAT_NAME]:
             fmt = fmt + ":" + jupytext_format["format_name"]
 
     return fmt
@@ -803,7 +811,7 @@ def formats_with_support_for_cell_metadata():
     for fmt in JUPYTEXT_FORMATS:
         if fmt.format_name == "myst" and not is_myst_available():
             continue
-        if fmt.format_name == "pandoc" and not is_pandoc_available():
+        if fmt.format_name in ("pandoc", "org") and not is_pandoc_available():
             continue
         if fmt.format_name in FORMATS_WITH_NO_CELL_METADATA:
             continue

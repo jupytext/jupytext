@@ -1,0 +1,25 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+This notebook contains complex outputs, including plotly javascript graphs.
+
+* Interactive plots
+:PROPERTIES:
+:CUSTOM_ID: interactive-plots
+:END:
+
+We use Plotly's connected mode to make the notebook lighter - when connected, the notebook downloads the =plotly.js= library from the web.
+
+#+begin_src jupyter-python
+import plotly.offline as offline
+offline.init_notebook_mode(connected=True)
+#+end_src
+
+#+begin_src jupyter-python
+import plotly.graph_objects as go
+fig = go.Figure(
+    data=[go.Bar(y=[2, 3, 1])],
+    layout=go.Layout(title="bar plot"))
+fig.show()
+fig.data[0].marker = dict(color='purple')
+fig
+#+end_src

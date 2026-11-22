@@ -1,0 +1,11 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Xonsh
+#+PROPERTY: header-args:jupyter-xonsh :kernel xonsh
+#+begin_src jupyter-xonsh
+len($(curl -L https://xon.sh))
+#+end_src
+
+#+begin_src jupyter-xonsh
+for filename in `.*`:
+    print(filename)
+    du -sh @(filename)
+#+end_src

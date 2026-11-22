@@ -1,0 +1,35 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Typescript 3.5
+#+PROPERTY: header-args:jupyter-typescript :kernel typescript
+#+begin_src jupyter-typescript
+let x: number = 5;
+const y: number = 6;
+var z: string = "hi";
+console.log(z);
+x + y;
+#+end_src
+
+#+begin_src jupyter-typescript
+function add(num1: number, num2: number): number {
+    return num1 + num2
+}
+add(x, y);
+#+end_src
+
+#+begin_src jupyter-typescript
+const arrowAdd = (num1: number, num2: number) => num1 + num2;
+arrowAdd(x, y);
+#+end_src
+
+#+begin_src jupyter-typescript
+class User {
+  constructor(private name: string) {
+    this.name = name;
+  }
+  sayHello(): string {
+    return "Hello, I'm " + this.name;
+  }
+}
+let John: User;
+John = new User("John");
+John.sayHello();
+#+end_src

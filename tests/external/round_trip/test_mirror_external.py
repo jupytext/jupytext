@@ -14,6 +14,11 @@ def test_ipynb_to_pandoc(ipynb_to_pandoc, no_jupytext_version_number):
     assert_conversion_same_as_mirror(ipynb_to_pandoc, "md:pandoc", "ipynb_to_pandoc")
 
 
+@pytest.mark.requires_pandoc(min_version="3.4")
+def test_ipynb_to_org(ipynb_to_org, no_jupytext_version_number):
+    assert_conversion_same_as_mirror(ipynb_to_org, "org", "ipynb_to_org")
+
+
 @pytest.mark.requires_quarto
 def test_ipynb_to_quarto(
     ipynb_to_quarto,

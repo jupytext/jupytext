@@ -1,0 +1,39 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+* Part one - various cells
+:PROPERTIES:
+:CUSTOM_ID: part-one---various-cells
+:END:
+
+Here we have a markdown cell
+
+with two blank lines
+
+Now we have a markdown cell
+with a code block inside it
+
+#+begin_src python
+1 + 1
+#+end_src
+
+After that cell we'll have a code cell
+
+#+begin_src jupyter-python
+2 + 2
+
+
+3 + 3
+#+end_src
+
+Followed by a raw cell
+
+* Part two - cell metadata
+:PROPERTIES:
+:CUSTOM_ID: part-two---cell-metadata
+:END:
+
+This is a markdown cell with cell metadata ={"key": "value"}=
+
+#+begin_src jupyter-python
+"""This is a code cell with metadata `{"tags":["parameters"], ".class":null}`"""
+#+end_src

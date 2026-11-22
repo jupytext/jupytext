@@ -51,7 +51,9 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
     format_name = fmt.get("format_name") or text_repr.get("format_name")
 
     notebook_metadata_filter = nb_source.metadata.get("jupytext", {}).get("notebook_metadata_filter")
-    if notebook_metadata_filter == "-all":
+    if ext == ".org":
+        nb_metadata = restore_filtered_metadata(nb_source.metadata, nb_outputs.metadata, None, "kernelspec,org_babel")
+    elif notebook_metadata_filter == "-all":
         nb_metadata = nb_outputs.metadata
 
     else:

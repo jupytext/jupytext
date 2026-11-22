@@ -1,0 +1,17 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Stata
+#+PROPERTY: header-args:jupyter-stata :kernel stata
+#+begin_src jupyter-stata
+// This notebook uses the stata_kernel: https://github.com/kylebarron/stata_kernel
+#+end_src
+
+#+begin_src jupyter-stata
+use http://www.stata-press.com/data/r13/auto
+#+end_src
+
+#+begin_src jupyter-stata
+summarize
+#+end_src
+
+#+begin_src jupyter-stata
+scatter weight length
+#+end_src

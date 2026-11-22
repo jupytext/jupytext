@@ -1,0 +1,11 @@
+#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
+#+PROPERTY: header-args:jupyter-python :kernel python3
+#+begin_src jupyter-python
+# This is an unfrozen cell. Works as usual.
+print("I'm a regular cell so I run and print!")
+#+end_src
+
+#+begin_src jupyter-python
+# This is an frozen cell
+print("I'm frozen so Im not executed :(")
+#+end_src
