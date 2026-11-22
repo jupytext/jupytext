@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, new_raw_cell
 
@@ -294,6 +296,94 @@ def test_org_round_trip_preserves_cpp_kernel():
     assert restored.metadata.org_babel == notebook.metadata.org_babel
     assert restored.cells[0].cell_type == "code"
     assert restored.cells[0].source == notebook.cells[0].source
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(strict=True, reason="Pairing can discard notebook content on the next sync")
+@pytest.mark.parametrize("make_pair", [True, False], ids=["new-pair", "existing-pair"])
+def test_org_cli_pairing_preserves_original_files_on_loss(tmp_path, make_pair):
+    path = tmp_path / "notebook.ipynb"
+    org_path = path.with_suffix(".org")
+    notebook = new_notebook(
+        cells=[
+            new_markdown_cell("First note"),
+            new_markdown_cell("Second note"),
+            new_raw_cell("Keep this raw text"),
+            new_code_cell("1 + 1", metadata={"tags": ["keep-tag"]}),
+        ]
+    )
+    if make_pair:
+        args = ["--set-formats", "ipynb,org", str(path)]
+    else:
+        notebook.metadata.jupytext = {"formats": "ipynb,org"}
+        jupytext.write(notebook, org_path)
+        org_before = org_path.read_bytes()
+        args = ["--sync", str(path)]
+    jupytext.write(notebook, path)
+    if not make_pair:
+        os.utime(path, (org_path.stat().st_mtime - 2,) * 2)
+    notebook_before = path.read_bytes()
+
+    with pytest.raises(ValueError, match="Org pairing"):
+        jupytext_cli(args)
+
+    assert path.read_bytes() == notebook_before
+    if make_pair:
+        assert not org_path.exists()
+    else:
+        assert org_path.read_bytes() == org_before
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(strict=True, reason="Sync can overwrite Org syntax lost during import")
+def test_org_cli_sync_preserves_authored_org_on_loss(tmp_path):
+    path = tmp_path / "notebook.ipynb"
+    org_path = path.with_suffix(".org")
+    (tmp_path / "jupytext.toml").write_text('formats = "ipynb,org"\n', encoding="utf-8")
+    jupytext.write(new_notebook(cells=[new_code_cell("1 + 1")]), path)
+    org_path.write_text(
+        """#+TITLE: Keep this title
+# A comment to keep
+<<manual-target>>
+[[manual-target][Jump here]]
+
+#+NAME: my-code
+#+begin_src jupyter-python
+1 + 2
+#+end_src
+""",
+        encoding="utf-8",
+    )
+    os.utime(path, (org_path.stat().st_mtime - 2,) * 2)
+    notebook_before = path.read_bytes()
+    org_before = org_path.read_bytes()
+
+    with pytest.raises(ValueError, match="Org pairing"):
+        jupytext_cli(["--sync", "--check-source-is-newer", str(org_path)])
+
+    assert path.read_bytes() == notebook_before
+    assert org_path.read_bytes() == org_before
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(strict=True, reason="Pandoc expands literal tabs in Org source blocks")
+def test_org_round_trip_preserves_literal_tab_in_code():
+    source = 'text = """first\n\tsecond\n"""'
+    notebook = new_notebook(cells=[new_code_cell(source)])
+    restored = jupytext.reads(jupytext.writes(notebook, "org"), "org")
+    assert restored.cells[0].source == source
+
+
+@pytest.mark.requires_pandoc
+@pytest.mark.xfail(strict=True, reason="Org export produces a link to an image it does not write")
+def test_org_export_rejects_notebook_attachments():
+    png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ak33iUAAAAASUVORK5CYII="
+    cell = new_markdown_cell(
+        "![Diagram](attachment:diagram.png)",
+        attachments={"diagram.png": {"image/png": png}},
+    )
+    with pytest.raises(ValueError, match="Org.*attachment"):
+        jupytext.writes(new_notebook(cells=[cell]), "org")
 
 
 @pytest.mark.requires_pandoc
