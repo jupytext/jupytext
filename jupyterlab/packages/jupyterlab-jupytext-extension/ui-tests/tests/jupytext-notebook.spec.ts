@@ -1,4 +1,5 @@
-import { expect, test } from '@jupyterlab/galata';
+import { expect } from '@playwright/test';
+import { test } from '@jupyterlab/galata/lib/fixtures';
 
 // Currently we are enabling only percent and MyST formats in Jupytext menu
 // So test for only these cases.

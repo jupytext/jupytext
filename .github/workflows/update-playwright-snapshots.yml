@@ -1,54 +1,19 @@
 name: Update Playwright Snapshots
 
 on:
-  issue_comment:
-    types: [created, edited]
+  workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
+  zizmor:
+    uses: $/.github/workflows/step_zizmor.yml
+    with:
+      upload-sarif: false
+
   update-snapshots:
-    if: >-
-      ${{ github.event.issue.pull_request &&
-      contains(github.event.comment.body, 'update playwright snapshots') &&
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: React to the triggering comment
-        run: |
-          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions --raw-field 'content=+1'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Checkout the branch from the PR that triggered the job
-        run: |
-          gh pr checkout ${{ github.event.issue.number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install jupytext
-        run: |
-          HATCH_BUILD_HOOKS_ENABLE=true python -m pip install -e '.[test-ui]' jupyterlab
-
-          # Uninstall jupyter-fs as it overrides the original browser-test.js to
-          # check its own functionality (https://github.com/jpmorganchase/jupyter-fs/blob/main/jupyterfs/browser-test.js)
-          pip uninstall jupyter-fs -y
-
-      - name: Update snapshots
-        uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@b9d5c28489f8b460cef48868f303b97c20f8fe1b # v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Test folder within your repository
-          test_folder: jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests/tests
-
-          # Playwright knows how to start JupyterLab server
-          start_server_script: 'null'
-          npm_client: jlpm
+    needs: [ zizmor ]
+    uses: $/.github/workflows/step_tests-ui.yml
+    with:
+      update-snapshots: true

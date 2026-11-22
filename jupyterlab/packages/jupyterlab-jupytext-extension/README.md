@@ -23,7 +23,7 @@ jupyter labextension install jupyterlab-jupytext@1.1.1  # for JupyterLab 1.x
 
 # How to develop this extension
 
-For fine-grained access to the `jlpm` command and various build steps:
+Building the extension requires Node.js 22.12 or later. To use `jlpm` directly:
 
 ```bash
 pip install -e '.[dev]'

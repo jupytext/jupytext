@@ -1,4 +1,5 @@
-import { expect, test } from '@jupyterlab/galata';
+import { expect } from '@playwright/test';
+import { test } from '@jupyterlab/galata/lib/fixtures';
 
 test.describe('Jupytext Launcher Category', () => {
   test.use({ autoGoto: false, viewport: { height: 1020, width: 1280 } });

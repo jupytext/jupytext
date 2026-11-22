@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    uses: ./.github/workflows/step_build.yml
+    uses: $/.github/workflows/step_build.yml
 
   publish:
     needs: [ build ]

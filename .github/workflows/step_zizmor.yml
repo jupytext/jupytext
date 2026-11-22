@@ -3,6 +3,11 @@ run-name: Run zizmor
 
 on:
   workflow_call:
+    inputs:
+      upload-sarif:
+        description: Upload results to GitHub code scanning
+        type: boolean
+        default: true
 
 jobs:
   zizmor:
@@ -14,5 +19,13 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Run zizmor 🌈
+    - name: Upload zizmor results
+      if: inputs.upload-sarif
       uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+
+    # SARIF mode exits successfully even when it reports findings.
+    - name: Enforce the zizmor audit
+      uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+      with:
+        advanced-security: false
+        annotations: true
