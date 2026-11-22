@@ -8,16 +8,21 @@ name: Comment PR
 on:
   pull_request_target:
 
-permissions:
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   comment-pr:
     runs-on: ubuntu-latest
     name: Comment PR
+    permissions:
+      pull-requests: write # Post the onboarding comment.
     steps:
       - name: Comment PR
-        uses: thollander/actions-comment-pull-request@e4a76dd2b0a3c2027c3fd84147a67c22ee4c90fa # v3
+        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
           message: |
             Thank you for making this pull request.

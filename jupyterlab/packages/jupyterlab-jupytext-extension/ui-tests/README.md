@@ -3,7 +3,9 @@
 This folder contains the integration tests of the extension.
 
 They are defined using [Playwright](https://playwright.dev/docs/intro) test runner
-and [Galata](https://github.com/jupyterlab/jupyterlab/tree/main/galata) helper.
+and the [Galata](https://github.com/jupyterlab/jupyterlab/tree/main/galata) fixtures.
+The specs import those fixtures directly because Galata's CommonJS entry point
+loads a benchmark reporter that requires Vega 5.
 
 The Playwright configuration is defined in [playwright.config.js](./playwright.config.js).
 
@@ -82,10 +84,12 @@ cd ./ui-tests
 jlpm playwright test -u
 ```
 
-> Some discrepancy may occurs between the snapshots generated on your computer and
-> the one generated on the CI. To ease updating the snapshots on a PR, you can
-> type `please update playwright snapshots` to trigger the update by a bot on the CI.
-> Once the bot has computed new snapshots, it will commit them to the PR branch.
+To regenerate snapshots on CI, open **Actions → Update Playwright Snapshots**,
+select **Run workflow**, and choose the branch to test. Download the
+`playwright-snapshots` artifact from the completed run and extract it. To apply a
+nonempty patch, run `git apply /path/to/playwright-snapshots.patch` from the root
+of that branch's checkout, then review and commit the updated snapshots.
+For a fork PR, run the workflow in the fork or regenerate the snapshots locally.
 
 ## Create tests
 

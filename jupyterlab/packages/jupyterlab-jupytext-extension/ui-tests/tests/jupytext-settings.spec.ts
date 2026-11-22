@@ -1,4 +1,5 @@
-import { expect, test } from '@jupyterlab/galata';
+import { expect } from '@playwright/test';
+import { test } from '@jupyterlab/galata/lib/fixtures';
 
 test('Open the settings editor with a Jupytext query', async ({ page }) => {
   await page.evaluate(async () => {

@@ -291,7 +291,7 @@ python = "3.13.13.*" # One test involving Black fails on the CI
 jupyterlab = ">=4.6.1,<5"
 nbformat = ">=5.1.2"
 pre-commit = ">=4.3"
-nodejs = ">=20"
+nodejs = ">=22.12"
 hatch = "*"
 pip = "*"
 jupyter-builder = ">=1.1.0,<2"
@@ -313,7 +313,7 @@ jupyter-server-ydoc = ">=3.0.2,<4"
 # Dedicated environment for building the JupyterLab extension.
 [tool.pixi.feature.build.dependencies]
 python = "3.13.*"
-nodejs = ">=20"
+nodejs = ">=22.12"
 jupyterlab = ">=4.6.1,<5"
 jupyter-builder = ">=1.1.0,<2"
 

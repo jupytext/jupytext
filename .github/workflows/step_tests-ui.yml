@@ -3,6 +3,11 @@ run-name: Run UI tests with Galata
 
 on:
   workflow_call:
+    inputs:
+      update-snapshots:
+        description: Regenerate Playwright snapshots and upload a patch
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,7 +37,7 @@ jobs:
       - name: Fix jlpm (use build env's pip-installed version)
         run: |
           mkdir -p ~/.local/bin
-          ln -sf "${{ github.workspace }}/.pixi/envs/build/bin/jlpm" ~/.local/bin/jlpm
+          ln -sf "$GITHUB_WORKSPACE/.pixi/envs/build/bin/jlpm" ~/.local/bin/jlpm
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install from source
@@ -56,8 +61,29 @@ jobs:
         run: jlpm playwright install chromium
 
       - name: Integration tests
+        if: ${{ !inputs.update-snapshots }}
         working-directory: jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests
         run: jlpm playwright test
+
+      - name: Regenerate snapshots
+        if: inputs.update-snapshots
+        working-directory: jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests
+        run: jlpm test:update
+
+      - name: Create snapshot patch
+        if: inputs.update-snapshots
+        run: |
+          snapshots=':(glob)jupyterlab/packages/jupyterlab-jupytext-extension/ui-tests/tests/**/*-snapshots/**'
+          git add --intent-to-add -- "$snapshots"
+          git diff --binary -- "$snapshots" > "$RUNNER_TEMP/playwright-snapshots.patch"
+
+      - name: Upload snapshot patch
+        if: inputs.update-snapshots
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: playwright-snapshots
+          path: ${{ runner.temp }}/playwright-snapshots.patch
+          if-no-files-found: error
 
       - name: Upload UI Test artifacts
         if: failure()
