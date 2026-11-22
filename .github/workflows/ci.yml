@@ -39,36 +39,37 @@ jobs:
     uses: $/.github/workflows/step_pre-commit.yml
 
   static-analysis:
-    needs: [ zizmor, pre-commit ]
+    needs: [ zizmor ]
     uses: $/.github/workflows/step_static-analysis.yml
     permissions:
       contents: read
       security-events: write
 
   coverage:
-    needs: [ zizmor, pre-commit ]
+    needs: [ zizmor ]
     uses: $/.github/workflows/step_coverage.yml
 
   test-pip:
-    needs: [ zizmor, pre-commit ]
+    needs: [ zizmor ]
     uses: $/.github/workflows/step_tests-pip.yml
 
   test-conda:
-    needs: [ zizmor, pre-commit ]
+    needs: [ build ]
     uses: $/.github/workflows/step_tests-conda.yml
 
   test-ui:
-    needs: [ zizmor, pre-commit ]
+    needs: [ build ]
     uses: $/.github/workflows/step_tests-ui.yml
 
   build:
-    needs: [ zizmor, pre-commit ]
+    needs: [ zizmor ]
     uses: $/.github/workflows/step_build.yml
     with:
       upload: ${{ inputs.upload-build-artifacts || false }}
+      upload-test-wheel: true
 
   devcontainer:
-    needs: [ zizmor, pre-commit ]
+    needs: [ zizmor ]
     uses: $/.github/workflows/step_devcontainer.yml
 
   pass:

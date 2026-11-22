@@ -12,8 +12,14 @@ jobs:
     with:
       upload-sarif: false
 
-  update-snapshots:
+  build:
     needs: [ zizmor ]
+    uses: $/.github/workflows/step_build.yml
+    with:
+      upload-test-wheel: true
+
+  update-snapshots:
+    needs: [ build ]
     uses: $/.github/workflows/step_tests-ui.yml
     with:
       update-snapshots: true

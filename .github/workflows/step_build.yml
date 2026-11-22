@@ -9,6 +9,10 @@ on:
         required: false
         default: false
         description: Upload build artifacts
+      upload-test-wheel:
+        type: boolean
+        default: false
+        description: Share the wheel containing the prebuilt extension with test jobs
       ref:
         type: string
         description: Tag to build
@@ -38,6 +42,15 @@ jobs:
 
       - name: Build package
         run: HATCH_BUILD_HOOKS_ENABLE=true hatch build
+
+      - name: Upload wheel for tests
+        if: inputs.upload-test-wheel
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: jupytext-test-wheel
+          path: dist/*.whl
+          if-no-files-found: error
+          overwrite: true
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
