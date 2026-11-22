@@ -1,4 +1,6 @@
-import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
+import { expect } from '@playwright/test';
+import { test } from '@jupyterlab/galata/lib/fixtures';
+import type { IJupyterLabPageFixture } from '@jupyterlab/galata/lib/jupyterlabpage';
 
 const notebookName = 'file-types.ipynb';
 const scriptName = 'file-types.py';

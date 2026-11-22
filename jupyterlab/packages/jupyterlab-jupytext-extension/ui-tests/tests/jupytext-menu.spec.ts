@@ -1,4 +1,5 @@
-import { expect, test } from '@jupyterlab/galata';
+import { expect } from '@playwright/test';
+import { test } from '@jupyterlab/galata/lib/fixtures';
 
 // Main Jupytext menu
 const jupytextMenu = ['File>New Text Notebook', 'File>Jupytext'];

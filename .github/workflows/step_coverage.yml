@@ -28,6 +28,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@b9d5c28489f8b460cef48868f303b97c20f8fe1b # v1
         with:
           python_version: 3.x
+          node_version: "none"
 
       - name: Install from source
         run: python -m pip install -e '.[test-cov,test-${{ matrix.coverage }}]'

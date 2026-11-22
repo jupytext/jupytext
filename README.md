@@ -122,4 +122,4 @@ There is also this short introduction to Jupytext: [![](https://img.shields.io/b
 
 ## Community
 
-Have a question, a bug report, or an idea? Join us on [Discord](https://discord.gg/VfdAsYyn) or open an issue or discussion on [GitHub](https://github.com/jupytext/jupytext).
+Have a question, a bug report, or an idea? Join us on [Discord](https://discord.gg/NrrFHC9r8u) or open an issue or discussion on [GitHub](https://github.com/jupytext/jupytext).

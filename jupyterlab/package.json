@@ -6,10 +6,10 @@
         "packages/*"
     ],
     "scripts": {
-        "build": "lerna run --parallel build",
-        "build:prod": "lerna run --parallel build:prod",
-        "install-ext": "lerna run build:labextension:dev",
-        "clean:all": "lerna run --parallel clean:all",
+        "build": "jlpm workspace jupyterlab-jupytext build",
+        "build:prod": "jlpm workspace jupyterlab-jupytext build:prod",
+        "install-ext": "jlpm workspace jupyterlab-jupytext build:labextension:dev",
+        "clean:all": "jlpm workspace jupyterlab-jupytext clean:all",
         "eslint": "eslint . --ext .ts,.tsx --fix",
         "eslint:check": "eslint . --ext .ts,.tsx",
         "prettier": "prettier --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\"",
@@ -19,8 +19,7 @@
         "stylelint:files": "stylelint --fix",
         "lint": "jlpm && jlpm prettier && jlpm eslint && jlpm stylelint",
         "lint:check": "jlpm prettier:check && jlpm eslint:check && jlpm stylelint:check",
-        "update-dependency": "update-dependency --lerna",
-        "watch": "lerna run --parallel watch"
+        "watch": "jlpm workspace jupyterlab-jupytext watch"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "~6.13.2",
@@ -28,16 +27,17 @@
         "eslint": "~8.55.0",
         "eslint-config-prettier": "~9.1.0",
         "eslint-plugin-prettier": "~5.0.1",
-        "lerna": "^7.1.4",
         "prettier": "^3.5.3",
         "stylelint": "^16.15.0",
         "stylelint-config-recommended": "^15.0.0",
         "stylelint-config-standard": "^37.0.0"
     },
     "resolutions": {
-        "tar": "7.5.3",
-        "glob": "10.5.0",
-        "systeminformation": "5.27.14"
+        "@jupyter/builder/glob": "^14.0.3",
+        "@jupyterlab/apputils/sanitize-html": "^2.18.0",
+        "@jupyterlab/galata/vega": "^6.4.0",
+        "@jupyterlab/galata/vega-lite": "^6.5.0",
+        "mermaid/katex": "^0.18.2"
     },
     "styleModule": "packages/*/style/index.js",
     "eslintIgnore": [

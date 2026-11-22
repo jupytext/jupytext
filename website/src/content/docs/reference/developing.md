@@ -12,9 +12,9 @@ If you want to test a feature that has been integrated in `main` but not deliver
 HATCH_BUILD_HOOKS_ENABLE=true pip install git+https://github.com/jupytext/jupytext.git
 ```
 
-The above requires `node`. You can install it with e.g.
+Building the extension requires Node.js 22.12 or later. You can install it with Conda.
 ```
-conda install 'nodejs>=20' -c conda-forge
+conda install 'nodejs>=22.12' -c conda-forge
 ```
 
 Alternatively you can build only Jupytext core (e.g. skip the JupyterLab extension). To do so, remove `HATCH_BUILD_HOOKS_ENABLE=true` in the above.

@@ -29,47 +29,53 @@ concurrency:
 
 jobs:
   zizmor:
-    uses: ./.github/workflows/step_zizmor.yml
+    uses: $/.github/workflows/step_zizmor.yml
     permissions:
+      actions: read
       contents: read
       security-events: write
 
   pre-commit:
     needs: [ zizmor ]
-    uses: ./.github/workflows/step_pre-commit.yml
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
+    uses: $/.github/workflows/step_pre-commit.yml
 
   static-analysis:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_static-analysis.yml
+    needs: [ zizmor ]
+    uses: $/.github/workflows/step_static-analysis.yml
     permissions:
       contents: read
       security-events: write
 
   coverage:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_coverage.yml
+    needs: [ zizmor ]
+    uses: $/.github/workflows/step_coverage.yml
 
   test-pip:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_tests-pip.yml
+    needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
+    uses: $/.github/workflows/step_tests-pip.yml
 
   test-conda:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_tests-conda.yml
+    needs: [ build ]
+    uses: $/.github/workflows/step_tests-conda.yml
 
   test-ui:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_tests-ui.yml
+    needs: [ build ]
+    uses: $/.github/workflows/step_tests-ui.yml
 
   build:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_build.yml
+    needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
+    uses: $/.github/workflows/step_build.yml
     with:
       upload: ${{ inputs.upload-build-artifacts || false }}
+      upload-test-wheel: true
 
   devcontainer:
-    needs: [ zizmor, pre-commit ]
-    uses: ./.github/workflows/step_devcontainer.yml
+    needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
+    uses: $/.github/workflows/step_devcontainer.yml
 
   pass:
     name: Pass
@@ -79,4 +85,7 @@ jobs:
       - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
+          allowed-skips: >-
+            ${{ needs.zizmor.outputs.merge-queue-passed == 'true'
+                && 'pre-commit,test-pip,test-conda,test-ui,build,devcontainer' || '[]' }}
     if: always()
