@@ -54,11 +54,11 @@ jobs:
     uses: $/.github/workflows/step_tests-pip.yml
 
   test-conda:
-    needs: [ zizmor ]
+    needs: [ build ]
     uses: $/.github/workflows/step_tests-conda.yml
 
   test-ui:
-    needs: [ zizmor ]
+    needs: [ build ]
     uses: $/.github/workflows/step_tests-ui.yml
 
   build:
@@ -66,6 +66,7 @@ jobs:
     uses: $/.github/workflows/step_build.yml
     with:
       upload: ${{ inputs.upload-build-artifacts || false }}
+      upload-test-wheel: true
 
   devcontainer:
     needs: [ zizmor ]
