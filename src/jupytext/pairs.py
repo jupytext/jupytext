@@ -7,6 +7,7 @@ from .compare import compare
 from .config import JupytextConfiguration
 from .formats import long_form_multiple_formats, long_form_one_format
 from .jupytext import reads, writes
+from .org import org_markdown_matches, org_pair_text_key
 from .paired_paths import paired_paths
 
 NotebookFile = namedtuple("notebook_file", "path fmt timestamp")
@@ -23,8 +24,12 @@ def checked_org_pair_text(notebook, config, existing_text=None):
     if len(restored.cells) != len(notebook.cells):
         raise ValueError("Org pairing would change the number of notebook cells")
     for index, (original, converted) in enumerate(zip(notebook.cells, restored.cells), 1):
-        if (original.cell_type, original.source) != (converted.cell_type, converted.source):
-            raise ValueError(f"Org pairing would change the type or source of cell {index}")
+        if original.cell_type != converted.cell_type:
+            raise ValueError(f"Org pairing would change the type of cell {index}")
+        if original.source != converted.source and (
+            original.cell_type != "markdown" or not org_markdown_matches(original.source, converted.source)
+        ):
+            raise ValueError(f"Org pairing would change the source of cell {index}")
         original_metadata = {key: value for key, value in original.metadata.items() if key != "trusted"}
         if original_metadata != converted.metadata:
             raise ValueError(f"Org pairing would change the metadata of cell {index}")
@@ -32,10 +37,13 @@ def checked_org_pair_text(notebook, config, existing_text=None):
         if notebook.metadata.get(key) != restored.metadata.get(key):
             raise ValueError(f"Org pairing would change the notebook's {key} metadata")
 
-    if existing_text is not None and existing_text.removesuffix("\n") != exported.removesuffix("\n"):
+    if existing_text is not None:
+        existing_key = org_pair_text_key(existing_text)
+        if existing_key == org_pair_text_key(exported):
+            return existing_text
         existing_notebook = reads(existing_text, fmt="org", config=config)
         rewritten = writes(existing_notebook, fmt="org", config=config)
-        if rewritten.removesuffix("\n") != existing_text.removesuffix("\n"):
+        if org_pair_text_key(rewritten) != existing_key:
             raise ValueError("Org pairing would rewrite an existing Org file that cannot round-trip")
     return exported
 

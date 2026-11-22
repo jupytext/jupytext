@@ -8,6 +8,7 @@ from tornado.web import HTTPError
 import jupytext
 from jupytext.cli import jupytext as jupytext_cli
 from jupytext.compare import compare_notebooks
+from jupytext.org import org_markdown_matches, org_pair_text_key
 from jupytext.pandoc import PandocError
 
 
@@ -362,29 +363,46 @@ def test_org_cli_sync_preserves_authored_org_on_loss(tmp_path):
 
 
 @pytest.mark.requires_pandoc(min_version="3.4")
-def test_org_cli_sync_propagates_edit_in_a_supported_pair(tmp_path):
+@pytest.mark.parametrize("uppercase_directives", [False, True])
+def test_org_cli_sync_propagates_edit_in_a_supported_pair(tmp_path, uppercase_directives):
     path = tmp_path / "notebook.ipynb"
     org_path = path.with_suffix(".org")
     (tmp_path / "jupytext.toml").write_text('formats = "ipynb,org"\n', encoding="utf-8")
     jupytext.write(
         new_notebook(
-            cells=[new_markdown_cell("An introduction"), new_code_cell("1 + 1")],
-            metadata={"custom": "keep this in the notebook"},
+            cells=[new_markdown_cell("An _introduction_"), new_code_cell("1 + 1")],
+            metadata={
+                "custom": "keep this in the notebook",
+                "kernelspec": {"name": "python3", "language": "python", "display_name": "Python 3"},
+            },
         ),
         path,
     )
     assert jupytext_cli(["--set-formats", "ipynb,org", str(path)]) == 0
     new_text = org_path.read_text(encoding="utf-8").replace("1 + 1", "1 + 2")
+    if uppercase_directives:
+        new_text = new_text.replace("#+begin_src", "#+BEGIN_SRC").replace("#+end_src", "#+END_SRC")
+        new_text = new_text.replace("#+PROPERTY", "#+property")
     org_path.write_text(new_text, encoding="utf-8")
     os.utime(path, (org_path.stat().st_mtime - 2,) * 2)
 
     assert jupytext_cli(["--sync", "--check-source-is-newer", str(org_path)]) == 0
 
     restored = jupytext.read(path)
-    assert [cell.source for cell in restored.cells] == ["An introduction", "1 + 2"]
+    assert [cell.source for cell in restored.cells] == ["An *introduction*", "1 + 2"]
     assert restored.metadata.custom == "keep this in the notebook"
     assert restored.metadata.jupytext.formats == "ipynb,org"
     assert org_path.read_text(encoding="utf-8") == new_text
+
+
+def test_org_pair_comparison_preserves_case_in_literal_source():
+    original = '#+BEGIN_SRC jupyter-python\ntext = """\n#+PROPERTY: A literal line\n"""\n#+END_SRC\n'
+    assert org_pair_text_key(original) != org_pair_text_key(original.replace("#+PROPERTY:", "#+property:"))
+
+
+@pytest.mark.requires_pandoc(min_version="3.4")
+def test_org_markdown_comparison_preserves_hard_line_breaks():
+    assert not org_markdown_matches("First line  \nSecond line", "First line\nSecond line")
 
 
 @pytest.mark.requires_pandoc(min_version="3.4")

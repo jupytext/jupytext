@@ -204,7 +204,7 @@ Current limitations
 - Embedded notebook attachments cannot be exported to Org.
 - Org conversion stops with an error if Pandoc takes longer than 30 seconds.
 
-Pairing and sync check that the notebook's cells and the existing Org text can round-trip before writing either file. If the check fails, Jupytext reports the difference and leaves both files intact. Standalone conversion into a new file can still be useful for documents that use features outside this subset.
+Pairing and sync check that the notebook's cells and the existing Org text can round-trip before writing either file. The check accepts equivalent Markdown formatting, capitalization differences in source block delimiters and Jupytext header keywords, and a missing final newline in Org. If the check fails, Jupytext reports the difference and leaves both files intact. Standalone conversion into a new file can still be useful for documents that use features outside this subset.
 To sync by passing the `.org` path, declare `formats = "ipynb,org"` in `jupytext.toml`.
 
 Install Pandoc 3.4 or later to use the Org format.
