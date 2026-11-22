@@ -5,8 +5,8 @@ jupyter:
     text_representation:
       extension: .md
       format_name: markdown
-      format_version: '1.1'
-      jupytext_version: 1.1.6
+      format_version: '1.3'
+      jupytext_version: 1.20.1.dev0
   kernelspec:
     display_name: Python 3
     language: python
@@ -15,69 +15,66 @@ jupyter:
 
 # Getting started with Jupytext
 
-This small notebook shows you how to activate Jupytext in the JupyterLab
-environment. We'll show you a few things that you can do with Jupytext and
-a bit of what happens under the hood.
+Jupytext lets you open a Markdown file or a script as a notebook. It can also
+pair a notebook with a text file so you can review edits in Git and keep rich
+outputs in the notebook.
 
-**Note: to run this notebook locally, you need to first follow the Jupytext
-installation instructions and activate the JupyterLab plugin. If you're on
-Binder, it should already work.**
+Binder opens this example as a notebook. In a local JupyterLab installation,
+follow the [installation guide](https://jupytext.org/getting-started/install/)
+and open `get_started.md` with **Open With → Jupytext Notebook** to try the text
+view. To start with a notebook, convert a copy of the Markdown file with
+`jupytext --to ipynb --update-metadata '{"jupytext":null}' get_started.md`,
+then open `get_started.ipynb`.
 
+## Pair a notebook with a Python script
 
-## Enabling Jupytext in a new notebook
+1. Open `get_started.ipynb` in JupyterLab.
+2. Choose **File → Jupytext → Pair Notebook → Pair Notebook with Percent Format**.
+3. Save the notebook. Jupytext writes `get_started.py` alongside it.
+4. Open the script in the text editor and find the `# %%` cell boundaries. Edit
+   a cell, save the script, and use **Reload Notebook from Disk** in JupyterLab
+   to see the change.
 
-This notebook is brand new - it hasn't had any special extra metadata added
-to it.
+## Inspect the pairing
 
-If we want Jupytext to save files in multiple formats automatically,
-we can use the JupyterLab **command palette** to do so.
-
-* In the _View_ menu, click on _Activate Command Palette_
-* Then type **`Jupytext`**. You should see a number of commands come up. Each
-  one tells Jupytext to save the notebook in a different
-  file format automatically.
-* Select **Pair notebook with MyST Markdown**
-
-That's it! If you have Jupytext installed, it will now save your notebook in
-markdown format automatically when you save this `.ipynb` file
-**in addition to** saving the `.ipynb` file itself.
-
-After you've done this, save the notebook. You should now see a new file called
-**`get_started.md`** in the same directory as this notebook.
-
-
-## How does Jupytext know to do this?
-
-Jupytext uses notebook-level metadata to keep track of what formats are paired
-with a notebook. Below we'll print the metadata of this notebook so you can see
-what the Jupytext metadata looks like.
+The notebook metadata records the paired formats. This cell shows the pairing
+stored in `get_started.ipynb` after you save it.
 
 ```python
-import nbformat as nbf
-from IPython.display import JSON
-notebook = nbf.read('./get_started.ipynb', nbf.NO_CONVERT)
-JSON(notebook['metadata'])
+from pathlib import Path
+
+import nbformat
+
+path = Path("get_started.ipynb")
+if path.exists():
+    notebook = nbformat.read(path, as_version=4)
+    print(notebook.metadata.get("jupytext", {}).get("formats", "No pairing saved yet."))
+else:
+    print(f"Open and save {path.name} to inspect its pairing.")
 ```
 
-As you select different formats from the command palette (following the instructions
-above) and save the notebook, you'll see this metadata change.
+## Try an output
 
-
-## That's it!
-
-Play around with different kinds of code and outputs to see how each is
-converted into its corresponding text format. Here's a little Python code
-to get you started:
+Run this cell and save the notebook again. The plot stays in the `.ipynb` file
+and the Python script contains the code that produced it. Install `matplotlib`
+if you are running this example locally.
 
 ```python
-import numpy as np
 import matplotlib.pyplot as plt
 
-plt.scatter(*np.random.randn(2, 100), c=np.random.randn(100), s=np.random.rand(100)*100)
+days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+commits = [3, 5, 2, 6, 4]
+fig, ax = plt.subplots(figsize=(5, 2.6))
+ax.bar(days, commits)
+ax.set(title="A week of commits", ylabel="Commits")
+plt.show()
 ```
 
-# Experiment with the demo notebook!
+## Explore the other examples
 
-In the *`demo/`* folder for `jupytext` there is a notebook called **`World population.ipynb`**.
-By default, saving the demo notebook will also create *many* possible Jupytext
-outputs so you can see what each looks like and which you prefer.
+- [World Population](World%20population.ipynb) uses the same notebook to show seven text formats.
+- [Benchmarking Jupytext](Benchmarking%20Jupytext.py) measures conversion size and timing.
+- [Tests in a notebook](Tests%20in%20a%20notebook.md) uses pytest to check notebook code.
+- [Jupytext's word cloud](Jupytext%27s%20word%20cloud.py) displays an image from a script.
+- [Pairing in VS Code](vscode/notebook.ipynb) shows the same notebook in two editors.
+- [Stable cell IDs](cell_ids/notebook.py) builds matching notebooks from a shared script.

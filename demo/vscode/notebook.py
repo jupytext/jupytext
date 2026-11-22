@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.18.0-dev
+#       jupytext_version: 1.20.1.dev0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -14,27 +14,29 @@
 # ---
 
 # %% [markdown]
-# This paired notebook can be edited either as
-# a Python script or as a Jupyter notebook in
-# VS Code. Thanks to the Jupytext Sync
-# extension, changes are automatically synced to
-# the other paired file(s) when you save.
+# # Edit a paired notebook in VS Code
 #
-# 💡 Tip: don't forget to hit "Save" before
-# switching to the other editor. If you don't save
-# your changes, you will run into conflicting edits
-# as VS Code does not autoreload files that have
-# unsaved edits.
+# Open both `notebook.ipynb` and `notebook.py`. With the
+# [Jupytext Sync extension](https://marketplace.visualstudio.com/items?itemName=caenrigen.jupytext-sync)
+# active, save changes in either file to update its pair. Save an edit before
+# switching editors to avoid conflicting unsaved changes.
+#
+# To try the same workflow from the terminal, run
+# `jupytext --sync notebook.py` from this directory after editing the script.
 
 # %%
 import plotly.express as px
 
-# %%
+iris = px.data.iris()
 px.scatter(
-    px.data.iris(),
+    iris,
     x="sepal_width",
     y="sepal_length",
     color="species",
+    labels={"sepal_width": "Sepal width (cm)", "sepal_length": "Sepal length (cm)"},
+    title="Iris sepal measurements",
 )
 
-# %%
+# %% [markdown]
+# Try changing the chart title in the script. Sync, run the cell in the
+# notebook, and save to keep the refreshed output in the `.ipynb` file.

@@ -58,6 +58,9 @@ hyphens, and must be unique within the notebook. Titles that do not satisfy
 the character or length rule remain cell metadata. Duplicate IDs cause a
 conversion error.
 
+Try the [cell ID demo notebook](https://github.com/jupytext/jupytext/blob/main/demo/cell_ids/notebook.py)
+to see how two collaborators can rebuild a notebook with matching IDs from a shared script.
+
 ## Magic commands
 
 In the `percent` and `light` script formats, magic commands (Jupyter commands prefixed by `%` or `%%`) are commented out in scripts. You can change this by using the `comment_magics` option, either in the `jupytext.toml` file or at the command line with `jupytext --opt`.

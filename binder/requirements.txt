@@ -4,5 +4,5 @@ plotly
 matplotlib
 wordcloud
 pandas
-wbdata
+pytest
 bash_kernel

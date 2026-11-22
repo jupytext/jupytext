@@ -2,112 +2,82 @@
 jupyter:
   jupytext:
     cell_markers: region,endregion
-    formats: ipynb,.pct.py:percent,.lgt.py:light,.spx.py:sphinx,md,Rmd,.pandoc.md:pandoc
+    default_lexer: ipython3
+    formats: ipynb,.pct.py:percent,.lgt.py:light,md,Rmd,.myst.md:myst
     text_representation:
       extension: .md
       format_name: markdown
-      format_version: '1.1'
-      jupytext_version: 1.1.0
+      format_version: '1.3'
+      jupytext_version: 1.20.1.dev0
   kernelspec:
     display_name: Python 3
     language: python
     name: python3
 ---
 
-# A quick insight at world population
+# World population by region
 
-## Collecting population data
+How has the world's population changed since 1990? This notebook uses a
+[World Bank snapshot](https://data.worldbank.org/indicator/SP.POP.TOTL) to
+compare growth across regions. The annual population totals from 1990 through
+2025 are bundled in `world_population.csv`, so the notebook runs offline.
 
-In the below we retrieve population data from the
-[World Bank](http://www.worldbank.org/)
-using the [wbdata](https://github.com/OliverSherouse/wbdata) python package
+Source data is from World Development Indicators, updated November 11, 2026,
+and licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The CSV uses the region labels in the
+[World Bank download](https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=csv).
 
-```python
-import pandas as pd
-import wbdata as wb
+To rebuild the CSV from the bundled source, run
+`pixi run python tools/update_world_population.py` from the repository root.
+To refresh from a newer World Bank download, pass its ZIP file as an argument.
 
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 20
-```
-
-Corresponding indicator is found using search method - or, directly,
-the World Bank site.
-
-```python
-wb.search_indicators('Population, total')  # SP.POP.TOTL
-# wb.search_indicators('area')
-# => https://data.worldbank.org/indicator is easier to use
-```
-
-Now we download the population data
-
-```python
-indicators = {'SP.POP.TOTL': 'Population, total',
-              'AG.SRF.TOTL.K2': 'Surface area (sq. km)',
-              'AG.LND.TOTL.K2': 'Land area (sq. km)',
-              'AG.LND.ARBL.ZS': 'Arable land (% of land area)'}
-data = wb.get_dataframe(indicators, convert_date=True).sort_index()
-data
-```
-
-World is one of the countries
-
-```python
-data.loc['World']
-```
-
-Can we classify over continents?
-
-```python
-data.loc[(slice(None), '2017-01-01'), :]['Population, total'].dropna(
-).sort_values().tail(60).index.get_level_values('country')
-```
-
-Extract zones manually (in order of increasing population)
-
-```python
-zones = ['North America', 'Middle East & North Africa',
-         'Latin America & Caribbean', 'Europe & Central Asia',
-         'Sub-Saharan Africa', 'South Asia',
-         'East Asia & Pacific'][::-1]
-```
-
-And extract population information (and check total is right)
-
-```python
-population = data.loc[zones]['Population, total'].swaplevel().unstack()
-population = population[zones]
-assert all(data.loc['World']['Population, total'] == population.sum(axis=1))
-```
-
-## Stacked area plot with matplotlib
+The notebook is paired with Percent, Light, Markdown, R Markdown, and MyST.
+The Sphinx Gallery and Pandoc files are standalone exports. Install
+`pandas` and `matplotlib` to run the analysis and static chart locally.
 
 ```python
 import matplotlib.pyplot as plt
+import pandas as pd
+
+population = pd.read_csv("world_population.csv", index_col="year")
+latest = population.iloc[-1]
+print(f"{latest.name}: {latest['World'] / 1e9:.2f} billion people worldwide.")
+population[["World"]].tail()
 ```
 
+## Population across regions
+
+The World Bank supplies a separate world total. The charts use the seven
+reported regional series and express their populations in billions.
+
 ```python
-plt.clf()
-plt.figure(figsize=(10, 5), dpi=100)
-plt.stackplot(population.index, population.values.T / 1e9)
-plt.legend(population.columns, loc='upper left')
-plt.ylabel('Population count (B)')
+regions = population.drop(columns="World").div(1e9)
+regions = regions[regions.iloc[-1].sort_values(ascending=False).index]
+```
+
+The stacked area chart shows how the contribution of each region changes over
+time.
+
+```python
+ax = regions.plot.area(figsize=(9, 4), linewidth=0)
+ax.set(xlabel="Year", ylabel="Population (billions)", title="Population by region")
+ax.legend(loc="upper left", bbox_to_anchor=(1, 1), frameon=False)
+ax.figure.tight_layout()
 plt.show()
 ```
 
-## Stacked bar plot with plotly
+## Optional interactive chart
+
+With `plotly` installed, run this cell in JupyterLab. Hover for the
+population of a region in a given year, or click a region in the legend
+to hide it.
 
 ```python
-import plotly.offline as offline
-import plotly.graph_objs as go
+import plotly.express as px
 
-offline.init_notebook_mode()
-```
-
-```python
-data = [go.Scatter(x=population.index, y=population[zone], name=zone, stackgroup='World')
-        for zone in zones]
-fig = go.Figure(data=data,
-                layout=go.Layout(title='World population'))
-offline.iplot(fig)
+px.area(
+    regions,
+    labels={"year": "Year", "value": "Population (billions)", "variable": "Region"},
+    title="Population by region",
+)
 ```
