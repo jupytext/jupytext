@@ -31,11 +31,13 @@ jobs:
   zizmor:
     uses: $/.github/workflows/step_zizmor.yml
     permissions:
+      actions: read
       contents: read
       security-events: write
 
   pre-commit:
     needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
     uses: $/.github/workflows/step_pre-commit.yml
 
   static-analysis:
@@ -51,6 +53,7 @@ jobs:
 
   test-pip:
     needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
     uses: $/.github/workflows/step_tests-pip.yml
 
   test-conda:
@@ -63,6 +66,7 @@ jobs:
 
   build:
     needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
     uses: $/.github/workflows/step_build.yml
     with:
       upload: ${{ inputs.upload-build-artifacts || false }}
@@ -70,6 +74,7 @@ jobs:
 
   devcontainer:
     needs: [ zizmor ]
+    if: needs.zizmor.outputs.merge-queue-passed != 'true'
     uses: $/.github/workflows/step_devcontainer.yml
 
   pass:
@@ -80,4 +85,7 @@ jobs:
       - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
+          allowed-skips: >-
+            ${{ needs.zizmor.outputs.merge-queue-passed == 'true'
+                && 'pre-commit,test-pip,test-conda,test-ui,build,devcontainer' || '[]' }}
     if: always()

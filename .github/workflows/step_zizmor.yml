@@ -8,10 +8,16 @@ on:
         description: Upload results to GitHub code scanning
         type: boolean
         default: true
+    outputs:
+      merge-queue-passed:
+        description: Whether CI passed on this push commit in the merge queue
+        value: ${{ jobs.zizmor.outputs.merge-queue-passed }}
 
 jobs:
   zizmor:
     runs-on: ubuntu-latest
+    outputs:
+      merge-queue-passed: ${{ steps.merge-queue.outputs.passed }}
 
     steps:
     - name: Checkout
@@ -29,3 +35,19 @@ jobs:
       with:
         advanced-security: false
         annotations: true
+
+    - name: Check CI for the merged commit
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      id: merge-queue
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if tested_sha="$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+          -f "head_sha=$GITHUB_SHA" -f event=merge_group -f status=success -F per_page=1 \
+          --jq '.workflow_runs[] | select(.event == "merge_group" and .conclusion == "success") | .head_sha')" &&
+          [[ "$tested_sha" == "$GITHUB_SHA" ]]; then
+          echo "passed=true" >> "$GITHUB_OUTPUT"
+          echo "CI passed in the merge queue for this commit."
+        else
+          echo "No successful merge-queue run verified. Running full CI."
+        fi
