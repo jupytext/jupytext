@@ -1261,14 +1261,14 @@ def load_paired_notebook(
     formats = long_form_multiple_formats(formats)
     _, fmt_with_prefix_suffix = find_base_path_and_format(nb_file, formats)
     fmt.update(fmt_with_prefix_suffix)
+    notebooks = {nb_file: notebook}
 
     def read_one_file(path, fmt):
-        if path == nb_file:
-            return notebook
-
-        log(f"[jupytext] Loading {shlex.quote(path)}")
-        timestamp_checker.get_and_check_timestamp(path)
-        return read_func(path, fmt=fmt)
+        if path not in notebooks:
+            log(f"[jupytext] Loading {shlex.quote(path)}")
+            timestamp_checker.get_and_check_timestamp(path)
+            notebooks[path] = read_func(path, fmt=fmt)
+        return notebooks[path]
 
     if pre_commit_mode and file_in_git_index(nb_file):
         # We raise an error if two representations of this notebook in the git index are inconsistent
@@ -1297,6 +1297,19 @@ def load_paired_notebook(
                     )
 
     inputs, outputs = latest_inputs_and_outputs(nb_file, fmt, formats, timestamp_checker.get_and_check_timestamp)
+    if outputs.path and inputs.path != outputs.path:
+        # Pairing writes the text file last. If it is still an exact export of
+        # the notebook, keep the original cells and metadata from the .ipynb.
+        notebook_with_outputs = read_one_file(outputs.path, outputs.fmt)
+        exported = writes(notebook_with_outputs, fmt=inputs.fmt, config=config)
+        if not exported.endswith("\n"):
+            exported += "\n"
+        with open(inputs.path, encoding="utf-8") as fp:
+            text = fp.read()
+        timestamp_checker.check_timestamp(inputs.path)
+        if text == exported:
+            return notebook_with_outputs, inputs.path, outputs.path
+
     notebook = read_pair(inputs, outputs, read_one_file)
 
     return notebook, inputs.path, outputs.path
