@@ -1,63 +1,51 @@
 # Testing a Jupyter notebook with pytest
 
-In this notebook we describe how to test a notebook with `jupytext`.
+Use this example to run the same checks in a notebook and from the command
+line. Install `pytest` alongside Jupytext for the command-line part.
 
-## Writing assertions and tests in a notebook
+## Write and check a function
 
-Our notebook defines a function that we wish to test. Our function is simply
-
-```python
-def f(x, n=5):
-    return [x + i for i in range(n)] 
-```
-
-We can test the assertion in Jupyter with simply
+The function below returns consecutive integers using a configurable step.
 
 ```python
-assert f(5) == [5,6,7,8,9]
+def sequence(start, length=5, step=1):
+    return [start + index * step for index in range(length)]
 ```
 
-Since the assertion above works, we don't get any message. It's more interesting to see what happens when an assertion fails. Remove one element of the list above and change the assertion to, say, 
-
-    assert f(5) == [5,6,8,9]
-
-When we run the above in Jupyter, we get
-
-```stderr
----------------------------------------------------------------------------
-AssertionError                            Traceback (most recent call last)
-<ipython-input-3-1383ac5d204f> in <module>
-----> 1 assert f(5) == [5,6,8,9]
-
-AssertionError: 
-```
-
-Now if we run the notebook with `jupytext --check pytest 'Tests in a notebook.md'`, we get a more detailed description of the issue, thanks to `pytest`'s rewriting of assertions: 
-```output
-[jupytext] Reading Tests in a notebook.md
-=========================== test session starts ===========================
-platform win32 -- Python 3.7.5, pytest-5.2.2, py-1.8.0, pluggy-0.13.0
-rootdir: C:\Users\Marco
-collected 0 items / 1 errors
-
-================================ ERRORS ===================================
-_________ ERROR collecting Tests in a notebook vhs_lscr.py ________________
-Tests in a notebook vhs_lscr.py:19: in <module>
-    assert f(5) == [5,6,8,9]
-E   assert [5, 6, 7, 8, 9] == [5, 6, 8, 9]
-E    +  where [5, 6, 7, 8, 9] = <function f at 0x000002440A0D1798>(5)
-!!!!!!!!!!!!! Interrupted: 1 errors during collection !!!!!!!!!!!!!!!!!!!!!
-=========================== 1 error in 0.09s ==============================
-```
-
-Once all of our assertions pass, we can move them to a test function. In Jupyter the function is not evaluated - only when we run `jupytext --check pytest` on the notebook, the function is actually executed.
+Run an assertion in the notebook to check the result as you work.
 
 ```python
-def test_f():
-    assert f(5) == [5,6,7,8,9]
+assert sequence(5) == [5, 6, 7, 8, 9]
 ```
 
-## Going further
+## Name tests for pytest
 
-- [nbval](https://github.com/computationalmodelling/nbval) is a plugin for `pytest` that allows you to make sure that Jupyter notebooks run properly, and that their new outputs match the current ones. Use it as `pytest --nbval notebook.ipynb`.
-- [ipytest](https://github.com/chmp/ipytest) defines a `%%run_pytest` cell magic that allows you to execute the tests in a cell directly in Jupyter.
+Pytest discovers functions whose names begin with `test_`. Here we check the
+defaults and two edge cases. To run the same checks from Jupyter, call the
+functions in a cell.
+
+```python
+def test_default_step():
+    assert sequence(5) == [5, 6, 7, 8, 9]
+
+
+def test_negative_step():
+    assert sequence(5, length=3, step=-2) == [5, 3, 1]
+
+
+def test_empty_sequence():
+    assert sequence(5, length=0) == []
+```
+
+## Run the checks from a terminal
+
+From this directory, run:
+
+```text
+jupytext --check "pytest {}" "Tests in a notebook.md"
+```
+
+Jupytext exports the notebook to a temporary Python script. The `{}`
+placeholder gives pytest that file. Pytest runs the three tests and returns a
+failure status if any assertion fails. Try changing the expected result in
+`test_negative_step` to see pytest show the differing values.
