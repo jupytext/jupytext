@@ -16,7 +16,6 @@ from traitlets import Bool, Dict, Enum, Float, List, Unicode, Union
 from traitlets.config import Configurable
 from traitlets.config.loader import PyFileConfigLoader
 from traitlets.traitlets import TraitError
-import typing
 from .formats import (
     NOTEBOOK_EXTENSIONS,
     get_formats_from_notebook_metadata,
@@ -318,7 +317,7 @@ def find_global_jupytext_configuration_file():
     return None
 
 
-def find_jupytext_configuration_file(path: typing.Union[str, Path], search_parent_dirs=True) -> str:
+def find_jupytext_configuration_file(path: str | Path, search_parent_dirs=True) -> str:
     """Return the first jupytext configuration file in the current directory, or any parent directory"""
 
     path = Path(path).absolute()
