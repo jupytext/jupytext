@@ -29,7 +29,7 @@ jobs:
     # command with pixi so that we can pixi environment
     defaults:
       run:
-        shell: pixi run bash -el {0}
+        shell: pixi run --locked bash -el {0}
 
     steps:
       - name: Checkout
@@ -42,6 +42,7 @@ jobs:
         with:
           pixi-version: v0.84.2
           cache: true
+          locked: true
           activate-environment: default
 
       - name: Update pixi environment
@@ -59,10 +60,10 @@ jobs:
           name: jupytext-test-wheel
           path: dist
 
-      - name: Run tests
+      - name: Run Python and browser tests
         run: |
           # Seems like without this command, MacOS cannot activate environment
-          eval "$(pixi shell-hook)"
+          eval "$(pixi shell-hook --locked)"
 
           # Install a Jupyter Kernel
           python -m ipykernel install --name python_kernel --user

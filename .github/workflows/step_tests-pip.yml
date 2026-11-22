@@ -27,7 +27,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
-        experimental: [false]
         include:
           # Test with jupyter-server=2.10 that does not have the 'require_hash' argument
           - python-version: "3.x"
@@ -90,7 +89,6 @@ jobs:
           sudo apt install ./*.deb
 
       - name: Test with pytest
-        continue-on-error: ${{ matrix.experimental || false }}
         run: pytest -n logical --cov --cov-report=xml
 
       - name: Upload coverage
