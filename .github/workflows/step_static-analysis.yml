@@ -22,6 +22,17 @@ jobs:
         uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           languages: python, javascript
+          config: |
+            # These Hydrogen notebook fixtures preserve IPython syntax such as %magic and ?help.
+            paths-ignore:
+              - tests/data/notebooks/inputs/hydrogen/hydrogen_latex_html_R_magics.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/Notebook with html and latex cells.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/Notebook_with_R_magic.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/Notebook_with_more_R_magic_111.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/convert_to_py_then_test_with_update83.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/jupyter_again.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/nteract_with_parameter.py
+              - tests/data/notebooks/outputs/ipynb_to_hydrogen/text_outputs_and_images.py
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
