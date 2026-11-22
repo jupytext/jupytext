@@ -15,11 +15,9 @@ Note that Jupyter Collaboration also comes with an auto-save feature. By [defaul
 
 ## Collaborating on text notebooks
 
-Currently, the real-time collaboration feature can be used:
-- in the notebook editor when opening `.ipynb` notebooks
-- in the text editor when opening `.py` or `.md` files
+With Jupyter Collaboration 5, you can collaborate on a `.py` text notebook directly. Have everyone open the same file using **Open With → Jupytext Notebook**. Edits are shared across clients. With Collaboration’s default reload behavior, changes made to the script on disk also appear in the open notebook.
 
-However, it does not yet work on `.py` and `.md` files opened as notebooks. If you want to collaborate on text notebooks, we recommend that you collaborate on paired notebooks (see [#1432](https://github.com/jupytext/jupytext/issues/1432)).
+For paired notebooks, have everyone edit the same member of the pair. For example, open the `.ipynb` in the notebook editor and let Jupytext update the paired script on save.
 
 ## Known issues
 
