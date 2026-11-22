@@ -237,10 +237,7 @@ class TextNotebookConverter(NotebookReader, NotebookWriter):
         if self.fmt.get("format_name") == "pandoc":
             return notebook_to_md(self.filter_notebook(nb, metadata))
         if self.fmt.get("format_name") == "org" or self.ext == ".org":
-            # Pandoc writes Markdown cell IDs as standalone Org targets.
-            notebook = self.filter_notebook(nb, metadata, preserve_cell_ids=False)
-            notebook.nbformat_minor = min(notebook.nbformat_minor, 4)
-            return notebook_to_org(notebook)
+            return notebook_to_org(self.filter_notebook(nb, metadata))
         if self.fmt.get("format_name") == "quarto" or self.ext == ".qmd":
             return notebook_to_qmd(self.filter_notebook(nb, metadata))
         if self.fmt.get("format_name") == "marimo":

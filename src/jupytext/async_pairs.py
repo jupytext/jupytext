@@ -1,10 +1,10 @@
 from .combine import combine_inputs_with_outputs
 from .formats import check_file_version, long_form_multiple_formats
 from .paired_paths import find_base_path_and_format, full_path
-from .pairs import check_paired_files_match, checked_org_pair_text
+from .pairs import check_paired_files_match
 
 
-async def read_pair(inputs, outputs, read_one_file, must_match=False, config=None):
+async def read_pair(inputs, outputs, read_one_file, must_match=False):
     """Read a notebook given its inputs and outputs path and formats"""
     if not outputs.path or outputs.path == inputs.path:
         return await read_one_file(inputs.path, inputs.fmt)
@@ -14,8 +14,6 @@ async def read_pair(inputs, outputs, read_one_file, must_match=False, config=Non
 
     notebook_with_outputs = await read_one_file(outputs.path, outputs.fmt)
 
-    if inputs.fmt["extension"] == ".org":
-        checked_org_pair_text(notebook_with_outputs, config)
     if must_match:
         check_paired_files_match(inputs, outputs, notebook, notebook_with_outputs)
 

@@ -1,5 +1,6 @@
 #+JUPYTER_KERNEL_DISPLAY_NAME: SAS
 #+PROPERTY: header-args:jupyter-sas :kernel sas
+<<14a71cf0-4339-4ae6-982d-7dda15f3810e>>
 * SAS Notebooks with jupytext
 :PROPERTIES:
 :CUSTOM_ID: sas-notebooks-with-jupytext

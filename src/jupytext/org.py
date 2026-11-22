@@ -20,37 +20,8 @@ _ORG_JUPYTER_SOURCE_RE = re.compile(r"^[ \t]*#\+BEGIN_SRC[ \t]+jupyter-\S+", re.
 _ORG_HEADER_ARGS_RE = re.compile(r"^#\+PROPERTY:[ \t]+header-args(?::(\S+)|\+)?[ \t]+(.*)$", re.IGNORECASE)
 _ORG_HEADER_ARG_RE = re.compile(r'(?:^|[ \t]+):([A-Za-z0-9_-]+)(?=[ \t]|$)|"(?:\\.|[^"\\])*"')
 _ORG_KERNEL_DISPLAY_NAME_RE = re.compile(r"^#\+JUPYTER_KERNEL_DISPLAY_NAME:[ \t]*(.*?)\s*$", re.IGNORECASE)
-_ORG_PAIR_KEYWORD_RE = re.compile(r"^#\+(?:PROPERTY|JUPYTER_KERNEL_DISPLAY_NAME):", re.IGNORECASE)
 _ORG_ARGUMENT_KEY_RE = re.compile(r"[A-Za-z0-9_-]+")
 _ORG_TIMEOUT_SECONDS = 30
-
-
-def org_markdown_matches(original: str, converted: str) -> bool:
-    """Compare Markdown formatting through Pandoc while preserving its document structure."""
-    options = "--from markdown --to json --preserve-tabs"
-    original_document = pandoc(options, input_text=original, timeout=_ORG_TIMEOUT_SECONDS)
-    converted_document = pandoc(options, input_text=converted, timeout=_ORG_TIMEOUT_SECONDS)
-    return original_document == converted_document
-
-
-def org_pair_text_key(text: str) -> str:
-    """Normalize source switches, keyword case, and the optional final newline."""
-    lines = []
-    block_end = None
-    for line in _preserve_source_tabs(text).removesuffix("\n").split("\n"):
-        if block_end:
-            if line.strip().lower() == block_end:
-                if block_end == "#+end_src":
-                    line = line.lower()
-                block_end = None
-        elif block := _ORG_BLOCK_START_RE.match(line):
-            block_end = f"#+end_{block.group(1).lower()}"
-            if block_end == "#+end_src":
-                line = line[: block.end()].lower() + line[block.end() :]
-        elif keyword := _ORG_PAIR_KEYWORD_RE.match(line):
-            line = line[: keyword.end()].lower() + line[keyword.end() :]
-        lines.append(line)
-    return "\n".join(lines)
 
 
 def org_to_notebook(text):

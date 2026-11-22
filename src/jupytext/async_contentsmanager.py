@@ -44,7 +44,7 @@ from .paired_paths import (
     full_path,
     paired_paths,
 )
-from .pairs import PairedFilesDiffer, checked_org_pair_text, latest_inputs_and_outputs
+from .pairs import PairedFilesDiffer, latest_inputs_and_outputs
 
 
 def build_async_jupytext_contents_manager_class(base_contents_manager_class):
@@ -127,18 +127,6 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
                 config = await self.get_config(path)
                 jupytext_formats = notebook_formats(nbk, config, path)
                 _, jupytext_formats = self._drop_formats_if_they_dont_match_path(path, None, jupytext_formats)
-                org_outputs = {}
-                if any(fmt["extension"] == ".org" for fmt in jupytext_formats):
-                    notebook = nbformat.from_dict(nbk)
-                    _, fmt = find_base_path_and_format(path, jupytext_formats)
-                    for alt_path, alt_fmt in paired_paths(path, fmt, jupytext_formats):
-                        if alt_fmt["extension"] != ".org":
-                            continue
-                        existing_text = None
-                        if await self.file_exists(alt_path):
-                            existing_model = await self.super.get(alt_path, type="file", format="text")
-                            existing_text = existing_model["content"]
-                        org_outputs[alt_path] = checked_org_pair_text(notebook, config, existing_text)
                 self.update_paired_notebooks(path, jupytext_formats)
 
                 async def save_one_file(path, fmt):
@@ -172,11 +160,11 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
                             "(toggle 'Include Metadata' in the Jupytext Menu or Commands if desired)".format(path)
                         )
 
-                    if path in org_outputs:
-                        content = org_outputs[path]
-                    else:
-                        content = writes(nbformat.from_dict(model["content"]), fmt=fmt, config=config)
-                    text_model = dict(type="file", format="text", content=content)
+                    text_model = dict(
+                        type="file",
+                        format="text",
+                        content=writes(nbformat.from_dict(model["content"]), fmt=fmt, config=config),
+                    )
 
                     return await self.super.save(text_model, path)
 
@@ -371,7 +359,7 @@ def build_async_jupytext_contents_manager_class(base_contents_manager_class):
                     self.log.warning(ts_mismatch)
 
                     try:
-                        content = await read_pair(inputs, outputs, read_one_file, must_match=True, config=config)
+                        content = await read_pair(inputs, outputs, read_one_file, must_match=True)
                         self.log.warning(
                             "The inputs in {src} and {out} are identical, so the mismatch in timestamps was ignored".format(
                                 src=inputs.path, out=outputs.path
@@ -406,7 +394,7 @@ to your jupytext.toml file
                 model["content"] = content
             else:
                 try:
-                    model["content"] = await read_pair(inputs, outputs, read_one_file, config=config)
+                    model["content"] = await read_pair(inputs, outputs, read_one_file)
                 except HTTPError:
                     raise
                 except Exception as err:

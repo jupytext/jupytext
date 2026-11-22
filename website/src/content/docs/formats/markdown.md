@@ -170,7 +170,7 @@ If you use Pandoc 3.10, upgrade to 3.10.1 or later. Pandoc 3.10 can truncate the
 
 ## Org Mode
 
-**Org support is experimental.** Jupytext introduced Org format version `0.1` in version 1.20.1. See the list of [known Org issues](https://github.com/jupytext/jupytext/issues?q=state%3Aopen%20label%3A%22org-format%22) before pairing notebooks with Org files.
+**Org support is experimental.** Jupytext introduced Org format version `0.1` in version 1.20.1. Pairing with Org can lose content or metadata when saving or syncing. Check your files before pairing them, and keep a copy of the originals. See the list of [known Org issues](https://github.com/jupytext/jupytext/issues?q=state%3Aopen%20label%3A%22org-format%22).
 
 [Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
 Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
@@ -199,12 +199,22 @@ Current limitations
 
 - Cell metadata is not preserved in the Org representation.
 - Consecutive Markdown cells are concatenated on round-trip, since Org prose has no native cell-boundary markers.
+- Pandoc can write Markdown cell IDs as Org targets, which come back as HTML anchors in Markdown.
 - Raw cells are not preserved by the current Pandoc-based conversion path.
-- Org headers store the kernelspec and document-wide Babel properties. Block- and subtree-level Babel settings, and other notebook metadata, are outside the round-trip guarantee.
+- Org headers store the kernelspec and document-wide Babel properties. Other notebook metadata is absent from the Org representation.
+- Org comments and block- or subtree-level Babel settings can be lost on conversion.
 - Embedded notebook attachments cannot be exported to Org.
 - Org conversion stops with an error if Pandoc takes longer than 30 seconds.
 
-Pairing and sync check that the notebook's cells and the existing Org text can round-trip before writing either file. The check accepts equivalent Markdown formatting, capitalization differences in source block delimiters and Jupytext header keywords, and a missing final newline in Org. If the check fails, Jupytext reports the difference and leaves both files intact. Standalone conversion into a new file can still be useful for documents that use features outside this subset.
+Run a [round-trip test](/using/cli/#testing-the-round-trip-conversion) from the file you plan to pair.
+
+```bash
+jupytext --test --to org notebook.ipynb
+jupytext --test --to ipynb notebook.org
+```
+
+These commands report differences without writing either file. Use `--test-strict` for a stricter comparison. For notebook inputs, the comparison covers cell content and metadata and ignores outputs and cell IDs.
+
 To sync by passing the `.org` path, declare `formats = "ipynb,org"` in `jupytext.toml`.
 
 Install Pandoc 3.4 or later to use the Org format.

@@ -24,6 +24,7 @@ from nbformat.sign import NotebookNotary
 import jupytext
 from jupytext.cell_reader import rst2md
 from jupytext.cli import system, tool_version
+from jupytext.compare import NotebookDifference
 from jupytext.formats import formats_with_support_for_cell_metadata
 from jupytext.myst import is_myst_available
 from jupytext.pandoc import is_pandoc_available
@@ -408,6 +409,13 @@ def ipynb_to_quarto(request):
     return request.param
 
 
+org_markdown_cell_id_xfail = pytest.mark.xfail(
+    reason="Pandoc converts Markdown cell IDs to Org targets and reads them back as HTML spans",
+    raises=NotebookDifference,
+    strict=True,
+)
+
+
 @pytest.fixture(
     params=[
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_R" / "ir_notebook.ipynb"),
@@ -415,8 +423,8 @@ def ipynb_to_quarto(request):
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_groovy" / "tailrecursive-factorial.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_js" / "ijavascript.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_m" / "octave_notebook.ipynb"),
-        str(SAMPLE_NOTEBOOK_PATH / "ipynb_maxima" / "maxima_example.ipynb"),
-        str(SAMPLE_NOTEBOOK_PATH / "ipynb_ocaml" / "ocaml_notebook.ipynb"),
+        pytest.param(str(SAMPLE_NOTEBOOK_PATH / "ipynb_maxima" / "maxima_example.ipynb"), marks=org_markdown_cell_id_xfail),
+        pytest.param(str(SAMPLE_NOTEBOOK_PATH / "ipynb_ocaml" / "ocaml_notebook.ipynb"), marks=org_markdown_cell_id_xfail),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "Notebook with html and latex cells.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "Notebook_with_R_magic.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_py" / "Notebook_with_more_R_magic_111.ipynb"),
@@ -428,7 +436,7 @@ def ipynb_to_quarto(request):
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_q" / "kalman_filter_and_visualization.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_robot" / "simple_robot_notebook.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_sage" / "sage_print_hello.ipynb"),
-        str(SAMPLE_NOTEBOOK_PATH / "ipynb_sas" / "sas.ipynb"),
+        pytest.param(str(SAMPLE_NOTEBOOK_PATH / "ipynb_sas" / "sas.ipynb"), marks=org_markdown_cell_id_xfail),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_scala" / "simple_scala_notebook.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_stata" / "stata_notebook.ipynb"),
         str(SAMPLE_NOTEBOOK_PATH / "ipynb_tcl" / "tcl_test.ipynb"),
