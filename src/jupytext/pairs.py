@@ -6,7 +6,7 @@ from copy import copy
 from .compare import compare
 from .config import JupytextConfiguration
 from .formats import long_form_multiple_formats, long_form_one_format
-from .jupytext import writes
+from .jupytext import reads, writes
 from .paired_paths import paired_paths
 
 NotebookFile = namedtuple("notebook_file", "path fmt timestamp")
@@ -14,6 +14,30 @@ NotebookFile = namedtuple("notebook_file", "path fmt timestamp")
 
 class PairedFilesDiffer(ValueError):
     """An error when the two representations of a paired notebook differ"""
+
+
+def checked_org_pair_text(notebook, config, existing_text=None):
+    """Serialize an Org pair only when the notebook and existing text can round-trip."""
+    exported = writes(notebook, fmt="org", config=config)
+    restored = reads(exported, fmt="org", config=config)
+    if len(restored.cells) != len(notebook.cells):
+        raise ValueError("Org pairing would change the number of notebook cells")
+    for index, (original, converted) in enumerate(zip(notebook.cells, restored.cells), 1):
+        if (original.cell_type, original.source) != (converted.cell_type, converted.source):
+            raise ValueError(f"Org pairing would change the type or source of cell {index}")
+        original_metadata = {key: value for key, value in original.metadata.items() if key != "trusted"}
+        if original_metadata != converted.metadata:
+            raise ValueError(f"Org pairing would change the metadata of cell {index}")
+    for key in ("kernelspec", "org_babel"):
+        if notebook.metadata.get(key) != restored.metadata.get(key):
+            raise ValueError(f"Org pairing would change the notebook's {key} metadata")
+
+    if existing_text is not None and existing_text.removesuffix("\n") != exported.removesuffix("\n"):
+        existing_notebook = reads(existing_text, fmt="org", config=config)
+        rewritten = writes(existing_notebook, fmt="org", config=config)
+        if rewritten.removesuffix("\n") != existing_text.removesuffix("\n"):
+            raise ValueError("Org pairing would rewrite an existing Org file that cannot round-trip")
+    return exported
 
 
 def check_paired_files_match(inputs, outputs, notebook, notebook_with_outputs):

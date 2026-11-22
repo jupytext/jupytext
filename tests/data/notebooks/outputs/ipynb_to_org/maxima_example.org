@@ -1,6 +1,5 @@
 #+JUPYTER_KERNEL_DISPLAY_NAME: Maxima
 #+PROPERTY: header-args:jupyter-maxima :kernel maxima
-<<a272759d>>
 ** maxima misc
 :PROPERTIES:
 :CUSTOM_ID: maxima-misc

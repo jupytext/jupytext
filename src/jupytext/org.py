@@ -14,9 +14,9 @@ from .pandoc import PandocError, pandoc, raise_if_pandoc_is_not_available
 # Matches valid Org keyword lines such as #+TITLE:, #+AUTHOR:, #+PROPERTY:, etc.
 # Org keywords are case-insensitive; Pandoc may generate lowercase variants.
 _ORG_KEYWORD_RE = re.compile(r"^#\+[A-Za-z_]+:", re.IGNORECASE)
-_ORG_TARGET_LINE_RE = re.compile(r"^<<[^>\n]+>>[ \t]*$")
 _ORG_BLOCK_START_RE = re.compile(r"^[ \t]*#\+BEGIN_(\w+)\b", re.IGNORECASE)
 _ORG_CPP_SOURCE_RE = re.compile(r"^([ \t]*#\+BEGIN_SRC[ \t]+)jupyter-c\+\+(?=\s|$)", re.IGNORECASE)
+_ORG_JUPYTER_SOURCE_RE = re.compile(r"^[ \t]*#\+BEGIN_SRC[ \t]+jupyter-\S+", re.IGNORECASE)
 _ORG_HEADER_ARGS_RE = re.compile(r"^#\+PROPERTY:[ \t]+header-args(?::(\S+)|\+)?[ \t]+(.*)$", re.IGNORECASE)
 _ORG_HEADER_ARG_RE = re.compile(r'(?:^|[ \t]+):([A-Za-z0-9_-]+)(?=[ \t]|$)|"(?:\\.|[^"\\])*"')
 _ORG_KERNEL_DISPLAY_NAME_RE = re.compile(r"^#\+JUPYTER_KERNEL_DISPLAY_NAME:[ \t]*(.*?)\s*$", re.IGNORECASE)
@@ -56,6 +56,8 @@ def org_to_notebook(text):
 def notebook_to_org(notebook):
     """Convert a notebook to its Org-mode representation, using Pandoc"""
     _raise_if_pandoc_is_not_available_for_org()
+    if any(cell.get("attachments") for cell in notebook.cells):
+        raise ValueError("Org export cannot preserve notebook attachments")
     tmp_in = tempfile.NamedTemporaryFile(suffix=".ipynb", delete=False)
     tmp_in.write(ipynb_writes(notebook).encode("utf-8"))
     tmp_in.close()
@@ -152,17 +154,26 @@ def _update_header_args(args: dict[str, str | list[str]], text: str) -> None:
 
 
 def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
-    """Remove document-level properties and standalone targets outside literal blocks."""
+    """Remove document-level properties and prepare source blocks for Pandoc."""
     body = []
     header_args: dict[str, dict[str, str | list[str]]] = {}
     display_name = ""
     block_end = None
+    source_header = None
     for line in text.splitlines(keepends=True):
         content = line.rstrip("\r\n")
         if block_end:
             body.append(line)
             if content.strip().upper() == block_end:
                 block_end = None
+                source_header = None
+            elif source_header is not None and "\t" in content:
+                # Pandoc honors --preserve-tabs in Org source blocks with the -i switch.
+                header_index, language_end = source_header
+                header = body[header_index]
+                if not re.match(r"[ \t]+-i(?:\s|$)", header[language_end:]):
+                    body[header_index] = header[:language_end] + " -i" + header[language_end:]
+                source_header = None
             continue
 
         block = _ORG_BLOCK_START_RE.match(content)
@@ -170,6 +181,8 @@ def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
             block_end = f"#+END_{block.group(1).upper()}"
             # Pandoc's Org reader does not recognize '+' in a source block language.
             line = _ORG_CPP_SOURCE_RE.sub(r"\g<1>jupyter-cpp", line)
+            if source := _ORG_JUPYTER_SOURCE_RE.match(line):
+                source_header = len(body), source.end()
         elif match := _ORG_HEADER_ARGS_RE.fullmatch(content):
             language = match.group(1) or ""
             if language.endswith("+") and language.lower() != "jupyter-c++":
@@ -178,8 +191,6 @@ def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
             continue
         elif match := _ORG_KERNEL_DISPLAY_NAME_RE.fullmatch(content):
             display_name = match.group(1)
-            continue
-        elif _ORG_TARGET_LINE_RE.fullmatch(content):
             continue
         body.append(line)
 
@@ -203,7 +214,7 @@ def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
 def _raise_if_pandoc_is_not_available_for_org() -> None:
     """Raise with an Org-specific error when Pandoc is unavailable."""
     try:
-        raise_if_pandoc_is_not_available()
+        raise_if_pandoc_is_not_available(min_version="3.4")
     except PandocError as exc:
         raise PandocError(str(exc).replace("Pandoc Markdown format", "Pandoc Org format")) from exc
 

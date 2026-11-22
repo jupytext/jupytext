@@ -50,7 +50,7 @@ from .paired_paths import (
     full_path,
     paired_paths,
 )
-from .pairs import PairedFilesDiffer, latest_inputs_and_outputs
+from .pairs import PairedFilesDiffer, checked_org_pair_text, latest_inputs_and_outputs
 
 
 def build_sync_jupytext_contents_manager_class(base_contents_manager_class):
@@ -140,6 +140,22 @@ def build_sync_jupytext_contents_manager_class(base_contents_manager_class):
                 _, jupytext_formats = self._drop_formats_if_they_dont_match_path(
                     path, None, jupytext_formats
                 )
+                org_outputs = {}
+                if any(fmt["extension"] == ".org" for fmt in jupytext_formats):
+                    notebook = nbformat.from_dict(nbk)
+                    _, fmt = find_base_path_and_format(path, jupytext_formats)
+                    for alt_path, alt_fmt in paired_paths(path, fmt, jupytext_formats):
+                        if alt_fmt["extension"] != ".org":
+                            continue
+                        existing_text = None
+                        if self.file_exists(alt_path):
+                            existing_model = self.super.get(
+                                alt_path, type="file", format="text"
+                            )
+                            existing_text = existing_model["content"]
+                        org_outputs[alt_path] = checked_org_pair_text(
+                            notebook, config, existing_text
+                        )
                 self.update_paired_notebooks(path, jupytext_formats)
 
                 def save_one_file(path, fmt):
@@ -182,13 +198,13 @@ def build_sync_jupytext_contents_manager_class(base_contents_manager_class):
                             )
                         )
 
-                    text_model = dict(
-                        type="file",
-                        format="text",
-                        content=writes(
+                    if path in org_outputs:
+                        content = org_outputs[path]
+                    else:
+                        content = writes(
                             nbformat.from_dict(model["content"]), fmt=fmt, config=config
-                        ),
-                    )
+                        )
+                    text_model = dict(type="file", format="text", content=content)
 
                     return self.super.save(text_model, path)
 
@@ -412,7 +428,11 @@ def build_sync_jupytext_contents_manager_class(base_contents_manager_class):
 
                     try:
                         content = read_pair(
-                            inputs, outputs, read_one_file, must_match=True
+                            inputs,
+                            outputs,
+                            read_one_file,
+                            must_match=True,
+                            config=config,
                         )
                         self.log.warning(
                             "The inputs in {src} and {out} are identical, so the mismatch in timestamps was ignored".format(
@@ -448,7 +468,9 @@ to your jupytext.toml file
                 model["content"] = content
             else:
                 try:
-                    model["content"] = read_pair(inputs, outputs, read_one_file)
+                    model["content"] = read_pair(
+                        inputs, outputs, read_one_file, config=config
+                    )
                 except HTTPError:
                     raise
                 except Exception as err:

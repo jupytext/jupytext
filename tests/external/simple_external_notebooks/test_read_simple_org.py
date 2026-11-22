@@ -1,7 +1,9 @@
 import os
 
 import pytest
+from jupyter_server.utils import ensure_async
 from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, new_raw_cell
+from tornado.web import HTTPError
 
 import jupytext
 from jupytext.cli import jupytext as jupytext_cli
@@ -9,7 +11,7 @@ from jupytext.compare import compare_notebooks
 from jupytext.pandoc import PandocError
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_notebook_to_org_and_back(
     notebook=new_notebook(
         cells=[
@@ -28,7 +30,7 @@ def test_notebook_to_org_and_back(
     assert nb2.cells[2].source == notebook.cells[2].source
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_round_trip_preserves_code():
     notebook = new_notebook(
         cells=[
@@ -40,7 +42,7 @@ def test_org_round_trip_preserves_code():
     assert any("a = 1" in cell.source for cell in nb2.cells if cell.cell_type == "code")
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_kernel_header_arg():
     """Kernel metadata should appear in Org header-args properties."""
     notebook = new_notebook(
@@ -55,7 +57,7 @@ def test_org_kernel_header_arg():
     assert "header-args:jupyter-python+ :session" not in org
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_header_args_are_read_as_kernel_metadata():
     org = """#+JUPYTER_KERNEL_DISPLAY_NAME: Python 3
 #+PROPERTY: header-args:jupyter-python :kernel python3
@@ -74,7 +76,7 @@ print("hello")
     assert nb.cells[0].cell_type == "code"
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_babel_metadata_is_written_to_header_args():
     notebook = new_notebook(
         metadata={
@@ -89,7 +91,7 @@ def test_org_babel_metadata_is_written_to_header_args():
     assert "#+PROPERTY: header-args:jupyter-python+ :session verification-games-fluxes" in org
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_header_args_without_kernel_do_not_set_kernelspec():
     org = """#+PROPERTY: header-args:jupyter-python+ :session verification-games-fluxes
 
@@ -102,7 +104,7 @@ print("hello")
     assert nb.metadata["org_babel"]["header_args"]["jupyter-python"]["session"] == "verification-games-fluxes"
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_raw_cells_are_not_preserved():
     notebook = new_notebook(
         cells=[
@@ -118,7 +120,7 @@ def test_raw_cells_are_not_preserved():
     assert nb2.cells[0].source == "before\n\nafter"
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_consecutive_markdown_cells_are_concatenated():
     notebook = new_notebook(
         cells=[
@@ -132,7 +134,7 @@ def test_consecutive_markdown_cells_are_concatenated():
     assert nb2.cells[0].source == "First markdown cell.\n\nSecond markdown cell."
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 @pytest.mark.xfail(
     reason="Org prose has no native cell-boundary markers; consecutive markdown cells are concatenated",
     strict=True,
@@ -147,7 +149,7 @@ def test_strict_round_trip_does_not_preserve_consecutive_markdown_cells():
     compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 @pytest.mark.xfail(
     reason="Pandoc Org conversion does not preserve raw cells",
     strict=True,
@@ -163,7 +165,7 @@ def test_strict_round_trip_does_not_preserve_raw_cells():
     compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 @pytest.mark.xfail(
     reason="Org format does not preserve cell metadata",
     strict=True,
@@ -180,12 +182,8 @@ def test_strict_round_trip_does_not_preserve_cell_metadata():
     compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
 
 
-@pytest.mark.requires_pandoc
-@pytest.mark.xfail(
-    reason="Pandoc Org conversion may normalize indentation inside code blocks",
-    strict=True,
-)
-def test_strict_round_trip_does_not_preserve_code_indentation():
+@pytest.mark.requires_pandoc(min_version="3.4")
+def test_strict_round_trip_preserves_code_indentation():
     notebook = new_notebook(
         cells=[
             new_code_cell('fish = {"x"=>x,\n\t"type"=>"scatter"}'),
@@ -194,7 +192,7 @@ def test_strict_round_trip_does_not_preserve_code_indentation():
     compare_notebooks(jupytext.reads(jupytext.writes(notebook, "org"), "org"), notebook, "org")
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_utf8():
     """Org format should handle unicode correctly"""
     notebook = new_notebook(
@@ -216,7 +214,7 @@ def test_meaningful_error_when_pandoc_is_missing(tmpdir):
         jupytext_cli([str(nb_file), "--to", "org"])
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_round_trip_preserves_literal_source_lines():
     source = """cat <<'EOF'
 <<tag>>
@@ -232,7 +230,7 @@ EOF"""
     assert restored.cells[0].source == source
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_round_trip_preserves_document_babel_args_without_a_kernel():
     org = """#+PROPERTY: header-args :exports both
 #+PROPERTY: header-args:python :results output replace :file output/report.csv
@@ -263,7 +261,7 @@ print("hello")
     assert restored.cells[0].source == notebook.cells[0].source
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 @pytest.mark.parametrize("language", ["", "jupyter-python"])
 def test_org_round_trip_preserves_repeated_babel_vars(language):
     suffix = f":{language}" if language else ""
@@ -284,7 +282,7 @@ print(x + y, label)
     assert jupytext.reads(restored, "org").metadata.org_babel == notebook.metadata.org_babel
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_round_trip_preserves_cpp_kernel():
     kernel = {"name": "xcpp17", "language": "c++", "display_name": "C++17"}
     notebook = new_notebook(
@@ -298,8 +296,7 @@ def test_org_round_trip_preserves_cpp_kernel():
     assert restored.cells[0].source == notebook.cells[0].source
 
 
-@pytest.mark.requires_pandoc
-@pytest.mark.xfail(strict=True, reason="Pairing can discard notebook content on the next sync")
+@pytest.mark.requires_pandoc(min_version="3.4")
 @pytest.mark.parametrize("make_pair", [True, False], ids=["new-pair", "existing-pair"])
 def test_org_cli_pairing_preserves_original_files_on_loss(tmp_path, make_pair):
     path = tmp_path / "notebook.ipynb"
@@ -334,8 +331,7 @@ def test_org_cli_pairing_preserves_original_files_on_loss(tmp_path, make_pair):
         assert org_path.read_bytes() == org_before
 
 
-@pytest.mark.requires_pandoc
-@pytest.mark.xfail(strict=True, reason="Sync can overwrite Org syntax lost during import")
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_cli_sync_preserves_authored_org_on_loss(tmp_path):
     path = tmp_path / "notebook.ipynb"
     org_path = path.with_suffix(".org")
@@ -365,8 +361,58 @@ def test_org_cli_sync_preserves_authored_org_on_loss(tmp_path):
     assert org_path.read_bytes() == org_before
 
 
-@pytest.mark.requires_pandoc
-@pytest.mark.xfail(strict=True, reason="Pandoc expands literal tabs in Org source blocks")
+@pytest.mark.requires_pandoc(min_version="3.4")
+def test_org_cli_sync_propagates_edit_in_a_supported_pair(tmp_path):
+    path = tmp_path / "notebook.ipynb"
+    org_path = path.with_suffix(".org")
+    (tmp_path / "jupytext.toml").write_text('formats = "ipynb,org"\n', encoding="utf-8")
+    jupytext.write(
+        new_notebook(
+            cells=[new_markdown_cell("An introduction"), new_code_cell("1 + 1")],
+            metadata={"custom": "keep this in the notebook"},
+        ),
+        path,
+    )
+    assert jupytext_cli(["--set-formats", "ipynb,org", str(path)]) == 0
+    new_text = org_path.read_text(encoding="utf-8").replace("1 + 1", "1 + 2")
+    org_path.write_text(new_text, encoding="utf-8")
+    os.utime(path, (org_path.stat().st_mtime - 2,) * 2)
+
+    assert jupytext_cli(["--sync", "--check-source-is-newer", str(org_path)]) == 0
+
+    restored = jupytext.read(path)
+    assert [cell.source for cell in restored.cells] == ["An introduction", "1 + 2"]
+    assert restored.metadata.custom == "keep this in the notebook"
+    assert restored.metadata.jupytext.formats == "ipynb,org"
+    assert org_path.read_text(encoding="utf-8") == new_text
+
+
+@pytest.mark.requires_pandoc(min_version="3.4")
+@pytest.mark.asyncio
+async def test_jupyter_save_preserves_existing_pair_when_org_cannot_round_trip(tmp_path, cm):
+    cm.root_dir = str(tmp_path)
+    path = tmp_path / "notebook.ipynb"
+    org_path = path.with_suffix(".org")
+    notebook = new_notebook(
+        cells=[new_code_cell("1 + 1")],
+        metadata={"jupytext": {"formats": "ipynb,org"}},
+    )
+    jupytext.write(notebook, path)
+    jupytext.write(notebook, org_path)
+    with org_path.open("a", encoding="utf-8") as fp:
+        fp.write("# Keep this comment\n")
+    notebook_before = path.read_bytes()
+    org_before = org_path.read_bytes()
+    notebook.cells[0].source = "1 + 2"
+
+    with pytest.raises(HTTPError, match="Org pairing"):
+        await ensure_async(cm.save({"type": "notebook", "content": notebook}, path.name))
+
+    assert path.read_bytes() == notebook_before
+    assert org_path.read_bytes() == org_before
+
+
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_round_trip_preserves_literal_tab_in_code():
     source = 'text = """first\n\tsecond\n"""'
     notebook = new_notebook(cells=[new_code_cell(source)])
@@ -374,8 +420,7 @@ def test_org_round_trip_preserves_literal_tab_in_code():
     assert restored.cells[0].source == source
 
 
-@pytest.mark.requires_pandoc
-@pytest.mark.xfail(strict=True, reason="Org export produces a link to an image it does not write")
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_export_rejects_notebook_attachments():
     png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ak33iUAAAAASUVORK5CYII="
     cell = new_markdown_cell(
@@ -386,7 +431,7 @@ def test_org_export_rejects_notebook_attachments():
         jupytext.writes(new_notebook(cells=[cell]), "org")
 
 
-@pytest.mark.requires_pandoc
+@pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_reports_pandoc_timeout(monkeypatch):
     from subprocess import TimeoutExpired
 

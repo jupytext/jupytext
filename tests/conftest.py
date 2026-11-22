@@ -480,8 +480,9 @@ def pytest_runtest_setup(item):
             # https://github.com/mwouts/jupytext/commit/c07d919702999056ce47f92b74f63a15c8361c5d
             # The mirror files changed again when Pandoc 2.16 was introduced
             # https://github.com/mwouts/jupytext/pull/919/commits/1fa1451ecdaa6ad8d803bcb6fb0c0cf09e5371bf
-            if not is_pandoc_available(min_version="3.0"):
-                pytest.skip("pandoc>=3.0 is not available")
+            min_version = mark.kwargs.get("min_version", "3.0")
+            if not is_pandoc_available(min_version=min_version):
+                pytest.skip(f"pandoc>={min_version} is not available")
         if mark.name == "requires_quarto":
             if not is_quarto_available(min_version="0.2.0"):
                 pytest.skip("quarto>=0.2 is not available")

@@ -1,6 +1,5 @@
 #+JUPYTER_KERNEL_DISPLAY_NAME: OCaml default
 #+PROPERTY: header-args:jupyter-OCaml :kernel ocaml-jupyter
-<<0ce05620>>
 * Example of an OCaml notebook
 :PROPERTIES:
 :CUSTOM_ID: example-of-an-ocaml-notebook
@@ -10,7 +9,6 @@
 let sum x y = x + y
 #+end_src
 
-<<f89c9670>>
 Let's try our function:
 
 #+begin_src jupyter-OCaml

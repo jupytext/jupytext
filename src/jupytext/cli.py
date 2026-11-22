@@ -46,7 +46,7 @@ from .paired_paths import (
     full_path,
     paired_paths,
 )
-from .pairs import latest_inputs_and_outputs
+from .pairs import checked_org_pair_text, latest_inputs_and_outputs
 from .sync_pairs import read_pair, write_pair
 from .version import __version__
 
@@ -583,9 +583,10 @@ def jupytext_single_file(nb_file, args, log, notary):
                 cell.metadata.pop("trusted", None)
         return nb
 
-    def _writes(nb, fmt):
+    def _writes(nb, fmt, content=None):
         """Serialize a notebook; sign the result when every cell is trusted."""
-        content = writes(nb, fmt=fmt, config=config)
+        if content is None:
+            content = writes(nb, fmt=fmt, config=config)
         if notary.check_cells(nb):
             notary.sign(reads(content, fmt=fmt, config=config))
         else:
@@ -844,6 +845,7 @@ def jupytext_single_file(nb_file, args, log, notary):
 
     # b. Output to the desired file or format
     untracked_files = 0
+    org_outputs = {}
 
     def lazy_write(
         path,
@@ -868,7 +870,7 @@ def jupytext_single_file(nb_file, args, log, notary):
             _, ext = os.path.splitext(path)
             fmt = copy(fmt or {})
             fmt = long_form_one_format(fmt, update={"extension": ext})
-            new_content = _writes(notebook, fmt=fmt)
+            new_content = _writes(notebook, fmt=fmt, content=org_outputs.get(path))
             diff = None
             if not new_content.endswith("\n"):
                 new_content += "\n"
@@ -1041,6 +1043,15 @@ def jupytext_single_file(nb_file, args, log, notary):
     elif args.sync:
         if args.check_source_is_newer:
             timestamp_checker.check_file_is_newest(nb_file)
+        for path, output_fmt in paired_paths(nb_file, fmt, formats):
+            if output_fmt["extension"] != ".org":
+                continue
+            existing_text = None
+            if timestamp_checker.get_and_check_timestamp(path) is not None:
+                with open(path, encoding="utf-8") as fp:
+                    existing_text = fp.read()
+                timestamp_checker.check_timestamp(path)
+            org_outputs[path] = checked_org_pair_text(notebook, config, existing_text)
         write_pair(nb_file, formats, lazy_write)
 
     return untracked_files
@@ -1297,7 +1308,7 @@ def load_paired_notebook(
                     )
 
     inputs, outputs = latest_inputs_and_outputs(nb_file, fmt, formats, timestamp_checker.get_and_check_timestamp)
-    notebook = read_pair(inputs, outputs, read_one_file)
+    notebook = read_pair(inputs, outputs, read_one_file, config=config)
 
     return notebook, inputs.path, outputs.path
 
