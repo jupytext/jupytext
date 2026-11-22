@@ -262,6 +262,27 @@ print("hello")
 
 
 @pytest.mark.requires_pandoc
+@pytest.mark.parametrize("language", ["", "jupyter-python"])
+def test_org_round_trip_preserves_repeated_babel_vars(language):
+    suffix = f":{language}" if language else ""
+    org = f"""#+PROPERTY: header-args{suffix} :var x=1 :var label="a :b c"
+#+PROPERTY: header-args{suffix}+ :var y=2
+
+#+begin_src jupyter-python
+print(x + y, label)
+#+end_src
+"""
+    notebook = jupytext.reads(org, "org")
+    expected = {"var": ["x=1", 'label="a :b c"', "y=2"]}
+    assert notebook.metadata.org_babel.header_args[language] == expected
+
+    ipynb = jupytext.writes(notebook, "ipynb")
+    restored = jupytext.writes(jupytext.reads(ipynb, "ipynb"), "org")
+    assert f'#+PROPERTY: header-args{suffix} :var x=1 :var label="a :b c" :var y=2' in restored
+    assert jupytext.reads(restored, "org").metadata.org_babel == notebook.metadata.org_babel
+
+
+@pytest.mark.requires_pandoc
 def test_org_round_trip_preserves_cpp_kernel():
     kernel = {"name": "xcpp17", "language": "c++", "display_name": "C++17"}
     notebook = new_notebook(

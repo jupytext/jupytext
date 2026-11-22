@@ -17,7 +17,7 @@ _ORG_KEYWORD_RE = re.compile(r"^#\+[A-Za-z_]+:", re.IGNORECASE)
 _ORG_TARGET_LINE_RE = re.compile(r"^<<[^>\n]+>>[ \t]*$")
 _ORG_BLOCK_START_RE = re.compile(r"^[ \t]*#\+BEGIN_(\w+)\b", re.IGNORECASE)
 _ORG_CPP_SOURCE_RE = re.compile(r"^([ \t]*#\+BEGIN_SRC[ \t]+)jupyter-c\+\+(?=\s|$)", re.IGNORECASE)
-_ORG_HEADER_ARGS_RE = re.compile(r"^#\+PROPERTY:[ \t]+header-args(?::(\S+))?[ \t]+(.*)$", re.IGNORECASE)
+_ORG_HEADER_ARGS_RE = re.compile(r"^#\+PROPERTY:[ \t]+header-args(?::(\S+)|\+)?[ \t]+(.*)$", re.IGNORECASE)
 _ORG_HEADER_ARG_RE = re.compile(r'(?:^|[ \t]+):([A-Za-z0-9_-]+)(?=[ \t]|$)|"(?:\\.|[^"\\])*"')
 _ORG_KERNEL_DISPLAY_NAME_RE = re.compile(r"^#\+JUPYTER_KERNEL_DISPLAY_NAME:[ \t]*(.*?)\s*$", re.IGNORECASE)
 _ORG_ARGUMENT_KEY_RE = re.compile(r"[A-Za-z0-9_-]+")
@@ -120,27 +120,41 @@ def _format_header_args_line(language: str, args: dict[str, Any]) -> str:
         raise ValueError(f"Invalid Org Babel language {language!r}")
     tokens = []
     for key, value in args.items():
-        value = str(value)
-        if not _ORG_ARGUMENT_KEY_RE.fullmatch(key) or len(value.splitlines()) > 1 or "\n" in value or "\r" in value:
+        if not _ORG_ARGUMENT_KEY_RE.fullmatch(key):
             raise ValueError(f"Invalid Org Babel header argument {key!r}")
-        tokens.append(f":{key} {value}".rstrip())
+        values = value if key == "var" and isinstance(value, list) else [value]
+        for item in values:
+            item = str(item)
+            if len(item.splitlines()) > 1 or "\n" in item or "\r" in item:
+                raise ValueError(f"Invalid Org Babel header argument {key!r}")
+            tokens.append(f":{key} {item}".rstrip())
     suffix = f":{language}" if language else ""
     return f"#+PROPERTY: header-args{suffix} {' '.join(tokens)}\n"
 
 
-def _parse_header_args(text: str) -> dict[str, str]:
+def _update_header_args(args: dict[str, str | list[str]], text: str) -> None:
     # Quoted strings are matched as a unit, so a colon inside one cannot start another argument.
     keys = [match for match in _ORG_HEADER_ARG_RE.finditer(text) if match.group(1)]
-    return {
-        match.group(1): text[match.end() : keys[index + 1].start() if index + 1 < len(keys) else len(text)].strip()
-        for index, match in enumerate(keys)
-    }
+    for index, match in enumerate(keys):
+        key = match.group(1)
+        end = keys[index + 1].start() if index + 1 < len(keys) else len(text)
+        value = text[match.end() : end].strip()
+
+        # Babel allows multiple :var assignments in one property or across additive properties.
+        if key == "var" and key in args:
+            previous = args[key]
+            if isinstance(previous, list):
+                previous.append(value)
+            else:
+                args[key] = [previous, value]
+        else:
+            args[key] = value
 
 
 def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
     """Remove document-level properties and standalone targets outside literal blocks."""
     body = []
-    header_args: dict[str, dict[str, str]] = {}
+    header_args: dict[str, dict[str, str | list[str]]] = {}
     display_name = ""
     block_end = None
     for line in text.splitlines(keepends=True):
@@ -160,7 +174,7 @@ def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
             language = match.group(1) or ""
             if language.endswith("+") and language.lower() != "jupyter-c++":
                 language = language[:-1]
-            header_args.setdefault(language, {}).update(_parse_header_args(match.group(2)))
+            _update_header_args(header_args.setdefault(language, {}), match.group(2))
             continue
         elif match := _ORG_KERNEL_DISPLAY_NAME_RE.fullmatch(content):
             display_name = match.group(1)

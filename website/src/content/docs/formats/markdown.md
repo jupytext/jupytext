@@ -185,6 +185,7 @@ Code cells are represented as `#+BEGIN_SRC jupyter-<language> ... #+END_SRC` blo
 ```
 
 Jupytext stores document-wide Babel properties in notebook metadata under `org_babel.header_args`. In Markdown-like formats this appears under `jupyter.org_babel`. Language-specific properties use the Org language name as the key, and a property that applies to all languages uses an empty key.
+Repeated `:var` values are stored as a list in their original order.
 
 ```yaml
 jupyter:
