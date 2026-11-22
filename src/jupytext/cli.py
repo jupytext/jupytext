@@ -1307,7 +1307,7 @@ def load_paired_notebook(
         with open(inputs.path, encoding="utf-8") as fp:
             text = fp.read()
         timestamp_checker.check_timestamp(inputs.path)
-        if text == exported:
+        if text == exported or (inputs.fmt["extension"] == ".py" and _only_adds_final_newline(text, exported)):
             return notebook_with_outputs, inputs.path, outputs.path
 
     notebook = read_pair(inputs, outputs, read_one_file)
