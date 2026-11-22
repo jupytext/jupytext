@@ -550,26 +550,28 @@ def write(nb, fp, version=nbformat.NO_CONVERT, fmt=None, config=None, **kwargs):
             sys.stdout.write(content.encode("utf-8"))
         return
 
-    if not hasattr(fp, "write"):
-        # Treat fp as a file name
-        fp = str(fp)
-        _, ext = os.path.splitext(fp)
+    is_path = not hasattr(fp, "write")
+    if is_path:
+        path = str(fp)
+        _, ext = os.path.splitext(path)
         fmt = copy(fmt or {})
         fmt = long_form_one_format(fmt, update={"extension": ext})
-        create_prefix_dir(fp, fmt, None)
-
-        with open(fp, "w", encoding="utf-8") as stream:
-            write(nb, stream, version=version, fmt=fmt, config=config, **kwargs)
-            return
     else:
         assert fmt is not None, "'fmt' argument in jupytext.write is mandatory unless fp is a file name"
 
     content = writes(nb, version=version, fmt=fmt, config=config, **kwargs)
     if isinstance(content, bytes):
         content = content.decode("utf8")
-    fp.write(content)
     if not content.endswith("\n"):
-        fp.write("\n")
+        content += "\n"
+
+    if is_path:
+        # Conversion can fail, so open the destination only after serialization.
+        create_prefix_dir(path, fmt, None)
+        with open(path, "w", encoding="utf-8") as stream:
+            stream.write(content)
+    else:
+        fp.write(content)
 
 
 def create_prefix_dir(nb_file, fmt, log):
