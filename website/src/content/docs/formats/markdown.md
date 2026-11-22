@@ -170,11 +170,11 @@ If you use Pandoc 3.10, upgrade to 3.10.1 or later. Pandoc 3.10 can truncate the
 
 ## Org Mode
 
-The Org format was introduced in Jupytext 1.20.1.
+**Org support is experimental.** Jupytext introduced Org format version `0.1` in version 1.20.1. See the list of [known Org issues](https://github.com/jupytext/jupytext/issues?q=state%3Aopen%20label%3A%22org-format%22) before pairing notebooks with Org files.
 
 [Org mode](https://orgmode.org/) is a major mode for Emacs widely used for note-taking and literate programming.
 Jupytext can read and write Jupyter notebooks as Org-mode (`.org`) files using Pandoc as a conversion backend.
-
+Keep the original file when converting a notebook or Org document and review the converted file before replacing the original.
 
 Code cells are represented as `#+BEGIN_SRC jupyter-<language> ... #+END_SRC` blocks. Pandoc imports ordinary source blocks such as `#+BEGIN_SRC python` as fenced code in Markdown cells. The kernel metadata are recorded as top-level `#+PROPERTY: header-args` lines in the Org output, e.g.
 

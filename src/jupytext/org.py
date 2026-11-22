@@ -34,10 +34,10 @@ def org_markdown_matches(original: str, converted: str) -> bool:
 
 
 def org_pair_text_key(text: str) -> str:
-    """Ignore source delimiter and header keyword case and the optional final newline."""
+    """Normalize source switches, keyword case, and the optional final newline."""
     lines = []
     block_end = None
-    for line in text.removesuffix("\n").split("\n"):
+    for line in _preserve_source_tabs(text).removesuffix("\n").split("\n"):
         if block_end:
             if line.strip().lower() == block_end:
                 if block_end == "#+end_src":
@@ -56,7 +56,7 @@ def org_pair_text_key(text: str) -> str:
 def org_to_notebook(text):
     """Convert an Org-mode text to a Jupyter notebook, using Pandoc"""
     _raise_if_pandoc_is_not_available_for_org()
-    text, metadata = _extract_org_metadata(text)
+    text, metadata = _extract_org_metadata(_preserve_source_tabs(text))
     tmp_in = tempfile.NamedTemporaryFile(suffix=".org", delete=False)
     tmp_in.write(text.encode("utf-8"))
     tmp_in.close()
@@ -110,7 +110,7 @@ def notebook_to_org(notebook):
     header_args = notebook.metadata.get("org_babel", {}).get("header_args", {})
     text = _inject_header_args(text, kernelspec, header_args)
 
-    return "\n".join(text.splitlines())
+    return "\n".join(_preserve_source_tabs(text).splitlines())
 
 
 def _inject_header_args(text: str, kernelspec: dict, header_args: dict) -> str:
@@ -182,27 +182,42 @@ def _update_header_args(args: dict[str, str | list[str]], text: str) -> None:
             args[key] = value
 
 
+def _preserve_source_tabs(text: str) -> str:
+    """Mark Jupyter source blocks with tabs so Pandoc reads the tabs literally."""
+    lines = text.splitlines(keepends=True)
+    block_end = None
+    source_header = None
+    for index, line in enumerate(lines):
+        if block_end:
+            if line.strip().upper() == block_end:
+                block_end = None
+                source_header = None
+            elif source_header is not None and "\t" in line:
+                # Pandoc honors --preserve-tabs in Org source blocks with the -i switch.
+                header_index, language_end = source_header
+                header = lines[header_index]
+                if not re.match(r"[ \t]+-i(?:\s|$)", header[language_end:]):
+                    lines[header_index] = header[:language_end] + " -i" + header[language_end:]
+                source_header = None
+        elif block := _ORG_BLOCK_START_RE.match(line):
+            block_end = f"#+END_{block.group(1).upper()}"
+            if source := _ORG_JUPYTER_SOURCE_RE.match(line):
+                source_header = index, source.end()
+    return "".join(lines)
+
+
 def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
-    """Remove document-level properties and prepare source blocks for Pandoc."""
+    """Remove document-level properties and prepare source block languages for Pandoc."""
     body = []
     header_args: dict[str, dict[str, str | list[str]]] = {}
     display_name = ""
     block_end = None
-    source_header = None
     for line in text.splitlines(keepends=True):
         content = line.rstrip("\r\n")
         if block_end:
             body.append(line)
             if content.strip().upper() == block_end:
                 block_end = None
-                source_header = None
-            elif source_header is not None and "\t" in content:
-                # Pandoc honors --preserve-tabs in Org source blocks with the -i switch.
-                header_index, language_end = source_header
-                header = body[header_index]
-                if not re.match(r"[ \t]+-i(?:\s|$)", header[language_end:]):
-                    body[header_index] = header[:language_end] + " -i" + header[language_end:]
-                source_header = None
             continue
 
         block = _ORG_BLOCK_START_RE.match(content)
@@ -210,8 +225,6 @@ def _extract_org_metadata(text: str) -> tuple[str, dict[str, Any]]:
             block_end = f"#+END_{block.group(1).upper()}"
             # Pandoc's Org reader does not recognize '+' in a source block language.
             line = _ORG_CPP_SOURCE_RE.sub(r"\g<1>jupyter-cpp", line)
-            if source := _ORG_JUPYTER_SOURCE_RE.match(line):
-                source_header = len(body), source.end()
         elif match := _ORG_HEADER_ARGS_RE.fullmatch(content):
             language = match.group(1) or ""
             if language.endswith("+") and language.lower() != "jupyter-c++":

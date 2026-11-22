@@ -2,6 +2,7 @@ import os
 
 import pytest
 from jupyter_server.utils import ensure_async
+from nbformat import reads as ipynb_reads
 from nbformat.v4.nbbase import new_code_cell, new_markdown_cell, new_notebook, new_raw_cell
 from tornado.web import HTTPError
 
@@ -9,7 +10,7 @@ import jupytext
 from jupytext.cli import jupytext as jupytext_cli
 from jupytext.compare import compare_notebooks
 from jupytext.org import org_markdown_matches, org_pair_text_key
-from jupytext.pandoc import PandocError
+from jupytext.pandoc import PandocError, pandoc
 
 
 @pytest.mark.requires_pandoc(min_version="3.4")
@@ -433,8 +434,20 @@ async def test_jupyter_save_preserves_existing_pair_when_org_cannot_round_trip(t
 @pytest.mark.requires_pandoc(min_version="3.4")
 def test_org_round_trip_preserves_literal_tab_in_code():
     source = 'text = """first\n\tsecond\n"""'
-    notebook = new_notebook(cells=[new_code_cell(source)])
-    restored = jupytext.reads(jupytext.writes(notebook, "org"), "org")
+    notebook = new_notebook(cells=[new_code_cell(source), new_code_cell("pass")])
+    org = jupytext.writes(notebook, "org")
+    assert [line for line in org.splitlines() if line.startswith("#+begin_src")] == [
+        "#+begin_src jupyter-python -i",
+        "#+begin_src jupyter-python",
+    ]
+
+    converted = pandoc("--from org --to ipynb --standalone --preserve-tabs", input_text=org, timeout=30)
+    assert ipynb_reads(converted, as_version=4).cells[0].source.removesuffix("\n") == source
+
+    # Org files generated before this switch was added should still work as pairs.
+    old_org = org.replace("#+begin_src jupyter-python -i", "#+begin_src jupyter-python", 1)
+    assert org_pair_text_key(org) == org_pair_text_key(old_org)
+    restored = jupytext.reads(old_org, "org")
     assert restored.cells[0].source == source
 
 
