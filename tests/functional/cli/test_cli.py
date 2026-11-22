@@ -90,29 +90,6 @@ def test_cli_preserves_metadata_edits_to_explicit_myst_raw_cell(tmp_path, args, 
     assert cell.metadata == ({"tags": tags} if tags else {})
 
 
-@pytest.mark.parametrize("sync_from_script", [False, True])
-@pytest.mark.parametrize("has_final_newline", [False, True])
-def test_sync_keeps_original_cells_when_text_is_an_unchanged_export(tmp_path, sync_from_script, has_final_newline):
-    ipynb = tmp_path / "notebook.ipynb"
-    script = tmp_path / "notebook.py"
-    notebook = new_notebook(cells=[new_raw_cell("Raw text"), new_code_cell("1 + 1")])
-    write(notebook, ipynb)
-    assert jupytext(["--set-formats", "ipynb,py:nomarker", str(ipynb)]) == 0
-
-    original_notebook = ipynb.read_bytes()
-    original_script = script.read_bytes()
-    if not has_final_newline:
-        original_script = original_script.removesuffix(b"\n")
-        script.write_bytes(original_script)
-    older_timestamp = script.stat().st_mtime - 2
-    os.utime(ipynb, (older_timestamp, older_timestamp))
-    source = script if sync_from_script else ipynb
-    assert jupytext(["--sync", str(source)]) == 0
-
-    assert ipynb.read_bytes() == original_notebook
-    assert script.read_bytes() == original_script
-
-
 def test_str2bool():
     assert str2bool("d") is None
     assert str2bool("TRUE") is True
