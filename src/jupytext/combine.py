@@ -41,7 +41,9 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
             nb_outputs.nbformat, nb_outputs.nbformat_minor, nb_source.nbformat
         )
     )
-    nb_source.nbformat_minor = nb_outputs.nbformat_minor
+    source_ids = vars(nb_source).get("_cell_ids_from_text", ())
+    nbformat_minor = max(nb_outputs.nbformat_minor, 5) if source_ids else nb_outputs.nbformat_minor
+    nb_source.nbformat_minor = nbformat_minor
 
     fmt = long_form_one_format(fmt)
     text_repr = nb_source.metadata.get("jupytext", {}).get("text_representation", {})
@@ -76,7 +78,7 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
     else:
         cell_metadata_filter = nb_metadata.get("jupytext", {}).get("cell_metadata_filter")
 
-    outputs_map = map_outputs_to_inputs(nb_source.cells, nb_outputs.cells)
+    outputs_map = map_outputs_to_inputs(nb_source.cells, nb_outputs.cells, source_ids)
 
     cells = []
     for source_cell, j in zip(nb_source.cells, outputs_map):
@@ -93,6 +95,8 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
 
         # Cell text is taken from the source notebook
         cell.source = source_cell.source
+        if source_ids and (source_cell.id in source_ids or "id" not in output_cell or output_cell.id in source_ids):
+            cell.id = source_cell.id
 
         # We also restore the cell metadata that has been filtered
         if is_frontmatter_cell:
@@ -119,21 +123,35 @@ def combine_inputs_with_outputs(nb_source, nb_outputs, fmt=None):
         cells=cells,
         metadata=nb_metadata,
         nbformat=nb_outputs.nbformat,
-        nbformat_minor=nb_outputs.nbformat_minor,
+        nbformat_minor=nbformat_minor,
     )
 
 
-def map_outputs_to_inputs(cells_inputs, cells_outputs):
+def map_outputs_to_inputs(cells_inputs, cells_outputs, source_ids=()):
     """Returns a map i->(j or None) that maps the cells with outputs to the input cells"""
     n_in = len(cells_inputs)
     n_out = len(cells_outputs)
     outputs_map = [None] * n_in
+    used_outputs = set()
+
+    if source_ids:
+        outputs_by_id = {(cell.get("id"), cell.cell_type): j for j, cell in enumerate(cells_outputs)}
+        for i, cell in enumerate(cells_inputs):
+            if cell.id in source_ids:
+                j = outputs_by_id.get((cell.id, cell.cell_type))
+                if j is not None:
+                    outputs_map[i] = j
+                    used_outputs.add(j)
 
     # First rule: match based on cell type, content, in increasing order, for each cell type
     first_unmatched_output_per_cell_type = {}
     for i in range(n_in):
+        if outputs_map[i] is not None:
+            continue
         cell_input = cells_inputs[i]
         for j in range(first_unmatched_output_per_cell_type.get(cell_input.cell_type, 0), n_out):
+            if j in used_outputs:
+                continue
             cell_output = cells_outputs[j]
             if cell_input.cell_type == cell_output.cell_type and same_content(cell_input.source, cell_output.source):
                 outputs_map[i] = j
@@ -142,26 +160,26 @@ def map_outputs_to_inputs(cells_inputs, cells_outputs):
 
     # Second rule: match unused outputs based on cell type and content
     # Third rule: is the new cell the final part of a previous cell with outputs?
-    unused_ouputs = set(range(n_out)).difference(outputs_map)
+    unused_outputs = set(range(n_out)).difference(outputs_map)
     for endswith in [False, True]:
-        if not unused_ouputs:
+        if not unused_outputs:
             return outputs_map
 
         for i in range(n_in):
             if outputs_map[i] is not None:
                 continue
             cell_input = cells_inputs[i]
-            for j in unused_ouputs:
+            for j in unused_outputs:
                 cell_output = cells_outputs[j]
                 if cell_input.cell_type == cell_output.cell_type and same_content(
                     cell_output.source, cell_input.source, endswith
                 ):
                     outputs_map[i] = j
-                    unused_ouputs.remove(j)
+                    unused_outputs.remove(j)
                     break
 
     # Fourth rule: match based on increasing index (and cell type) for non-empty cells
-    if not unused_ouputs:
+    if not unused_outputs:
         return outputs_map
 
     prev_j = -1
@@ -171,14 +189,14 @@ def map_outputs_to_inputs(cells_inputs, cells_outputs):
             continue
 
         j = prev_j + 1
-        if j not in unused_ouputs:
+        if j not in unused_outputs:
             continue
 
         cell_input = cells_inputs[i]
         cell_output = cells_outputs[j]
         if cell_input.cell_type == cell_output.cell_type and cell_input.source.strip() != "":
             outputs_map[i] = j
-            unused_ouputs.remove(j)
+            unused_outputs.remove(j)
             prev_j = j
 
     return outputs_map

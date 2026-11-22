@@ -1,10 +1,7 @@
-import jupytext
-
 from .combine import combine_inputs_with_outputs
-from .compare import compare
 from .formats import check_file_version, long_form_multiple_formats
 from .paired_paths import find_base_path_and_format, full_path
-from .pairs import PairedFilesDiffer
+from .pairs import check_paired_files_match
 
 
 async def read_pair(inputs, outputs, read_one_file, must_match=False):
@@ -18,11 +15,7 @@ async def read_pair(inputs, outputs, read_one_file, must_match=False):
     notebook_with_outputs = await read_one_file(outputs.path, outputs.fmt)
 
     if must_match:
-        in_text = jupytext.writes(notebook, inputs.fmt)
-        out_text = jupytext.writes(notebook_with_outputs, inputs.fmt)
-        diff = compare(out_text, in_text, outputs.path, inputs.path, return_diff=True)
-        if diff:
-            raise PairedFilesDiffer(diff)
+        check_paired_files_match(inputs, outputs, notebook, notebook_with_outputs)
 
     notebook = combine_inputs_with_outputs(notebook, notebook_with_outputs, fmt=inputs.fmt)
 

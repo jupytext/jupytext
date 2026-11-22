@@ -8,6 +8,7 @@ import yaml
 from nbformat.v4.nbbase import NotebookNode, new_raw_cell
 from yaml.representer import SafeRepresenter
 
+from .cell_metadata import is_valid_cell_id
 from .languages import (
     _SCRIPT_EXTENSIONS,
     comment_lines,
@@ -30,6 +31,7 @@ _BLANK_RE = re.compile(r"^\s*$")
 _JUPYTER_RE = re.compile(r"^jupyter\s*:\s*$")
 _LEFTSPACE_RE = re.compile(r"^\s")
 _UTF8_HEADER = " -*- coding: utf-8 -*-"
+_RAW_HEADER_CELL_ID = "raw_header_cell_id"
 
 # Change this to False in tests
 INSERT_AND_CHECK_VERSION_NUMBER = True
@@ -111,7 +113,7 @@ def insert_jupytext_info_and_filter_metadata(metadata, fmt, text_format, unsuppo
     )
 
 
-def metadata_and_cell_to_header(notebook, metadata, text_format, fmt, unsupported_keys=None):
+def metadata_and_cell_to_header(notebook, metadata, text_format, fmt, unsupported_keys=None, *, preserve_raw_cell_id=False):
     """
     Return the text header corresponding to a notebook, and remove the
     first cell of the notebook if it contained the header
@@ -122,6 +124,7 @@ def metadata_and_cell_to_header(notebook, metadata, text_format, fmt, unsupporte
     lines_to_next_cell = None
     root_level_metadata = {}
     root_level_metadata_as_raw_cell = fmt.get("root_level_metadata_as_raw_cell", True)
+    raw_header_cell_id = None
 
     if not root_level_metadata_as_raw_cell:
         root_level_metadata = metadata.get("jupytext", {}).pop("root_level_metadata", {})
@@ -133,8 +136,12 @@ def metadata_and_cell_to_header(notebook, metadata, text_format, fmt, unsupporte
                 header = lines[1:-1]
                 lines_to_next_cell = cell.metadata.get("lines_to_next_cell")
                 notebook.cells = notebook.cells[1:]
+                if preserve_raw_cell_id:
+                    raw_header_cell_id = cell.get("id")
 
     metadata = insert_jupytext_info_and_filter_metadata(metadata, fmt, text_format, unsupported_keys)
+    if is_valid_cell_id(raw_header_cell_id):
+        metadata.setdefault("jupytext", {})[_RAW_HEADER_CELL_ID] = raw_header_cell_id
 
     if metadata:
         root_level_metadata["jupyter"] = metadata
@@ -175,11 +182,15 @@ def recursive_update(target, update, overwrite=True):
     return target
 
 
-def header_to_metadata_and_cell(lines, header_prefix, header_suffix, ext=None, root_level_metadata_as_raw_cell=True):
+def header_to_metadata_and_cell(
+    lines, header_prefix, header_suffix, ext=None, root_level_metadata_as_raw_cell=True, *, explicit_cell_ids=None
+):
     """
     Return the metadata, a boolean to indicate if a jupyter section was found,
     the first cell of notebook if some metadata is found outside
     the jupyter section, and next loc in text
+
+    When explicit_cell_ids is provided, restore the leading raw cell ID and record it in the set.
     """
 
     header = []
@@ -249,9 +260,19 @@ def header_to_metadata_and_cell(lines, header_prefix, header_suffix, ext=None, r
             header.append(line)
 
     if ended:
+        raw_header_cell_id = None
         if jupyter:
             extra_metadata = metadata
             metadata = yaml.safe_load("\n".join(jupyter))["jupyter"]
+            if root_level_metadata_as_raw_cell and explicit_cell_ids is not None:
+                jupytext_metadata = metadata.get("jupytext", {})
+                cell_id = jupytext_metadata.get(_RAW_HEADER_CELL_ID)
+                if is_valid_cell_id(cell_id):
+                    raw_header_cell_id = jupytext_metadata.pop(_RAW_HEADER_CELL_ID)
+                    if not jupytext_metadata:
+                        metadata.pop("jupytext")
+                    if not metadata:
+                        jupyter = []
             recursive_update(metadata, extra_metadata)
 
         lines_to_next_cell = 1
@@ -264,7 +285,7 @@ def header_to_metadata_and_cell(lines, header_prefix, header_suffix, ext=None, r
         else:
             lines_to_next_cell = 0
 
-        if header:
+        if header or raw_header_cell_id is not None:
             if root_level_metadata_as_raw_cell:
                 cell = _new_frontmatter_cell(
                     source="\n".join(["---"] + header + ["---"]),
@@ -274,6 +295,9 @@ def header_to_metadata_and_cell(lines, header_prefix, header_suffix, ext=None, r
                         else {"lines_to_next_cell": lines_to_next_cell}
                     ),
                 )
+                if raw_header_cell_id is not None:
+                    cell.id = raw_header_cell_id
+                    explicit_cell_ids.add(raw_header_cell_id)
             else:
                 cell = None
                 root_level_metadata = yaml.safe_load("\n".join(header))
