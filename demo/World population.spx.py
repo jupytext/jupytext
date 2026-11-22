@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: sphinx
 #       format_version: '1.1'
-#       jupytext_version: 1.1.0
+#       jupytext_version: 1.20.1.dev0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
