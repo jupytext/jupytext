@@ -388,7 +388,7 @@ def jupytext(args=None, *, notary=None):
         if len(args.notebooks) != 1:
             raise ValueError("--paired-paths applies to a single notebook")
         print_paired_paths(args.notebooks[0], args.input_format)
-        return 1
+        return 0
 
     if args.run_path:
         args.execute = True
@@ -513,7 +513,8 @@ def jupytext(args=None, *, notary=None):
                 except Exception as err:
                     sys.stderr.write(f"[jupytext] Error: {str(err)}\n")
 
-        return exit_code
+        # An exit status is a byte on POSIX systems: 256 failures would exit with 0
+        return min(exit_code, 255)
     finally:
         if notary_to_close:
             notary_to_close.store.close()
