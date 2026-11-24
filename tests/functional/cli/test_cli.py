@@ -1531,7 +1531,7 @@ def test_paired_paths_from_notebook_metadata(tmp_path, python_notebook, capsys):
     python_notebook.metadata["jupytext"] = {"formats": "ipynb,py:percent,md"}
     write(python_notebook, ipynb_notebook_path)
 
-    jupytext([str(ipynb_notebook_path), "--paired-paths"])
+    assert jupytext([str(ipynb_notebook_path), "--paired-paths"]) == 0
 
     capture = capsys.readouterr()
 
@@ -1543,12 +1543,29 @@ def test_paired_paths_from_notebook_metadata(tmp_path, python_notebook, capsys):
     ], paired_paths
 
 
+def test_paired_paths_of_unpaired_notebook(tmp_path, python_notebook, capsys):
+    ipynb_notebook_path = tmp_path / "notebook.ipynb"
+    write(python_notebook, ipynb_notebook_path)
+
+    assert jupytext([str(ipynb_notebook_path), "--paired-paths"]) == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_exit_code_does_not_wrap_around_256_failed_files(tmp_path, monkeypatch):
+    script = tmp_path / "script.py"
+    script.write_text("1 + 1\n")
+    monkeypatch.setattr("jupytext.cli.jupytext_single_file", lambda *args, **kwargs: 1)
+
+    assert jupytext(["--to", "ipynb", *[str(script)] * 2]) == 2
+    assert jupytext(["--to", "ipynb", *[str(script)] * 256]) == 255
+
+
 def test_paired_paths_from_config(tmp_path, python_notebook, capsys):
     ipynb_notebook_path = tmp_path / "notebook.ipynb"
     write(python_notebook, ipynb_notebook_path)
     (tmp_path / "jupytext.toml").write_text('''formats="ipynb,py:percent,md"''')
 
-    jupytext([str(ipynb_notebook_path), "--paired-paths"])
+    assert jupytext([str(ipynb_notebook_path), "--paired-paths"]) == 0
 
     capture = capsys.readouterr()
 
