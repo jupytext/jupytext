@@ -1456,6 +1456,42 @@ def test_lexer_is_preserved_in_round_trips(
     assert tmp_md.read_text() == text
 
 
+@pytest.mark.skip_on_windows
+def test_pipe_honors_jupytext_config_996(tmp_path, monkeypatch):
+    """The notebook piped to --pipe must be read back with the Jupytext configuration (#996)"""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "jupytext.toml").write_text("comment_magics = false\n")
+
+    tmp_py = tmp_path / "nb.py"
+    text = "# %%\n# %matplotlib inline\nimport numpy as np\n"
+    tmp_py.write_text(text)
+
+    jupytext(["--pipe", "cat", str(tmp_py)])
+
+    # With comment_magics = false, the commented magic is a plain comment: the pipe
+    # round-trip must not turn it into a magic command
+    assert tmp_py.read_text() == text
+
+
+@pytest.mark.skip_on_windows
+def test_pipe_reports_config_dependent_representation_996(tmp_path, monkeypatch):
+    """The text representation piped to the command must honor the Jupytext config (#996)"""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "jupytext.toml").write_text("root_level_metadata_as_raw_cell = false\n")
+
+    nb_file = tmp_path / "nb.ipynb"
+    nb = new_notebook(cells=[new_code_cell("1 + 1")])
+    nb.metadata["custom"] = {"key": "value"}
+    write(nb, str(nb_file))
+
+    command = sys.executable + " -c \"import sys; d = sys.stdin.read(); open('seen.txt', 'w').write(d); sys.stdout.write(d)\""
+    jupytext([str(nb_file), "--pipe", command, "--pipe-fmt", "py:percent", "-o", "piped.py"])
+
+    seen = (tmp_path / "seen.txt").read_text()
+    assert "root_level_metadata_as_raw_cell: false" in seen
+    assert seen == (tmp_path / "piped.py").read_text()
+
+
 @pytest.mark.requires_black
 def test_pipe_with_quiet_does_not_print(tmp_path, capsys):
     tmp_py = tmp_path / "nb.py"
