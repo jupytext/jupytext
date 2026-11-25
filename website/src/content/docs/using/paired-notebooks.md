@@ -39,3 +39,23 @@ In case you forgot to reload, and saved the Jupyter notebook while the text repr
 ![](https://github.com/jupytext/jupytext-screenshots/raw/master/JupytextDocumentation/NotebookChanged.png)
 
 If that happens, simply select the version that has the most recent changes (or: make a copy of the `.py` notebook on disk, click on _overwrite_ in Jupyter, and reconcile manually the two `.py` files).
+
+## Resolve Git merge conflicts when both files are tracked
+
+Resolve conflicts in the text representation first. Then use the resolved text file to regenerate the notebook inputs.
+
+1. Edit the paired text file, such as `notebook.py`, and remove the Git conflict markers after merging the changes you want.
+2. Rebuild `notebook.ipynb` from `notebook.py`. To regenerate the notebook without saved outputs, run the following command.
+
+   ```bash
+   jupytext --to ipynb notebook.py
+   ```
+
+   To reuse saved outputs from one side of a regular merge, first restore that side's valid `.ipynb` to the working tree. The example below selects the current branch's notebook. Use `--theirs` to select the incoming branch's notebook. The update reuses outputs for cells with matching inputs. Rerun changed cells to refresh their outputs.
+
+   ```bash
+   git restore --ours --worktree -- notebook.ipynb
+   jupytext --update --to ipynb notebook.py
+   ```
+
+3. Review the notebook and stage both files with `git add notebook.py notebook.ipynb`. Once Git reports that you have resolved all conflicts, finish the merge.
