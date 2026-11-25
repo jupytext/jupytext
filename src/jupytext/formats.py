@@ -347,7 +347,9 @@ def guess_format(text, ext):
             if double_percent_re.match(line) or double_percent_and_space_re.match(line) or nbconvert_script_re.match(line):
                 double_percent_count += 1
 
-            if not line.startswith(unescaped_comment) and is_magic(line, language):
+            # An escaped magic can be indented, e.g. `    # !ls` inside an `if` block,
+            # so the comment prefix has to be looked for after the indentation.
+            if not line.lstrip().startswith(unescaped_comment) and is_magic(line, language):
                 magic_command_count += 1
 
             if twenty_hash_re.match(line) and ext == ".py":

@@ -325,3 +325,20 @@ def test_magic_assign_816():
     assert _PYTHON_MAGIC_ASSIGN.match("# flake8_version = !flake8 --version")
     assert _PYTHON_MAGIC_ASSIGN.match("name = %time 2+2")
     assert _PYTHON_MAGIC_ASSIGN.match("# name = %time 2+2")
+
+
+def test_indented_magic_in_percent_script_1224():
+    """An escaped, indented magic must not stop the other magics from being read (#1224)"""
+    text = """# %%
+
+# !ls
+
+# %%
+
+if 1:
+    # !ls
+"""
+    nb = jupytext.reads(text, "py")
+    compare(nb.cells[0].source, "\n!ls")
+    compare(nb.cells[1].source, "\nif 1:\n    !ls")
+    compare(jupytext.writes(nb, "py"), text)
