@@ -1,0 +1,1 @@
+- Escaped magics that are indented no longer make `guess_format` read a `py:percent` script as a `hydrogen` one, so the other magics in the file are converted again.

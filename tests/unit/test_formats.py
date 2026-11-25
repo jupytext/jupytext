@@ -45,6 +45,16 @@ print("hello world!")
     assert guess_format(nb, ext=".py")[0] == "percent"
 
 
+def test_guess_format_simple_percent_with_indented_magic(
+    nb="""# %%
+if 1:
+    # !ls
+""",
+):
+    """An escaped magic can be indented, e.g. inside an `if` block (#1224)"""
+    assert guess_format(nb, ext=".py")[0] == "percent"
+
+
 def test_guess_format_simple_hydrogen_with_magic(
     nb="""# %%
 %time
