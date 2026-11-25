@@ -69,3 +69,15 @@ repos:
 
 Tested examples of how to use the pre-commit hook are available in our [tests](https://github.com/jupytext/jupytext/tree/main/tests/external/pre_commit) -
 see for instance [test_pre_commit_1_sync_with_config.py](https://github.com/jupytext/jupytext/blob/main/tests/external/pre_commit/test_pre_commit_1_sync_with_config.py).
+
+## Which file does the hook use as the source?
+
+During a normal commit, pre-commit passes staged files to the hook. The built-in hook runs Jupytext with `--pre-commit-mode`. With `--sync`, Jupytext gives the staged representation priority over its unstaged partner, regardless of their modification times.
+
+| Files staged for the commit | What happens |
+| --- | --- |
+| One file in the pair | Jupytext uses that file as the source for synchronization. |
+| Both files | Jupytext checks that the staged representations agree. If they disagree, the hook fails. Reconcile the two files and stage the reconciled versions before retrying. |
+| Neither file | Pre-commit does not pass the pair to the hook. Unstaged edits to the pair stay out of the commit. |
+
+If synchronization updates a file during the hook, review and stage the update before retrying the commit.
